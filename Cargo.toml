@@ -15,5 +15,5 @@ path = "src/lib.rs"
 crate-type = [ "rlib", "cdylib", "staticlib" ]
 
 [[bin]]
-name = "mixtures"
+name = "mixes"
 path = "src/bin/sim/driver.rs"
