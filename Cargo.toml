@@ -8,6 +8,7 @@ license = "BSD-3-Clause"
 readme = "README.md"
 
 [dependencies]
+num_enum = "0.5.7"
 
 [lib]
 name = "mixture"

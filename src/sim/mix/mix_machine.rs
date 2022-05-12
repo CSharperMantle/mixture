@@ -7,7 +7,7 @@ pub struct MixMachine {
     /// The register `rX`.
     pub r_x: register::GenericRegister,
 
-    /// The register `rI1`.
+    /// The register `rI1`.e
     pub r_i1: register::IndexRegister,
     /// The register `rI2`.
     pub r_i2: register::IndexRegister,
@@ -31,6 +31,9 @@ pub struct MixMachine {
 
     /// The memory.
     pub mem: mem::Mem,
+
+    /// The instruction pointer.
+    pub pc: u32,
 }
 
 impl MixMachine {
@@ -49,6 +52,7 @@ impl MixMachine {
             toggle_overflow: false,
             indicator_comp: register::ComparisonIndicatorValue::EQUAL,
             mem: mem::Mem::new(),
+            pc: 0,
         }
     }
 }
