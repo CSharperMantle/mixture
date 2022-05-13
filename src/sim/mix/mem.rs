@@ -1,7 +1,17 @@
 use crate::sim::mix::*;
 
 /// A word in MIX machine, with variable number of bytes.
-/// The word is copied but not moved on each assignment.
+///
+/// Word are the basic unit of memory in MIX. A normal word
+/// contains 5 bytes and a sign byte. Note, however, that a
+/// byte may contain *arbitrary* amount of bits. A proper MIX
+/// program should run regardless of the number of bytes in a
+/// word. It is thus impossible to tell the content of individual
+/// bytes if several bytes are joined to represent a single
+/// scalar.
+///
+/// A byte should be able to represent a scalar no less than
+/// decimal `60`.
 ///
 /// # Generic Parameters
 /// * `N` - The number of bytes in the word, including sign.
@@ -130,7 +140,7 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
     /// use mixture::sim::mix::mem::*;
     /// use mixture::sim::mix::instr::*;
     ///
-    /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::Lda);
+    /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     ///
     /// let word: Word<6, false> = instr.try_into().unwrap();
     /// assert_eq!(word[0..=5], [0, 0xD0, 0x07, 0x02, 0x03, 0x08]);
