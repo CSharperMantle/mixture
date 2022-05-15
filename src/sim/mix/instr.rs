@@ -1,7 +1,7 @@
 use crate::sim::mix::*;
 
 /// An instruction of the MIX machine.
-/// 
+///
 /// It is possible to convert `Word<6, false>` to an instruction,
 /// given that all the fields are valid and vice versa.
 #[derive(Clone, Copy, Debug)]
@@ -46,6 +46,17 @@ impl Instruction {
             opcode,
         }
     }
+
+    /// Decode `F` to a `std::ops::RangeInclusive<u8>`.
+    ///
+    /// The `F` part of an instruction may be interpreted as a
+    /// range. This range is encoded as `F <- 8L + R`.
+    ///
+    /// # Returns
+    /// * `std::ops::RangeInclusive<u8>` - The range of the field.
+    pub fn field_to_range_inclusive(&self) -> std::ops::RangeInclusive<usize> {
+        ((self.field / 8) as usize)..=((self.field % 8) as usize)
+    }
 }
 
 impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
@@ -77,10 +88,7 @@ impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
     fn try_from(source: mem::Word<6, false>) -> Result<Self, Self::Error> {
         let sign = if source[0] == 0 { 1 } else { -1 };
         let addr = sign * i16::from_le_bytes([source[1], source[2]]);
-        let opcode = match Opcode::try_from(source[5..=5][0]) {
-            Ok(opcode) => opcode,
-            Err(_) => return Err("Invalid opcode"),
-        };
+        let opcode = Opcode::try_from(source[5..=5][0]).map_err(|_| "Invalid opcode")?;
         Ok(Instruction {
             opcode,
             field: source[4..=4][0],
@@ -302,7 +310,7 @@ pub enum Opcode {
     /// * `JANP(5)`
     ///
     /// `rA : 0; jump`
-    /// 
+    ///
     /// See also `Jmp`.
     JA = 40,
 
@@ -314,7 +322,7 @@ pub enum Opcode {
     /// * `J1NP(5)`
     ///
     /// `rI1 : 0; jump`
-    /// 
+    ///
     /// See `Jmp`.
     J1 = 41,
 
@@ -326,7 +334,7 @@ pub enum Opcode {
     /// * `J2NP(5)`
     ///
     /// `rI2 : 0; jump`
-    /// 
+    ///
     /// See `Jmp`.
     J2 = 42,
 
@@ -338,7 +346,7 @@ pub enum Opcode {
     /// * `J3NP(5)`
     ///
     /// `rI3 : 0; jump`
-    /// 
+    ///
     /// See `Jmp`.
     J3 = 43,
 
@@ -350,7 +358,7 @@ pub enum Opcode {
     /// * `J4NP(5)`
     ///
     /// `rI4 : 0; jump`
-    /// 
+    ///
     /// See `Jmp`.
     J4 = 44,
 
@@ -362,7 +370,7 @@ pub enum Opcode {
     /// * `J5NP(5)`
     ///
     /// `rI5 : 0; jump`
-    /// 
+    ///
     /// See `Jmp`.
     J5 = 45,
 
@@ -374,7 +382,7 @@ pub enum Opcode {
     /// * `J6NP(5)`
     ///
     /// `rI6 : 0; jump`
-    /// 
+    ///
     /// See `Jmp`.
     J6 = 46,
 
@@ -386,7 +394,7 @@ pub enum Opcode {
     /// * `JXNP(5)`
     ///
     /// `rX : 0; jump`
-    /// 
+    ///
     /// See `Jmp`.
     JX = 47,
 
@@ -456,42 +464,42 @@ pub enum Opcode {
 
     /// * `CMPA(0:5)` - Compare `rA` with `V`.
     /// * `FCMP(6)` - Float comparison.
-    /// 
+    ///
     /// `CI <- rA(F) : V`
     CmpA = 56,
 
     /// * `CMP1(0:5)` - Compare `rI1` with `V`.
-    /// 
+    ///
     /// `CI <- rI1(F) : V`
     Cmp1 = 57,
 
     /// * `CMP2(0:5)` - Compare `rI2` with `V`.
-    /// 
+    ///
     /// `CI <- rI2(F) : V`
     Cmp2 = 58,
 
     /// * `CMP3(0:5)` - Compare `rI3` with `V`.
-    /// 
+    ///
     /// `CI <- rI3(F) : V`
     Cmp3 = 59,
 
     /// * `CMP4(0:5)` - Compare `rI4` with `V`.
-    /// 
+    ///
     /// `CI <- rI4(F) : V`
     Cmp4 = 60,
 
     /// * `CMP5(0:5)` - Compare `rI5` with `V`.
-    /// 
+    ///
     /// `CI <- rI5(F) : V`
     Cmp5 = 61,
 
     /// * `CMP6(0:5)` - Compare `rI6` with `V`.
-    /// 
+    ///
     /// `CI <- rI6(F) : V`
     Cmp6 = 62,
 
     /// * `CMPX(0:5)` - Compare `rX` with `V`.
-    /// 
+    ///
     /// `CI <- rX(F) : V`
     CmpX = 63,
 }

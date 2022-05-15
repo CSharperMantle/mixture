@@ -89,6 +89,25 @@ impl<const N: usize, const P: bool> Word<N, P> {
 
         Ok(())
     }
+
+    /// Check if the word is positive.
+    ///
+    /// # Returns
+    /// * `true` - If the word is positive.
+    /// * `false` - If the word is negative.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mixture::sim::mix::mem::*;
+    ///
+    /// let mut reg = Word::<6, false>::new();
+    /// reg.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    ///
+    /// assert_eq!(reg.is_positive(), false);
+    /// ```
+    pub fn is_positive(&self) -> bool {
+        self.data[0] == 1
+    }
 }
 
 impl<const N: usize, const P: bool> std::ops::Index<std::ops::Range<usize>> for Word<N, P> {
@@ -123,6 +142,14 @@ impl<const N: usize, const P: bool> std::ops::Index<usize> for Word<N, P> {
     }
 }
 
+impl<const N: usize, const P: bool> std::ops::IndexMut<usize> for Word<N, P> {
+    /// Access the mutable content of the word with
+    /// the given index.
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.data[index]
+    }
+}
+
 impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
     type Error = &'static str;
 
@@ -148,27 +175,17 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
     fn try_from(source: instr::Instruction) -> Result<Self, Self::Error> {
         let mut word: Word<6, false> = Word::new();
         let sign = if source.addr < 0 { 1u8 } else { 0u8 };
-        match word.set(0..=0, &[sign]) {
-            Ok(_) => {}
-            Err(_) => return Err("Failed to set sign byte"),
-        };
+        word.set(0..=0, &[sign])
+            .map_err(|_| "Failed to set sign bit")?;
         let addr = (source.addr.abs() as u16).to_le_bytes();
-        match word.set(1..=2, &addr) {
-            Ok(_) => {}
-            Err(_) => return Err("Failed to set address bytes"),
-        };
-        match word.set(3..=3, &[source.index]) {
-            Ok(_) => {}
-            Err(_) => return Err("Failed to set index byte"),
-        };
-        match word.set(4..=4, &[source.field as u8]) {
-            Ok(_) => {}
-            Err(_) => return Err("Failed to set field byte"),
-        };
-        match word.set(5..=5, &[source.opcode as u8]) {
-            Ok(_) => {}
-            Err(_) => return Err("Failed to set opcode bytes"),
-        };
+        word.set(1..=2, &addr)
+            .map_err(|_| "Failed to set address bytes")?;
+        word.set(3..=3, &[source.index])
+            .map_err(|_| "Failed to set index byte")?;
+        word.set(4..=4, &[source.field as u8])
+            .map_err(|_| "Failed to set field byte")?;
+        word.set(5..=5, &[source.opcode as u8])
+            .map_err(|_| "Failed to set opcode bytes")?;
         Ok(word)
     }
 }
@@ -181,6 +198,17 @@ pub struct Mem {
 
 impl Mem {
     /// Create a new memory area with all-zero words.
+    ///
+    /// # Returns
+    /// * `Mem` - The new memory area.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mixture::sim::mix::mem::*;
+    ///
+    /// let mem = Mem::new();
+    /// assert_eq!(mem[0][0..=5], [0, 0, 0, 0, 0, 0]);
+    /// ```
     pub fn new() -> Self {
         Mem {
             data: [Word::<6, false>::new(); 4000],
@@ -191,9 +219,15 @@ impl Mem {
 impl std::ops::Index<usize> for Mem {
     type Output = Word<6, false>;
 
-    /// Access the content of the word with
-    /// the given range.
+    /// Access the word at a memory location.
     fn index(&self, index: usize) -> &Self::Output {
         &self.data[index]
+    }
+}
+
+impl std::ops::IndexMut<usize> for Mem {
+    /// Access the mutable word at a memory location.
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.data[index]
     }
 }

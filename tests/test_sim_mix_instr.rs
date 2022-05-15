@@ -8,8 +8,8 @@ fn test_instruction_from() {
 
     let instr = Instruction::try_from(word).unwrap();
     assert_eq!(instr.opcode, Opcode::LdA);
-    assert_eq!(instr.field, 0x03);
-    assert_eq!(instr.index, 0x02);
+    assert_eq!(instr.field, 3);
+    assert_eq!(instr.index, 2);
     assert_eq!(instr.addr, 2000);
 }
 
