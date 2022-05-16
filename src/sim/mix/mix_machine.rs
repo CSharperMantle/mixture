@@ -48,6 +48,9 @@ impl MixMachine {
     /// Reset the machine.
     ///
     /// This function resets the machine to its initial state.
+    /// It does not clear the memory.
+    ///
+    /// It is equivalent to `self.pc = 0; self.halted = false; self.toggle_overflow = false;`.
     pub fn reset(&mut self) {
         self.pc = 0;
         self.halted = false;
@@ -55,22 +58,27 @@ impl MixMachine {
     }
 
     /// Run the next instruction of the machine.
-    pub fn step(&mut self) {
+    ///
+    /// # Returns
+    /// * `Ok(())` - The machine successfully completed its operation.
+    /// * `Err(String)` - The machine encountered an error and is now halted.
+    pub fn step(&mut self) -> Result<(), String> {
         if self.halted {
-            return;
+            return Err("Operate on halted machine.".to_string());
         }
 
         // Fetch the instruction.
         let instr: instr::Instruction = match self.mem[self.pc].try_into() {
             Ok(instr) => instr,
             Err(_) => {
-                self.trap_illegal_instruction();
-                return;
+                return Err(self.trap_illegal_instruction());
             }
         };
 
+        self.pc += 1;
+
         // Run the instruction.
-        let result = match instr.opcode {
+        match instr.opcode {
             instr::Opcode::Nop => self.handler_instr_nop(instr),
 
             instr::Opcode::Add => todo!(),
@@ -83,21 +91,21 @@ impl MixMachine {
             instr::Opcode::Move => todo!(),
 
             instr::Opcode::LdA => self.handler_instr_load_6b(instr),
-            instr::Opcode::Ld1 => todo!(),
-            instr::Opcode::Ld2 => todo!(),
-            instr::Opcode::Ld3 => todo!(),
-            instr::Opcode::Ld4 => todo!(),
-            instr::Opcode::Ld5 => todo!(),
-            instr::Opcode::Ld6 => todo!(),
+            instr::Opcode::Ld1 => self.handler_instr_load_3b(instr),
+            instr::Opcode::Ld2 => self.handler_instr_load_3b(instr),
+            instr::Opcode::Ld3 => self.handler_instr_load_3b(instr),
+            instr::Opcode::Ld4 => self.handler_instr_load_3b(instr),
+            instr::Opcode::Ld5 => self.handler_instr_load_3b(instr),
+            instr::Opcode::Ld6 => self.handler_instr_load_3b(instr),
             instr::Opcode::LdX => self.handler_instr_load_6b(instr),
 
             instr::Opcode::LdAN => self.handler_instr_load_neg_6b(instr),
-            instr::Opcode::Ld1N => todo!(),
-            instr::Opcode::Ld2N => todo!(),
-            instr::Opcode::Ld3N => todo!(),
-            instr::Opcode::Ld4N => todo!(),
-            instr::Opcode::Ld5N => todo!(),
-            instr::Opcode::Ld6N => todo!(),
+            instr::Opcode::Ld1N => self.handler_instr_load_neg_3b(instr),
+            instr::Opcode::Ld2N => self.handler_instr_load_neg_3b(instr),
+            instr::Opcode::Ld3N => self.handler_instr_load_neg_3b(instr),
+            instr::Opcode::Ld4N => self.handler_instr_load_neg_3b(instr),
+            instr::Opcode::Ld5N => self.handler_instr_load_neg_3b(instr),
+            instr::Opcode::Ld6N => self.handler_instr_load_neg_3b(instr),
             instr::Opcode::LdXN => self.handler_instr_load_neg_6b(instr),
 
             instr::Opcode::StA => todo!(),
@@ -144,13 +152,10 @@ impl MixMachine {
             instr::Opcode::Cmp5 => todo!(),
             instr::Opcode::Cmp6 => todo!(),
             instr::Opcode::CmpX => todo!(),
-        };
-
-        // Increase the instruction pointer, or halt.
-        match result {
-            Ok(()) => self.pc += 1,
-            Err(msg) => self.trap_general_error(msg),
         }
+        .map_err(|msg| self.trap_general_error(msg))?;
+
+        Ok(())
     }
 
     /// Get indexed address.
@@ -165,8 +170,9 @@ impl MixMachine {
             } else {
                 -1
             };
-            let index_value = &self.r_in[index as usize - 1][1..=2];
-            index_sign * i16::from_le_bytes([index_value[0], index_value[1]]) + addr
+            let index_value = &self.r_in[index as usize - 1];
+
+            index_sign * i16::from_be_bytes([index_value[1], index_value[2]]) + addr
         };
 
         eff_addr.try_into().map_err(|_| "Invalid effective address")
@@ -244,22 +250,120 @@ impl MixMachine {
         Ok(())
     }
 
+    /// Handler for `LD1-6`.
+    ///
+    /// Note that this instruction only sets the first sign, 4th
+    /// and 5th bits of the original memory location. This prevents
+    /// the said 'undefined behavior' from happening.
+    fn handler_instr_load_3b(&mut self, instr: instr::Instruction) -> Result<(), &'static str> {
+        let mut field = instr.field_to_range_inclusive();
+        // Obtain everything.
+        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
+        let reg = match instr.opcode {
+            instr::Opcode::Ld1 => &mut self.r_in[0],
+            instr::Opcode::Ld2 => &mut self.r_in[1],
+            instr::Opcode::Ld3 => &mut self.r_in[2],
+            instr::Opcode::Ld4 => &mut self.r_in[3],
+            instr::Opcode::Ld5 => &mut self.r_in[4],
+            instr::Opcode::Ld6 => &mut self.r_in[5],
+            _ => unreachable!(),
+        };
+        // We need to care about only the 4th, 5th and the sign byte.
+        // So we make a temporary word and fill back the reg only the
+        // 4th, 5th and the sign byte. Handle 'understood' positive sign.
+        let mut temp = mem::Word::<6, false>::new();
+        temp.set(0..=2, &[1, 0, 0])
+            .map_err(|_| "Failed to zero temp")?;
+        // Do we need to update the sign byte?
+        let sign_copy_needed = *field.start() == 0;
+        if sign_copy_needed {
+            // Treat sign bit specially by moving it out.
+            field = (*field.start() + 1)..=(*field.end());
+        }
+
+        // Copy bytes shifted right.
+        let mut reg_cursor = 5;
+        for memory_cell_cursor in field.rev() {
+            temp[reg_cursor as usize] = memory_cell[memory_cell_cursor];
+            reg_cursor -= 1;
+        }
+        // Copy sign byte if needed.
+        if sign_copy_needed {
+            temp[0] = memory_cell[0];
+        }
+        // Fill back the reg.
+        reg[0] = temp[0];
+        reg[1] = temp[4];
+        reg[2] = temp[5];
+
+        Ok(())
+    }
+
+    /// Handler for `LD1-6N`.
+    ///
+    /// Note that this instruction only sets the first sign, 4th
+    /// and 5th bits of the original memory location. This prevents
+    /// the said 'undefined behavior' from happening.
+    fn handler_instr_load_neg_3b(&mut self, instr: instr::Instruction) -> Result<(), &'static str> {
+        let mut field = instr.field_to_range_inclusive();
+        // Obtain everything.
+        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
+        let reg = match instr.opcode {
+            instr::Opcode::Ld1N => &mut self.r_in[0],
+            instr::Opcode::Ld2N => &mut self.r_in[1],
+            instr::Opcode::Ld3N => &mut self.r_in[2],
+            instr::Opcode::Ld4N => &mut self.r_in[3],
+            instr::Opcode::Ld5N => &mut self.r_in[4],
+            instr::Opcode::Ld6N => &mut self.r_in[5],
+            _ => unreachable!(),
+        };
+        // We need to care about only the 4th, 5th and the sign byte.
+        // So we make a temporary word and fill back the reg only the
+        // 4th, 5th and the sign byte. Handle 'understood' positive sign.
+        let mut temp = mem::Word::<6, false>::new();
+        temp.set(0..=2, &[0, 0, 0])
+            .map_err(|_| "Failed to zero temp")?;
+        // Do we need to update the sign byte?
+        let sign_copy_needed = *field.start() == 0;
+        if sign_copy_needed {
+            // Treat sign bit specially by moving it out.
+            field = (*field.start() + 1)..=(*field.end());
+        }
+
+        // Copy bytes shifted right.
+        let mut reg_cursor = 5;
+        for memory_cell_cursor in field.rev() {
+            temp[reg_cursor as usize] = memory_cell[memory_cell_cursor];
+            reg_cursor -= 1;
+        }
+        // Copy negated sign byte if needed.
+        if sign_copy_needed {
+            temp[0] = if memory_cell[0] == 0 { 1 } else { 0 };
+        }
+        // Fill back the reg.
+        reg[0] = temp[0];
+        reg[1] = temp[4];
+        reg[2] = temp[5];
+
+        Ok(())
+    }
+
     /// Trap handler for illegal instructions.
     ///
     /// This function is called when an illegal instruction is
     /// encountered. It halts the machine and prints the
     /// offending address.
-    fn trap_illegal_instruction(&mut self) {
-        println!("HALT! Illegal instruction at address {}", self.pc);
+    fn trap_illegal_instruction(&mut self) -> String {
         self.halted = true;
+        format!("HALT! Illegal instruction. ADDR {}", self.pc)
     }
 
     /// Trap handler for general error.
-    /// 
+    ///
     /// This function is called when any other error is encountered.
     /// It halts the machine and prints the error message.
-    fn trap_general_error(&mut self, message: &str) {
-        println!("HALT! General error: {}", message);
+    fn trap_general_error(&mut self, message: &str) -> String {
         self.halted = true;
+        format!("HALT! General error: {} ADDR {}", message, self.pc)
     }
 }

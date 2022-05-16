@@ -170,15 +170,14 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     ///
     /// let word: Word<6, false> = instr.try_into().unwrap();
-    /// assert_eq!(word[0..=5], [0, 0xD0, 0x07, 0x02, 0x03, 0x08]);
+    /// assert_eq!(word[0..=5], [0, 0x07, 0xD0, 0x02, 0x03, 0x08]);
     /// ```
     fn try_from(source: instr::Instruction) -> Result<Self, Self::Error> {
         let mut word: Word<6, false> = Word::new();
         let sign = if source.addr < 0 { 1u8 } else { 0u8 };
         word.set(0..=0, &[sign])
             .map_err(|_| "Failed to set sign bit")?;
-        let addr = (source.addr.abs() as u16).to_le_bytes();
-        word.set(1..=2, &addr)
+        word.set(1..=2, &(source.addr.abs() as u16).to_be_bytes())
             .map_err(|_| "Failed to set address bytes")?;
         word.set(3..=3, &[source.index])
             .map_err(|_| "Failed to set index byte")?;

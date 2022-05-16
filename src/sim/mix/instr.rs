@@ -77,7 +77,7 @@ impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
     /// use mixture::sim::mix::instr::*;
     ///
     /// let mut word = Word::<6, false>::new();
-    /// word.set(0..=5, &[0, 0xD0, 0x07, 0x02, 0x03, 0x08]).unwrap();
+    /// word.set(0..=5, &[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
     ///
     /// let instr = Instruction::try_from(word).unwrap();
     /// assert_eq!(instr.opcode, Opcode::LdA);
@@ -87,7 +87,7 @@ impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
     /// ```
     fn try_from(source: mem::Word<6, false>) -> Result<Self, Self::Error> {
         let sign = if source[0] == 0 { 1 } else { -1 };
-        let addr = sign * i16::from_le_bytes([source[1], source[2]]);
+        let addr = sign * i16::from_be_bytes([source[1], source[2]]);
         let opcode = Opcode::try_from(source[5..=5][0]).map_err(|_| "Invalid opcode")?;
         Ok(Instruction {
             opcode,
