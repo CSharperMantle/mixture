@@ -300,6 +300,38 @@ fn test_simple_load_neg_3b() {
     assert_eq!(mix.r_in[0][0..=2], [1, 0, 0]);
 }
 
+#[test]
+fn test_simple_jmp() {
+    let mut mix = MixMachine::new();
+
+    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::Jmp)
+        .try_into()
+        .unwrap();
+    mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::Jmp)
+        .try_into()
+        .unwrap();
+    mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::Jmp)
+        .try_into()
+        .unwrap();
+
+    mix.reset();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 1000);
+    assert_eq!(mix.r_j[0..=2], [1, 0, 1]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 1001);
+    assert_eq!(mix.r_j[0..=2], [1, 0, 1]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 0);
+    assert_eq!(mix.r_j[0..=2], [1, 0, 1]);
+}
+
 // #[test]
 // fn test_simple_arith_add() {
 //     let mut mix = MixMachine::new();

@@ -1,10 +1,11 @@
 use crate::sim::mix::*;
 
 /// Values of the comparison indicator.
+#[derive(PartialEq, Eq, Debug)]
 pub enum ComparisonIndicatorValue {
-    EQUAL,
-    LESSER,
-    GREATER,
+    Equal,
+    Lesser,
+    Greater,
 }
 
 /// A generic register of a MIX machine.

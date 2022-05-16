@@ -1,23 +1,34 @@
 use crate::sim::mix::*;
 
+/// Error codes for the MIX machine.
+#[derive(PartialEq, Eq, Debug)]
+pub enum TrapCode {
+    GeneralError,
+    IllegalInstruction,
+    InvalidAddress,
+    InvalidField,
+    MemAccessError,
+    Halted,
+}
+
 /// The state of a MIX machine.
 pub struct MixMachine {
     /// The register `rA`.
-    pub r_a: register::GenericRegister,
+    pub r_a: reg::GenericRegister,
     /// The register `rX`.
-    pub r_x: register::GenericRegister,
+    pub r_x: reg::GenericRegister,
 
     /// The register `rIn`, where `n = 1, 2, 3, 4, 5, 6`.
-    pub r_in: [register::IndexRegister; 6],
+    pub r_in: [reg::IndexRegister; 6],
 
     /// The register `rJ`.
-    pub r_j: register::JumpRegister,
+    pub r_j: reg::JumpRegister,
 
     /// The overflow toggle.
     pub toggle_overflow: bool,
 
     /// The comparison indicator.
-    pub indicator_comp: register::ComparisonIndicatorValue,
+    pub indicator_comp: reg::ComparisonIndicatorValue,
 
     /// The memory.
     pub mem: mem::Mem,
@@ -33,12 +44,12 @@ impl MixMachine {
     /// Create a new MIX machine.
     pub fn new() -> Self {
         MixMachine {
-            r_a: register::GenericRegister::new(),
-            r_x: register::GenericRegister::new(),
-            r_in: [register::IndexRegister::new(); 6],
-            r_j: register::JumpRegister::new(),
+            r_a: reg::GenericRegister::new(),
+            r_x: reg::GenericRegister::new(),
+            r_in: [reg::IndexRegister::new(); 6],
+            r_j: reg::JumpRegister::new(),
             toggle_overflow: false,
-            indicator_comp: register::ComparisonIndicatorValue::EQUAL,
+            indicator_comp: reg::ComparisonIndicatorValue::Equal,
             mem: mem::Mem::new(),
             pc: 0,
             halted: true,
@@ -62,9 +73,9 @@ impl MixMachine {
     /// # Returns
     /// * `Ok(())` - The machine successfully completed its operation.
     /// * `Err(String)` - The machine encountered an error and is now halted.
-    pub fn step(&mut self) -> Result<(), String> {
+    pub fn step(&mut self) -> Result<(), TrapCode> {
         if self.halted {
-            return Err("Operate on halted machine.".to_string());
+            return Err(TrapCode::Halted);
         }
 
         // Fetch the instruction.
@@ -124,7 +135,7 @@ impl MixMachine {
             instr::Opcode::In => todo!(),
             instr::Opcode::Out => todo!(),
             instr::Opcode::Jred => todo!(),
-            instr::Opcode::Jmp => todo!(),
+            instr::Opcode::Jmp => self.handler_instr_jmp(instr),
 
             instr::Opcode::JA => todo!(),
             instr::Opcode::J1 => todo!(),
@@ -152,14 +163,13 @@ impl MixMachine {
             instr::Opcode::Cmp5 => todo!(),
             instr::Opcode::Cmp6 => todo!(),
             instr::Opcode::CmpX => todo!(),
-        }
-        .map_err(|msg| self.trap_general_error(msg))?;
+        }?;
 
         Ok(())
     }
 
     /// Get indexed address.
-    fn helper_get_eff_addr(&self, addr: i16, index: u8) -> Result<u16, &'static str> {
+    fn helper_get_eff_addr(&self, addr: i16, index: u8) -> Result<u16, TrapCode> {
         let eff_addr = if index == 0 {
             // Direct addressing.
             addr
@@ -175,19 +185,19 @@ impl MixMachine {
             index_sign * i16::from_be_bytes([index_value[1], index_value[2]]) + addr
         };
 
-        eff_addr.try_into().map_err(|_| "Invalid effective address")
+        eff_addr.try_into().map_err(|_| TrapCode::InvalidAddress)
     }
 
     /// Handler for `NOP`.
     ///
     /// This function does nothing.
-    fn handler_instr_nop(&mut self, _: instr::Instruction) -> Result<(), &'static str> {
+    fn handler_instr_nop(&mut self, _: instr::Instruction) -> Result<(), TrapCode> {
         // Do nothing.
         Ok(())
     }
 
     /// Handler for `LDA` and `LDX`.
-    fn handler_instr_load_6b(&mut self, instr: instr::Instruction) -> Result<(), &'static str> {
+    fn handler_instr_load_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
         let mut field = instr.field_to_range_inclusive();
         // Obtain everything.
         let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
@@ -198,7 +208,7 @@ impl MixMachine {
         };
         // Zero reg before copying. Handle 'understood' positive sign too.
         reg.set(0..=5, &[1, 0, 0, 0, 0, 0])
-            .map_err(|_| "Failed to zero reg")?;
+            .map_err(|_| TrapCode::MemAccessError)?;
         // Do we need to update the sign byte?
         let sign_copy_needed = *field.start() == 0;
         if sign_copy_needed {
@@ -219,7 +229,7 @@ impl MixMachine {
     }
 
     /// Handler for `LDAN` and `LDXN`.
-    fn handler_instr_load_neg_6b(&mut self, instr: instr::Instruction) -> Result<(), &'static str> {
+    fn handler_instr_load_neg_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
         let mut field = instr.field_to_range_inclusive();
         // Obtain everything.
         let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
@@ -230,7 +240,7 @@ impl MixMachine {
         };
         // Zero reg before copying. Handle 'understood' negative sign.
         reg.set(0..=5, &[0, 0, 0, 0, 0, 0])
-            .map_err(|_| "Failed to zero reg")?;
+            .map_err(|_| TrapCode::MemAccessError)?;
         // Do we need to update the sign byte?
         let sign_copy_needed = *field.start() == 0;
         if sign_copy_needed {
@@ -255,7 +265,7 @@ impl MixMachine {
     /// Note that this instruction only sets the first sign, 4th
     /// and 5th bits of the original memory location. This prevents
     /// the said 'undefined behavior' from happening.
-    fn handler_instr_load_3b(&mut self, instr: instr::Instruction) -> Result<(), &'static str> {
+    fn handler_instr_load_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
         let mut field = instr.field_to_range_inclusive();
         // Obtain everything.
         let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
@@ -273,7 +283,7 @@ impl MixMachine {
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
         let mut temp = mem::Word::<6, false>::new();
         temp.set(0..=2, &[1, 0, 0])
-            .map_err(|_| "Failed to zero temp")?;
+            .map_err(|_| TrapCode::MemAccessError)?;
         // Do we need to update the sign byte?
         let sign_copy_needed = *field.start() == 0;
         if sign_copy_needed {
@@ -304,7 +314,7 @@ impl MixMachine {
     /// Note that this instruction only sets the first sign, 4th
     /// and 5th bits of the original memory location. This prevents
     /// the said 'undefined behavior' from happening.
-    fn handler_instr_load_neg_3b(&mut self, instr: instr::Instruction) -> Result<(), &'static str> {
+    fn handler_instr_load_neg_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
         let mut field = instr.field_to_range_inclusive();
         // Obtain everything.
         let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
@@ -322,7 +332,7 @@ impl MixMachine {
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
         let mut temp = mem::Word::<6, false>::new();
         temp.set(0..=2, &[0, 0, 0])
-            .map_err(|_| "Failed to zero temp")?;
+            .map_err(|_| TrapCode::MemAccessError)?;
         // Do we need to update the sign byte?
         let sign_copy_needed = *field.start() == 0;
         if sign_copy_needed {
@@ -348,22 +358,46 @@ impl MixMachine {
         Ok(())
     }
 
+    /// Handler for `JMP` and variants.
+    fn handler_instr_jmp(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
+        let target_addr = self.helper_get_eff_addr(instr.addr, instr.index)? as usize;
+        // Match jump conditions.
+        let should_jump = match instr.field {
+            0 | 1 => true,
+            2 => self.toggle_overflow,
+            3 => !self.toggle_overflow,
+            4 => self.indicator_comp == reg::ComparisonIndicatorValue::Lesser,
+            5 => self.indicator_comp == reg::ComparisonIndicatorValue::Equal,
+            6 => self.indicator_comp == reg::ComparisonIndicatorValue::Greater,
+            7 => self.indicator_comp != reg::ComparisonIndicatorValue::Lesser,
+            8 => self.indicator_comp != reg::ComparisonIndicatorValue::Equal,
+            9 => self.indicator_comp != reg::ComparisonIndicatorValue::Greater,
+            _ => return Err(TrapCode::InvalidField),
+        };
+
+        if should_jump {
+            // Save PC in rJ.
+            if instr.field != 1 {
+                let pc_unpacked = (self.pc as u16).to_be_bytes();
+                self.r_j
+                    .set(1..=2, &pc_unpacked)
+                    .map_err(|_| TrapCode::MemAccessError)?;
+            }
+            println!("{:?}", self.pc);
+            // Do jump.
+            self.pc = target_addr;
+        }
+
+        Ok(())
+    }
+
     /// Trap handler for illegal instructions.
     ///
     /// This function is called when an illegal instruction is
     /// encountered. It halts the machine and prints the
     /// offending address.
-    fn trap_illegal_instruction(&mut self) -> String {
+    fn trap_illegal_instruction(&mut self) -> TrapCode {
         self.halted = true;
-        format!("HALT! Illegal instruction. ADDR {}", self.pc)
-    }
-
-    /// Trap handler for general error.
-    ///
-    /// This function is called when any other error is encountered.
-    /// It halts the machine and prints the error message.
-    fn trap_general_error(&mut self, message: &str) -> String {
-        self.halted = true;
-        format!("HALT! General error: {} ADDR {}", message, self.pc)
+        TrapCode::IllegalInstruction
     }
 }
