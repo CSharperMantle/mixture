@@ -34,7 +34,7 @@ pub struct MixMachine {
     pub mem: mem::Mem,
 
     /// The instruction pointer.
-    pub pc: usize,
+    pub pc: u16,
 
     /// The machine running state.
     pub halted: bool,
@@ -200,7 +200,7 @@ impl MixMachine {
     fn handler_instr_load_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
         let mut field = instr.field_to_range_inclusive();
         // Obtain everything.
-        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
+        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::LdA => &mut self.r_a,
             instr::Opcode::LdX => &mut self.r_x,
@@ -232,7 +232,7 @@ impl MixMachine {
     fn handler_instr_load_neg_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
         let mut field = instr.field_to_range_inclusive();
         // Obtain everything.
-        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
+        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::LdAN => &mut self.r_a,
             instr::Opcode::LdXN => &mut self.r_x,
@@ -268,7 +268,7 @@ impl MixMachine {
     fn handler_instr_load_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
         let mut field = instr.field_to_range_inclusive();
         // Obtain everything.
-        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
+        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::Ld1 => &mut self.r_in[0],
             instr::Opcode::Ld2 => &mut self.r_in[1],
@@ -317,7 +317,7 @@ impl MixMachine {
     fn handler_instr_load_neg_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
         let mut field = instr.field_to_range_inclusive();
         // Obtain everything.
-        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)? as usize];
+        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::Ld1N => &mut self.r_in[0],
             instr::Opcode::Ld2N => &mut self.r_in[1],
@@ -360,7 +360,7 @@ impl MixMachine {
 
     /// Handler for `JMP` and variants.
     fn handler_instr_jmp(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        let target_addr = self.helper_get_eff_addr(instr.addr, instr.index)? as usize;
+        let target_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         // Match jump conditions.
         let should_jump = match instr.field {
             0 | 1 => true,

@@ -215,18 +215,18 @@ impl Mem {
     }
 }
 
-impl std::ops::Index<usize> for Mem {
+impl std::ops::Index<u16> for Mem {
     type Output = Word<6, false>;
 
     /// Access the word at a memory location.
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index]
+    fn index(&self, index: u16) -> &Self::Output {
+        &self.data[index as usize]
     }
 }
 
-impl std::ops::IndexMut<usize> for Mem {
+impl std::ops::IndexMut<u16> for Mem {
     /// Access the mutable word at a memory location.
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.data[index]
+    fn index_mut(&mut self, index: u16) -> &mut Self::Output {
+        &mut self.data[index as usize]
     }
 }

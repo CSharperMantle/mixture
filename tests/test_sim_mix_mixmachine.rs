@@ -310,9 +310,7 @@ fn test_simple_jmp() {
     mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::Jmp)
         .try_into()
         .unwrap();
-    mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::Jmp)
-        .try_into()
-        .unwrap();
+    mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::Jmp).try_into().unwrap();
 
     mix.reset();
 
