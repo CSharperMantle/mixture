@@ -58,14 +58,24 @@ impl MixMachine {
 
     /// Reset the machine.
     ///
-    /// This function resets the machine to its initial state.
-    /// It does not clear the memory.
+    /// This method resets the machine to its initial state,
+    /// clearing the memory and registers.
     ///
-    /// It is equivalent to `self.pc = 0; self.halted = false; self.toggle_overflow = false;`.
     pub fn reset(&mut self) {
         self.pc = 0;
-        self.halted = false;
         self.toggle_overflow = false;
+        self.mem = mem::Mem::new();
+        self.r_a = reg::GenericRegister::new();
+        self.r_x = reg::GenericRegister::new();
+        self.r_in = [reg::IndexRegister::new(); 6];
+        self.r_j = reg::JumpRegister::new();
+    }
+
+    /// Restart the machine.
+    ///
+    /// This function un-halts the machine.
+    pub fn restart(&mut self) {
+        self.halted = false;
     }
 
     /// Run the next instruction of the machine.
@@ -97,7 +107,7 @@ impl MixMachine {
             instr::Opcode::Mul => todo!(),
             instr::Opcode::Div => todo!(),
 
-            instr::Opcode::Special => todo!(),
+            instr::Opcode::Special => self.handler_instr_special(instr),
             instr::Opcode::Shift => todo!(),
             instr::Opcode::Move => todo!(),
 
@@ -385,6 +395,61 @@ impl MixMachine {
         }
 
         Ok(())
+    }
+
+    /// Handler for `CHAR`, `NUM` and `HLT`.
+    fn handler_instr_special(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
+        if instr.field == 0 {
+            // NUM instruction
+            let a_content = &self.r_a[1..=5];
+            let x_content = &self.r_x[1..=5];
+            let mut result: u32 = 0;
+            // For each byte, we extract its 1st position,
+            // and push it to `result`.
+            for byte in a_content.iter().chain(x_content.iter()) {
+                let digit = *byte % 10;
+                result = result * 10 + digit as u32;
+            }
+            // Rebuild a word of 4 bytes.
+            let result_bytes = result.to_be_bytes();
+            self.r_a
+                .set(2..=5, &result_bytes)
+                .map_err(|_| TrapCode::MemAccessError)?;
+            Ok(())
+        } else if instr.field == 1 {
+            // CHAR instruction
+            let a_content = &self.r_a[2..=5];
+            // Obtain original number.
+            let mut source =
+                u32::from_be_bytes([a_content[0], a_content[1], a_content[2], a_content[3]]);
+            let mut cursor = 9;
+            let mut bytes: [u8; 10] = [0; 10];
+            // Extract each digit of `source` and pack them to a
+            // 10's multiplier.
+            while source > 0 {
+                let digit = source % 10;
+                source /= 10;
+                let byte = (30 + digit) as u8;
+                bytes[cursor] = byte;
+                cursor -= 1;
+            }
+            // Store them back.
+            for i in 0..5 {
+                self.r_a[i + 1] = bytes[i];
+            }
+            for i in 5..10 {
+                self.r_x[i - 5 + 1] = bytes[i];
+            }
+            Ok(())
+        } else if instr.field == 2 {
+            // HLT instruction
+            // Making it just like NOP if we restart the
+            // machine later.
+            self.halted = true;
+            Ok(())
+        } else {
+            return Err(TrapCode::InvalidField);
+        }
     }
 
     /// Trap handler for illegal instructions.
