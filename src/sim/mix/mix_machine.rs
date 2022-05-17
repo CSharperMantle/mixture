@@ -216,10 +216,8 @@ impl MixMachine {
             field = (*field.start() + 1)..=(*field.end());
         }
         // Copy bytes shifted right.
-        let mut reg_cursor = 5;
-        for memory_cell_cursor in field.rev() {
-            reg[reg_cursor as usize] = memory_cell[memory_cell_cursor];
-            reg_cursor -= 1;
+        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+            reg[reg_cursor] = memory_cell[memory_cell_cursor];
         }
         // Copy sign byte if needed.
         if sign_copy_needed {
@@ -248,10 +246,8 @@ impl MixMachine {
             field = (*field.start() + 1)..=(*field.end());
         }
         // Copy bytes shifted right.
-        let mut reg_cursor = 5;
-        for memory_cell_cursor in field.rev() {
-            reg[reg_cursor as usize] = memory_cell[memory_cell_cursor];
-            reg_cursor -= 1;
+        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+            reg[reg_cursor] = memory_cell[memory_cell_cursor];
         }
         // Copy negated sign byte if needed.
         if sign_copy_needed {
@@ -290,12 +286,9 @@ impl MixMachine {
             // Treat sign bit specially by moving it out.
             field = (*field.start() + 1)..=(*field.end());
         }
-
         // Copy bytes shifted right.
-        let mut reg_cursor = 5;
-        for memory_cell_cursor in field.rev() {
-            temp[reg_cursor as usize] = memory_cell[memory_cell_cursor];
-            reg_cursor -= 1;
+        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+            temp[reg_cursor] = memory_cell[memory_cell_cursor];
         }
         // Copy sign byte if needed.
         if sign_copy_needed {
@@ -341,10 +334,8 @@ impl MixMachine {
         }
 
         // Copy bytes shifted right.
-        let mut reg_cursor = 5;
-        for memory_cell_cursor in field.rev() {
-            temp[reg_cursor as usize] = memory_cell[memory_cell_cursor];
-            reg_cursor -= 1;
+        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+            temp[reg_cursor] = memory_cell[memory_cell_cursor];
         }
         // Copy negated sign byte if needed.
         if sign_copy_needed {
@@ -374,6 +365,11 @@ impl MixMachine {
             9 => self.indicator_comp != reg::ComparisonIndicatorValue::Greater,
             _ => return Err(TrapCode::InvalidField),
         };
+
+        // Clear overflow flag.
+        if instr.field == 2 || instr.field == 3 {
+            self.toggle_overflow = false;
+        }
 
         if should_jump {
             // Save PC in rJ.
