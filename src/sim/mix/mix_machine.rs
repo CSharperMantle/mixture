@@ -129,15 +129,15 @@ impl MixMachine {
             instr::Opcode::Ld6N => self.handler_instr_load_neg_3b(instr),
             instr::Opcode::LdXN => self.handler_instr_load_neg_6b(instr),
 
-            instr::Opcode::StA => todo!(),
-            instr::Opcode::St1 => todo!(),
-            instr::Opcode::St2 => todo!(),
-            instr::Opcode::St3 => todo!(),
-            instr::Opcode::St4 => todo!(),
-            instr::Opcode::St5 => todo!(),
-            instr::Opcode::St6 => todo!(),
-            instr::Opcode::StX => todo!(),
-            instr::Opcode::StJ => todo!(),
+            instr::Opcode::StA => self.handler_instr_store_6b(instr),
+            instr::Opcode::St1 => self.handler_instr_store_3b(instr),
+            instr::Opcode::St2 => self.handler_instr_store_3b(instr),
+            instr::Opcode::St3 => self.handler_instr_store_3b(instr),
+            instr::Opcode::St4 => self.handler_instr_store_3b(instr),
+            instr::Opcode::St5 => self.handler_instr_store_3b(instr),
+            instr::Opcode::St6 => self.handler_instr_store_3b(instr),
+            instr::Opcode::StX => self.handler_instr_store_6b(instr),
+            instr::Opcode::StJ => self.handler_instr_store_3b(instr),
             instr::Opcode::StZ => self.handler_instr_store_zero(instr),
 
             instr::Opcode::Jbus => todo!(),
@@ -208,9 +208,9 @@ impl MixMachine {
 
     /// Handler for `LDA` and `LDX`.
     fn handler_instr_load_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        let mut field = instr.field.to_range_inclusive();
         // Obtain everything.
-        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let mut field = instr.field.to_range_inclusive();
+        let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::LdA => &mut self.r_a,
             instr::Opcode::LdX => &mut self.r_x,
@@ -238,9 +238,9 @@ impl MixMachine {
 
     /// Handler for `LDAN` and `LDXN`.
     fn handler_instr_load_neg_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        let mut field = instr.field.to_range_inclusive();
         // Obtain everything.
-        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let mut field = instr.field.to_range_inclusive();
+        let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::LdAN => &mut self.r_a,
             instr::Opcode::LdXN => &mut self.r_x,
@@ -272,9 +272,9 @@ impl MixMachine {
     /// and 5th bits of the original memory location. This prevents
     /// the said 'undefined behavior' from happening.
     fn handler_instr_load_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        let mut field = instr.field.to_range_inclusive();
         // Obtain everything.
-        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let mut field = instr.field.to_range_inclusive();
+        let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::Ld1 => &mut self.r_in[0],
             instr::Opcode::Ld2 => &mut self.r_in[1],
@@ -308,7 +308,6 @@ impl MixMachine {
         reg[0] = temp[0];
         reg[1] = temp[4];
         reg[2] = temp[5];
-
         Ok(())
     }
 
@@ -318,9 +317,9 @@ impl MixMachine {
     /// and 5th bits of the original memory location. This prevents
     /// the said 'undefined behavior' from happening.
     fn handler_instr_load_neg_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        let mut field = instr.field.to_range_inclusive();
         // Obtain everything.
-        let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let mut field = instr.field.to_range_inclusive();
+        let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::Ld1N => &mut self.r_in[0],
             instr::Opcode::Ld2N => &mut self.r_in[1],
@@ -355,7 +354,6 @@ impl MixMachine {
         reg[0] = temp[0];
         reg[1] = temp[4];
         reg[2] = temp[5];
-
         Ok(())
     }
 
@@ -393,7 +391,6 @@ impl MixMachine {
             // Do jump.
             self.pc = target_addr;
         }
-
         Ok(())
     }
 
@@ -467,7 +464,6 @@ impl MixMachine {
         if start == 0 {
             memory_cell[0] = 1;
         }
-
         Ok(())
     }
 
@@ -485,7 +481,65 @@ impl MixMachine {
                 .set(0..=5, &orig_mem[0..=5])
                 .map_err(|_| TrapCode::MemAccessError)?;
         }
+        Ok(())
+    }
 
+    /// Handler for `STA` and `STX`.
+    fn handler_instr_store_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
+        // Obtain everything.
+        let mut field = instr.field.to_range_inclusive();
+        let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        let memory_cell = &mut self.mem[addr];
+        let reg = match instr.opcode {
+            instr::Opcode::StA => &self.r_a,
+            instr::Opcode::StX => &self.r_x,
+            _ => unreachable!(),
+        };
+        let sign_copy_needed = *field.start() == 0;
+        if sign_copy_needed {
+            // Treat sign bit specially by moving it out.
+            field = (*field.start() + 1)..=(*field.end());
+        }
+        // Copy bytes shifted right.
+        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+            memory_cell[memory_cell_cursor] = reg[reg_cursor];
+        }
+        if sign_copy_needed {
+            // Copy sign bit.
+            memory_cell[0] = reg[0];
+        }
+        Ok(())
+    }
+
+    /// Handler for `ST1-6`.
+    fn handler_instr_store_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
+        // Obtain everything.
+        let mut field = instr.field.to_range_inclusive();
+        let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        let memory_cell = &mut self.mem[addr];
+        let reg = match instr.opcode {
+            instr::Opcode::St1 => &self.r_in[0],
+            instr::Opcode::St2 => &self.r_in[1],
+            instr::Opcode::St3 => &self.r_in[2],
+            instr::Opcode::St4 => &self.r_in[3],
+            instr::Opcode::St5 => &self.r_in[4],
+            instr::Opcode::St6 => &self.r_in[5],
+            _ => unreachable!(),
+        };
+        let padded_reg = [reg[0], 0, 0, 0, reg[1], reg[2]];
+        let sign_copy_needed = *field.start() == 0;
+        if sign_copy_needed {
+            // Treat sign bit specially by moving it out.
+            field = (*field.start() + 1)..=(*field.end());
+        }
+        // Copy bytes shifted right.
+        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+            memory_cell[memory_cell_cursor] = padded_reg[reg_cursor];
+        }
+        if sign_copy_needed {
+            // Copy sign bit.
+            memory_cell[0] = padded_reg[0];
+        }
         Ok(())
     }
 

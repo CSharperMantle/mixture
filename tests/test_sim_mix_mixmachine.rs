@@ -438,3 +438,121 @@ fn test_simple_move() {
     assert_eq!(mix.mem[1001][0..=5], [1, 3, 3, 3, 3, 3]);
     assert_eq!(mix.mem[1002][0..=5], [1, 3, 3, 3, 3, 3]);
 }
+
+#[test]
+fn test_simple_store_6b() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::StA)
+        .try_into()
+        .unwrap();
+    mix.mem[1] = Instruction::new(2001, 13, 0, Opcode::StA)
+        .try_into()
+        .unwrap();
+    mix.mem[2] = Instruction::new(2002, 45, 0, Opcode::StA)
+        .try_into()
+        .unwrap();
+    mix.mem[3] = Instruction::new(2003, 18, 0, Opcode::StA)
+        .try_into()
+        .unwrap();
+    mix.mem[4] = Instruction::new(2004, 19, 0, Opcode::StA)
+        .try_into()
+        .unwrap();
+    mix.mem[5] = Instruction::new(2005, 1, 0, Opcode::StA)
+        .try_into()
+        .unwrap();
+
+    mix.r_a.set(0..=5, &[1, 6, 7, 8, 9, 0]).unwrap();
+    mix.mem[2000].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2001].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2002].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2003].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2004].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2005].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2000][0..=5], [1, 6, 7, 8, 9, 0]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2001][0..=5], [0, 6, 7, 8, 9, 0]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2002][0..=5], [0, 1, 2, 3, 4, 0]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2003][0..=5], [0, 1, 0, 3, 4, 5]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2004][0..=5], [0, 1, 9, 0, 4, 5]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2005][0..=5], [1, 0, 2, 3, 4, 5]);
+}
+
+#[test]
+fn test_simple_store_3b() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::St1)
+        .try_into()
+        .unwrap();
+    mix.mem[1] = Instruction::new(2001, 13, 0, Opcode::St1)
+        .try_into()
+        .unwrap();
+    mix.mem[2] = Instruction::new(2002, 45, 0, Opcode::St1)
+        .try_into()
+        .unwrap();
+    mix.mem[3] = Instruction::new(2003, 18, 0, Opcode::St1)
+        .try_into()
+        .unwrap();
+    mix.mem[4] = Instruction::new(2004, 19, 0, Opcode::St1)
+        .try_into()
+        .unwrap();
+    mix.mem[5] = Instruction::new(2005, 1, 0, Opcode::St1)
+        .try_into()
+        .unwrap();
+
+    mix.r_in[0].set(0..=2, &[1, 6, 7]).unwrap();
+    mix.mem[2000].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2001].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2002].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2003].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2004].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2005].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2000][0..=5], [1, 0, 0, 0, 6, 7]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2001][0..=5], [0, 0, 0, 0, 6, 7]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2002][0..=5], [0, 1, 2, 3, 4, 7]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2003][0..=5], [0, 1, 7, 3, 4, 5]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2004][0..=5], [0, 1, 6, 7, 4, 5]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2005][0..=5], [1, 7, 2, 3, 4, 5]);
+}
