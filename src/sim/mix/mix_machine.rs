@@ -1,3 +1,4 @@
+use crate::sim::mix::instr::ToRangeInclusive;
 use crate::sim::mix::*;
 
 /// Error codes for the MIX machine.
@@ -59,12 +60,11 @@ impl MixMachine {
     /// Reset the machine.
     ///
     /// This method resets the machine to its initial state,
-    /// clearing the memory and registers.
+    /// clearing the registers.
     ///
     pub fn reset(&mut self) {
         self.pc = 0;
         self.toggle_overflow = false;
-        self.mem = mem::Mem::new();
         self.r_a = reg::GenericRegister::new();
         self.r_x = reg::GenericRegister::new();
         self.r_in = [reg::IndexRegister::new(); 6];
@@ -138,7 +138,7 @@ impl MixMachine {
             instr::Opcode::St6 => todo!(),
             instr::Opcode::StX => todo!(),
             instr::Opcode::StJ => todo!(),
-            instr::Opcode::StZ => todo!(),
+            instr::Opcode::StZ => self.handler_instr_store_zero(instr),
 
             instr::Opcode::Jbus => todo!(),
             instr::Opcode::Ioc => todo!(),
@@ -208,7 +208,7 @@ impl MixMachine {
 
     /// Handler for `LDA` and `LDX`.
     fn handler_instr_load_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        let mut field = instr.field_to_range_inclusive();
+        let mut field = instr.field.to_range_inclusive();
         // Obtain everything.
         let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
@@ -238,7 +238,7 @@ impl MixMachine {
 
     /// Handler for `LDAN` and `LDXN`.
     fn handler_instr_load_neg_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        let mut field = instr.field_to_range_inclusive();
+        let mut field = instr.field.to_range_inclusive();
         // Obtain everything.
         let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
@@ -272,7 +272,7 @@ impl MixMachine {
     /// and 5th bits of the original memory location. This prevents
     /// the said 'undefined behavior' from happening.
     fn handler_instr_load_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        let mut field = instr.field_to_range_inclusive();
+        let mut field = instr.field.to_range_inclusive();
         // Obtain everything.
         let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
@@ -318,7 +318,7 @@ impl MixMachine {
     /// and 5th bits of the original memory location. This prevents
     /// the said 'undefined behavior' from happening.
     fn handler_instr_load_neg_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        let mut field = instr.field_to_range_inclusive();
+        let mut field = instr.field.to_range_inclusive();
         // Obtain everything.
         let memory_cell = self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
@@ -450,6 +450,25 @@ impl MixMachine {
         } else {
             return Err(TrapCode::InvalidField);
         }
+    }
+
+    /// Handler for `STZ`.
+    fn handler_instr_store_zero(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
+        // Obtain everything.
+        let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        let field = instr.field.to_range_inclusive();
+        let memory_cell = &mut self.mem[addr];
+        let start = *field.start();
+        // Zero the memory cell.
+        for i in field {
+            memory_cell[i] = 0;
+        }
+        // Deal with signs.
+        if start == 0 {
+            memory_cell[0] = 1;
+        }
+
+        Ok(())
     }
 
     /// Trap handler for illegal instructions.

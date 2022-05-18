@@ -381,6 +381,38 @@ fn test_simple_special() {
     assert_eq!(mix.halted, true);
 }
 
+#[test]
+fn test_simple_store_zero() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::StZ)
+        .try_into()
+        .unwrap();
+    mix.mem[1] = Instruction::new(1001, 13, 0, Opcode::StZ)
+        .try_into()
+        .unwrap();
+    mix.mem[2] = Instruction::new(1002, 45, 0, Opcode::StZ)
+        .try_into()
+        .unwrap();
+
+    mix.mem[1000].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[1001].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[1002].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[1000][0..=5], [1, 0, 0, 0, 0, 0]);
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[1001][0..=5], [0, 0, 0, 0, 0, 0]);
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[1002][0..=5], [0, 1, 2, 3, 4, 0]);
+}
+
 // #[test]
 // fn test_simple_arith_add() {
 //     let mut mix = MixMachine::new();

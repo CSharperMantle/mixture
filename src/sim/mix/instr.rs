@@ -46,17 +46,6 @@ impl Instruction {
             opcode,
         }
     }
-
-    /// Decode `F` to a `std::ops::RangeInclusive<u8>`.
-    ///
-    /// The `F` part of an instruction may be interpreted as a
-    /// range. This range is encoded as `F <- 8L + R`.
-    ///
-    /// # Returns
-    /// * `std::ops::RangeInclusive<u8>` - The range of the field.
-    pub fn field_to_range_inclusive(&self) -> std::ops::RangeInclusive<usize> {
-        ((self.field / 8) as usize)..=((self.field % 8) as usize)
-    }
 }
 
 impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
@@ -502,4 +491,28 @@ pub enum Opcode {
     ///
     /// `CI <- rX(F) : V`
     CmpX = 63,
+}
+
+/// Used when converting a type to a `RangeInclusive<T>`.
+pub trait ToRangeInclusive<T> {
+    /// Convert some value to `std::ops::RangeInclusive<T>`.
+    fn to_range_inclusive(self) -> std::ops::RangeInclusive<T>;
+}
+
+impl ToRangeInclusive<usize> for u8 {
+    /// Convert `u8` to a `std::ops::RangeInclusive<usize>`
+    /// representing a `F` value.
+    ///
+    /// `F <- 8 * L + R`.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use mixture::sim::mix::instr::*;
+    ///
+    /// assert_eq!(1.to_range_inclusive(), 0..=1);
+    /// assert_eq!(13.to_range_inclusive(), 1..=5);
+    /// ```
+    fn to_range_inclusive(self) -> std::ops::RangeInclusive<usize> {
+        ((self / 8) as usize)..=((self % 8) as usize)
+    }
 }
