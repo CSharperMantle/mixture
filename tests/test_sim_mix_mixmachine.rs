@@ -405,44 +405,36 @@ fn test_simple_store_zero() {
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.mem[1000][0..=5], [1, 0, 0, 0, 0, 0]);
+
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.mem[1001][0..=5], [0, 0, 0, 0, 0, 0]);
+
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.mem[1002][0..=5], [0, 1, 2, 3, 4, 0]);
 }
 
-// #[test]
-// fn test_simple_arith_add() {
-//     let mut mix = MixMachine::new();
+#[test]
+fn test_simple_move() {
+    let mut mix = MixMachine::new();
+    mix.reset();
 
-//     mix.r_a.set(0..=5, &[1, 0, 1, 2, 3, 4]).unwrap();
+    mix.mem[0] = Instruction::new(1000, 3, 0, Opcode::Move)
+        .try_into()
+        .unwrap();
 
-//     mix.mem[0] = Instruction::new(1, 5, 0, Opcode::Add).try_into().unwrap();
-//     mix.mem[1].set(0..=5, &[1, 1, 1, 1, 1, 1]).unwrap();
+    mix.r_in[0].set(1..=2, &[0x03, 0xE7]).unwrap();
+    mix.mem[1000].set(0..=5, &[1, 1, 1, 1, 1, 1]).unwrap();
+    mix.mem[1001].set(0..=5, &[1, 2, 2, 2, 2, 2]).unwrap();
+    mix.mem[1002].set(0..=5, &[1, 3, 3, 3, 3, 3]).unwrap();
 
-//     mix.reset();
-//     mix.step();
+    mix.restart();
 
-//     assert_eq!(mix.halted, false);
-//     assert_eq!(mix.toggle_overflow, false);
-//     assert_eq!(mix.r_a[0..=5], [1, 1, 2, 3, 4, 5]);
-// }
-
-// #[test]
-// fn test_simple_arith_sub() {
-//     let mut mix = MixMachine::new();
-
-//     mix.r_a.set(0..=5, &[1, 0, 1, 2, 3, 4]).unwrap();
-
-//     mix.mem[0] = Instruction::new(1, 5, 0, Opcode::Sub).try_into().unwrap();
-//     mix.mem[1].set(0..=5, &[1, 0, 1, 1, 1, 1]).unwrap();
-
-//     mix.reset();
-//     mix.step();
-
-//     assert_eq!(mix.halted, false);
-//     assert_eq!(mix.toggle_overflow, false);
-//     assert_eq!(mix.r_a[0..=5], [1, 0, 0, 1, 2, 3]);
-// }
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[999][0..=5], [1, 1, 1, 1, 1, 1]);
+    assert_eq!(mix.mem[1000][0..=5], [1, 2, 2, 2, 2, 2]);
+    assert_eq!(mix.mem[1001][0..=5], [1, 3, 3, 3, 3, 3]);
+    assert_eq!(mix.mem[1002][0..=5], [1, 3, 3, 3, 3, 3]);
+}

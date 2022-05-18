@@ -109,7 +109,7 @@ impl MixMachine {
 
             instr::Opcode::Special => self.handler_instr_special(instr),
             instr::Opcode::Shift => todo!(),
-            instr::Opcode::Move => todo!(),
+            instr::Opcode::Move => self.handler_instr_move(instr),
 
             instr::Opcode::LdA => self.handler_instr_load_6b(instr),
             instr::Opcode::Ld1 => self.handler_instr_load_3b(instr),
@@ -466,6 +466,24 @@ impl MixMachine {
         // Deal with signs.
         if start == 0 {
             memory_cell[0] = 1;
+        }
+
+        Ok(())
+    }
+
+    /// Handler for `MOVE`.
+    fn handler_instr_move(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
+        // Obtain from address.
+        let from_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        // Obtain to address.
+        let to_addr = u16::from_be_bytes([self.r_in[0][1], self.r_in[0][2]]);
+        let num_words = instr.field;
+        // Move each word.
+        for i in 0..num_words {
+            let orig_mem = self.mem[from_addr + i as u16];
+            self.mem[to_addr + i as u16]
+                .set(0..=5, &orig_mem[0..=5])
+                .map_err(|_| TrapCode::MemAccessError)?;
         }
 
         Ok(())
