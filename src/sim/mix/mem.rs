@@ -47,6 +47,46 @@ impl<const N: usize, const P: bool> Word<N, P> {
         w
     }
 
+    /// Create a new word from an `i64`.
+    ///
+    /// The function stores big-endian representation of the
+    /// given `i64` shifted to right. It means that if we have
+    /// a `Word<6, false>` only 5 bytes starting from right will
+    /// be stored. The sign byte is always `1` if `P` is `true`.
+    ///
+    /// # Arguments
+    /// * `value` - The value to initialize the word with.
+    ///
+    /// # Returns
+    /// * `Self` - The initialized word.
+    /// * `bool` - `true` if the given `i64` is too large, `false` otherwise.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mixture::sim::mix::mem::*;
+    ///
+    /// let v = -0x0102030405060708;
+    ///
+    /// let (word, overflow) = Word::<3, false>::from_i64(v);
+    /// assert_eq!(overflow, true);
+    /// assert_eq!(word[0..=2], [1, 0x07, 0x08]);
+    /// ```
+    pub fn from_i64(value: i64) -> (Self, bool) {
+        let mut word = Self::new();
+        let bytes = value.abs().to_be_bytes();
+        // See if we have something not copied.
+        // Bytes marked 'dirty' have not been copied yet.
+        let mut bytes_dirty = bytes.map(|byte| byte != 0);
+        word[0] = if !P && value < 0 { 1 } else { 0 };
+        for (word_i, bytes_i) in (1..N).rev().zip((0..8).rev()) {
+            word[word_i] = bytes[bytes_i];
+            // We have copied the byte; make it clean.
+            bytes_dirty[bytes_i] = false;
+        }
+        // If we have left some data behind, we have overflowed.
+        (word, bytes_dirty.iter().any(|&dirty| dirty))
+    }
+
     /// Set the content of the word.
     ///
     /// # Arguments
@@ -62,14 +102,9 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// ```rust
     /// use mixture::sim::mix::mem::*;
     ///
-    /// let mut reg = Word::<6, false>::new();
+    /// let mut word = Word::<6, false>::new();
     ///
-    /// assert_eq!(reg.set(0..=5, &[0, 1, 2, 3, 4, 5]), Ok(()));
-    ///
-    /// assert_eq!(reg.set(8..=0, &[]), Err(()));
-    /// assert_eq!(reg.set(0..=100, &[]), Err(()));
-    /// assert_eq!(reg.set(0..=2, &[]), Err(()));
-    /// assert_eq!(reg.set(0..=2, &[1, 2, 3, 4, 5, 6, 7]), Err(()));
+    /// assert_eq!(word.set(0..=5, &[0, 1, 2, 3, 4, 5]), Ok(()));
     /// ```
     pub fn set(&mut self, range: std::ops::RangeInclusive<usize>, value: &[u8]) -> Result<(), ()> {
         if range.is_empty() {
@@ -93,20 +128,77 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// Check if the word is positive.
     ///
     /// # Returns
-    /// * `true` - If the word is positive.
-    /// * `false` - If the word is negative.
+    /// * `true` - If the word is positive, `word[0] == 0`.
+    /// * `false` - If the word is negative, `word[0] == 1`.
     ///
     /// # Example
     /// ```rust
     /// use mixture::sim::mix::mem::*;
     ///
-    /// let mut reg = Word::<6, false>::new();
-    /// reg.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    /// let mut word = Word::<6, false>::new();
+    /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
     ///
-    /// assert_eq!(reg.is_positive(), false);
+    /// assert_eq!(word.is_positive(), true);
     /// ```
     pub fn is_positive(&self) -> bool {
-        self.data[0] == 1
+        self.data[0] == 0
+    }
+
+    /// Toggle the sign of the word.
+    ///
+    /// This method has no effect if the word is always positive,
+    /// i.e. `P == true`.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mixture::sim::mix::mem::*;
+    ///
+    /// let mut word = Word::<6, false>::new();
+    /// word[0] = 0;
+    ///
+    /// word.toggle_sign();
+    /// assert_eq!(word[0], 1);
+    /// word.toggle_sign();
+    /// assert_eq!(word[0], 0);
+    /// ```
+    pub fn toggle_sign(&mut self) {
+        self.data[0] = if !P && self.is_positive() { 1 } else { 0 };
+    }
+
+    /// Convert the word to an `i64`.
+    ///
+    /// This method squashes big-endian representation of the bytes
+    /// into a single quantity, ignoring too significant bytes.
+    ///
+    /// # Returns
+    /// * `i64` - The converted value.
+    /// * `bool` - `true` if the word is too large, `false` otherwise.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mixture::sim::mix::mem::*;
+    ///
+    /// let mut word = Word::<6, false>::new();
+    /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    ///
+    /// let (value, overflow) = word.to_i64();
+    /// assert_eq!(overflow, false);
+    /// assert_eq!(value, 0x0102030405);
+    /// ```
+    pub fn to_i64(&self) -> (i64, bool) {
+        let sign = if self.is_positive() { 1 } else { -1 };
+        let mut bytes: [u8; 8] = [0; 8];
+        // Bytes marked 'dirty' have not been copied yet.
+        let mut data_bytes_dirty = self.data.map(|byte| byte != 0);
+        // Sign byte is always dealt properly.
+        data_bytes_dirty[0] = false;
+        for (bytes_i, data_i) in (0..8).rev().zip((1..N).rev()) {
+            bytes[bytes_i] = self.data[data_i];
+            // We have copied the byte; make it clean.
+            data_bytes_dirty[data_i] = false;
+        }
+        let value = i64::from_be_bytes(bytes);
+        (value * sign, data_bytes_dirty.iter().any(|&dirty| dirty))
     }
 }
 
@@ -151,7 +243,7 @@ impl<const N: usize, const P: bool> std::ops::IndexMut<usize> for Word<N, P> {
 }
 
 impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
-    type Error = &'static str;
+    type Error = ();
 
     /// Convert an `Instruction` to a `Word<6, false>`.
     ///
@@ -174,17 +266,11 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
     /// ```
     fn try_from(source: instr::Instruction) -> Result<Self, Self::Error> {
         let mut word: Word<6, false> = Word::new();
-        let sign = if source.addr < 0 { 1u8 } else { 0u8 };
-        word.set(0..=0, &[sign])
-            .map_err(|_| "Failed to set sign bit")?;
-        word.set(1..=2, &(source.addr.abs() as u16).to_be_bytes())
-            .map_err(|_| "Failed to set address bytes")?;
-        word.set(3..=3, &[source.index])
-            .map_err(|_| "Failed to set index byte")?;
-        word.set(4..=4, &[source.field as u8])
-            .map_err(|_| "Failed to set field byte")?;
-        word.set(5..=5, &[source.opcode as u8])
-            .map_err(|_| "Failed to set opcode bytes")?;
+        word[0] = if source.addr < 0 { 1u8 } else { 0u8 };
+        word.set(1..=2, &(source.addr.abs() as u16).to_be_bytes())?;
+        word[3] = source.index;
+        word[4] = source.field;
+        word[5] = source.opcode as u8;
         Ok(word)
     }
 }

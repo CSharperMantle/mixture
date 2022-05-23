@@ -157,14 +157,14 @@ impl MixMachine {
             instr::Opcode::J6 => todo!(),
             instr::Opcode::JX => todo!(),
 
-            instr::Opcode::ModifyA => todo!(),
+            instr::Opcode::ModifyA => self.handler_instr_modify_6b(instr),
             instr::Opcode::Modify1 => todo!(),
             instr::Opcode::Modify2 => todo!(),
             instr::Opcode::Modify3 => todo!(),
             instr::Opcode::Modify4 => todo!(),
             instr::Opcode::Modify5 => todo!(),
             instr::Opcode::Modify6 => todo!(),
-            instr::Opcode::ModifyX => todo!(),
+            instr::Opcode::ModifyX => self.handler_instr_modify_6b(instr),
 
             instr::Opcode::CmpA => todo!(),
             instr::Opcode::Cmp1 => todo!(),
@@ -181,22 +181,17 @@ impl MixMachine {
 
     /// Get indexed address.
     fn helper_get_eff_addr(&self, addr: i16, index: u8) -> Result<u16, TrapCode> {
-        let eff_addr = if index == 0 {
+        if index == 0 {
             // Direct addressing.
-            addr
+            addr.try_into().map_err(|_| TrapCode::InvalidAddress)
         } else {
             // Indirect addressing.
-            let index_sign = if self.r_in[index as usize - 1].is_positive() {
-                1
-            } else {
-                -1
-            };
-            let index_value = &self.r_in[index as usize - 1];
-
-            index_sign * i16::from_be_bytes([index_value[1], index_value[2]]) + addr
-        };
-
-        eff_addr.try_into().map_err(|_| TrapCode::InvalidAddress)
+            let reg = self.r_in[index as usize - 1];
+            let (reg_val, _) = reg.to_i64();
+            (reg_val + addr as i64)
+                .try_into()
+                .map_err(|_| TrapCode::InvalidAddress)
+        }
     }
 
     /// Handler for `NOP`.
@@ -262,7 +257,7 @@ impl MixMachine {
         }
         // Copy negated sign byte if needed.
         if sign_copy_needed {
-            reg[0] = if memory_cell[0] == 0 { 1 } else { 0 };
+            reg[0] = if memory_cell.is_positive() { 1 } else { 0 };
         }
         Ok(())
     }
@@ -349,7 +344,7 @@ impl MixMachine {
         }
         // Copy negated sign byte if needed.
         if sign_copy_needed {
-            temp[0] = if memory_cell[0] == 0 { 1 } else { 0 };
+            temp[0] = if memory_cell.is_positive() { 1 } else { 0 };
         }
         // Fill back the reg.
         reg[0] = temp[0];
@@ -401,42 +396,35 @@ impl MixMachine {
             // NUM instruction
             let a_content = &self.r_a[1..=5];
             let x_content = &self.r_x[1..=5];
-            let mut result: u32 = 0;
+            let mut result: i64 = 0;
             // For each byte, we extract its 1st position,
             // and push it to `result`.
             for byte in a_content.iter().chain(x_content.iter()) {
                 let digit = *byte % 10;
-                result = result * 10 + digit as u32;
+                result = result * 10 + digit as i64;
             }
             // Rebuild a word of 4 bytes.
-            let result_bytes = result.to_be_bytes();
+            let (result_word, _) = mem::Word::<6, false>::from_i64(result);
             self.r_a
-                .set(2..=5, &result_bytes)
+                .set(0..=5, &result_word[0..=5])
                 .map_err(|_| TrapCode::MemAccessError)?;
             Ok(())
         } else if instr.field == 1 {
             // CHAR instruction
-            let a_content = &self.r_a[2..=5];
             // Obtain original number.
-            let mut source =
-                u32::from_be_bytes([a_content[0], a_content[1], a_content[2], a_content[3]]);
-            let mut cursor = 9;
-            let mut bytes: [u8; 10] = [0; 10];
-            // Extract each digit of `source` and pack them to a
-            // 10's multiplier.
-            while source > 0 {
-                let digit = source % 10;
-                source /= 10;
-                let byte = (30 + digit) as u8;
-                bytes[cursor] = byte;
-                cursor -= 1;
-            }
-            // Store them back.
-            for i in 0..5 {
-                self.r_a[i + 1] = bytes[i];
-            }
-            for i in 5..10 {
-                self.r_x[i - 5 + 1] = bytes[i];
+            let (source, _) = self.r_a.to_i64();
+            let digits = source
+                .abs()
+                .to_string()
+                .chars()
+                .map(|c| c.to_digit(10).unwrap())
+                .collect::<Vec<u32>>();
+            for (reg_i, digit) in (0..10).rev().zip(digits.iter().rev()) {
+                if reg_i >= 5 {
+                    self.r_x[reg_i - 5 + 1] = *digit as u8 + 30;
+                } else {
+                    self.r_a[reg_i + 1] = *digit as u8 + 30;
+                }
             }
             Ok(())
         } else if instr.field == 2 {
@@ -556,13 +544,23 @@ impl MixMachine {
         };
 
         if instr.field == 0 || instr.field == 1 {
+            // INCx and DECx
             let memory_cell = &self.mem[addr];
-            let orig_sign = if reg[0] == 1 { 1 } else { -1 };
-            let reg_val = &reg[2..=5];
-            let orig_val = i32::from_be_bytes([reg_val[0], reg_val[1], reg_val[2], reg_val[3]]);
-        }
 
-        todo!();
+            todo!()
+        } else if instr.field == 2 || instr.field == 3 {
+            // ENTx and ENNx
+            let (new_word, _) = mem::Word::<6, false>::from_i64(addr as i64);
+            // Copy new word into reg.
+            reg.set(0..=5, &new_word[0..=5])
+                .map_err(|_| TrapCode::MemAccessError)?;
+            if instr.field == 3 {
+                reg.toggle_sign();
+            }
+            Ok(())
+        } else {
+            Err(TrapCode::InvalidField)
+        }
     }
 
     /// Trap handler for illegal instructions.

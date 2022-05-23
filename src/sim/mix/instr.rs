@@ -75,7 +75,7 @@ impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
     /// assert_eq!(instr.addr, 2000);
     /// ```
     fn try_from(source: mem::Word<6, false>) -> Result<Self, Self::Error> {
-        let sign = if source[0] == 0 { 1 } else { -1 };
+        let sign = if source.is_positive() { 1 } else { -1 };
         let addr = sign * i16::from_be_bytes([source[1], source[2]]);
         let opcode = Opcode::try_from(source[5..=5][0]).map_err(|_| "Invalid opcode")?;
         Ok(Instruction {
