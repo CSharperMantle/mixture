@@ -158,12 +158,12 @@ impl MixMachine {
             instr::Opcode::JX => todo!(),
 
             instr::Opcode::ModifyA => self.handler_instr_modify_6b(instr),
-            instr::Opcode::Modify1 => todo!(),
-            instr::Opcode::Modify2 => todo!(),
-            instr::Opcode::Modify3 => todo!(),
-            instr::Opcode::Modify4 => todo!(),
-            instr::Opcode::Modify5 => todo!(),
-            instr::Opcode::Modify6 => todo!(),
+            instr::Opcode::Modify1 => self.handler_instr_modify_3b(instr),
+            instr::Opcode::Modify2 => self.handler_instr_modify_3b(instr),
+            instr::Opcode::Modify3 => self.handler_instr_modify_3b(instr),
+            instr::Opcode::Modify4 => self.handler_instr_modify_3b(instr),
+            instr::Opcode::Modify5 => self.handler_instr_modify_3b(instr),
+            instr::Opcode::Modify6 => self.handler_instr_modify_3b(instr),
             instr::Opcode::ModifyX => self.handler_instr_modify_6b(instr),
 
             instr::Opcode::CmpA => todo!(),
@@ -183,14 +183,14 @@ impl MixMachine {
     fn helper_get_eff_addr(&self, addr: i16, index: u8) -> Result<u16, TrapCode> {
         if index == 0 {
             // Direct addressing.
-            addr.try_into().map_err(|_| TrapCode::InvalidAddress)
+            return addr.try_into().map_err(|_| TrapCode::InvalidAddress);
         } else {
             // Indirect addressing.
             let reg = self.r_in[index as usize - 1];
             let (reg_val, _) = reg.to_i64();
-            (reg_val + addr as i64)
+            return (reg_val + addr as i64)
                 .try_into()
-                .map_err(|_| TrapCode::InvalidAddress)
+                .map_err(|_| TrapCode::InvalidAddress);
         }
     }
 
@@ -408,7 +408,7 @@ impl MixMachine {
             self.r_a
                 .set(0..=5, &result_word[0..=5])
                 .map_err(|_| TrapCode::MemAccessError)?;
-            Ok(())
+            return Ok(());
         } else if instr.field == 1 {
             // CHAR instruction
             // Obtain original number.
@@ -426,13 +426,13 @@ impl MixMachine {
                     self.r_a[reg_i + 1] = *digit as u8 + 30;
                 }
             }
-            Ok(())
+            return Ok(());
         } else if instr.field == 2 {
             // HLT instruction
             // Making it just like NOP if we restart the
             // machine later.
             self.halted = true;
-            Ok(())
+            return Ok(());
         } else {
             return Err(TrapCode::InvalidField);
         }
@@ -535,7 +535,6 @@ impl MixMachine {
     /// Handler for `INCA`, `DECA`, `ENTA`, `ENNA`, `INCX`,
     /// `DECX`, `ENTX` and `ENNX`.
     fn handler_instr_modify_6b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
-        // TODO: Finish me!
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         let reg = match instr.opcode {
             instr::Opcode::ModifyA => &mut self.r_a,
@@ -545,9 +544,18 @@ impl MixMachine {
 
         if instr.field == 0 || instr.field == 1 {
             // INCx and DECx
-            let memory_cell = &self.mem[addr];
-
-            todo!()
+            // Add or subtract one.
+            let addr = addr as i64;
+            let offset = if instr.field == 0 { addr } else { -addr };
+            // Convert to i64.
+            let (value, _) = reg.to_i64();
+            // Convert back modified value.
+            let (new_word, overflow) = mem::Word::<6, false>::from_i64(value + offset);
+            reg.set(0..=5, &new_word[0..=5])
+                .map_err(|_| TrapCode::MemAccessError)?;
+            // Should we overflow?
+            self.toggle_overflow = overflow;
+            return Ok(());
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
             let (new_word, _) = mem::Word::<6, false>::from_i64(addr as i64);
@@ -557,9 +565,51 @@ impl MixMachine {
             if instr.field == 3 {
                 reg.toggle_sign();
             }
-            Ok(())
+            return Ok(());
         } else {
-            Err(TrapCode::InvalidField)
+            return Err(TrapCode::InvalidField);
+        }
+    }
+
+    /// Handler for `INC1-6`, `DEC1-6`, `ENT1-6`, `ENN1-6`.
+    fn handler_instr_modify_3b(&mut self, instr: instr::Instruction) -> Result<(), TrapCode> {
+        let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        let reg = match instr.opcode {
+            instr::Opcode::Modify1 => &mut self.r_in[0],
+            instr::Opcode::Modify2 => &mut self.r_in[1],
+            instr::Opcode::Modify3 => &mut self.r_in[2],
+            instr::Opcode::Modify4 => &mut self.r_in[3],
+            instr::Opcode::Modify5 => &mut self.r_in[4],
+            instr::Opcode::Modify6 => &mut self.r_in[5],
+            _ => unreachable!(),
+        };
+
+        if instr.field == 0 || instr.field == 1 {
+            // INCx and DECx
+            // Add or subtract one.
+            let addr = addr as i64;
+            let offset = if instr.field == 0 { addr } else { -addr };
+            // Convert to i64.
+            let (value, _) = reg.to_i64();
+            // Convert back modified value.
+            let (new_word, overflow) = mem::Word::<3, false>::from_i64(value + offset);
+            reg.set(0..=2, &new_word[0..=2])
+                .map_err(|_| TrapCode::MemAccessError)?;
+            // Should we overflow?
+            self.toggle_overflow = overflow;
+            return Ok(());
+        } else if instr.field == 2 || instr.field == 3 {
+            // ENTx and ENNx
+            let (new_word, _) = mem::Word::<3, false>::from_i64(addr as i64);
+            // Copy new word into reg.
+            reg.set(0..=2, &new_word[0..=2])
+                .map_err(|_| TrapCode::MemAccessError)?;
+            if instr.field == 3 {
+                reg.toggle_sign();
+            }
+            return Ok(());
+        } else {
+            return Err(TrapCode::InvalidField);
         }
     }
 
