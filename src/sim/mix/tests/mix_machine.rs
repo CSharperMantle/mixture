@@ -23,6 +23,20 @@ fn test_reset_restart() {
 }
 
 #[test]
+fn test_simple_nop() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Nop).try_into().unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 1);
+}
+
+#[test]
 fn test_simple_load_6b() {
     let mut mix = MixMachine::new();
     mix.reset();
@@ -749,4 +763,40 @@ fn test_simple_add_sub() {
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.r_a[0..=4], [0, 0x02, 0xFE, 0, 0x95]);
+}
+
+#[test]
+fn test_simple_mul() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1000, 9, 0, Opcode::Mul)
+        .try_into()
+        .unwrap();
+
+    mix.mem[1000].set(0..=5, &[0, 2, 0, 0, 0, 0]).unwrap();
+    mix.r_a.set(0..=5, &[1, 0, 0, 0, 0, 0x70]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[0..=5], [1, 0, 0, 0, 0, 0]);
+    assert_eq!(mix.r_x[0..=5], [1, 0, 0, 0, 0, 0xE0]);
+
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Mul)
+        .try_into()
+        .unwrap();
+
+    mix.mem[1000].set(0..=5, &[0, 1, 1, 1, 1, 1]).unwrap();
+    mix.r_a.set(0..=5, &[0, 1, 1, 1, 1, 1]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[0..=5], [0, 0, 1, 2, 3, 4]);
+    assert_eq!(mix.r_x[0..=5], [0, 5, 4, 3, 2, 1]);
 }

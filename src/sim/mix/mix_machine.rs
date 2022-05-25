@@ -106,7 +106,7 @@ impl MixMachine {
 
             instr::Opcode::Add => self.handler_instr_add_sub(&instr),
             instr::Opcode::Sub => self.handler_instr_add_sub(&instr),
-            instr::Opcode::Mul => todo!(),
+            instr::Opcode::Mul => self.handler_instr_mul(&instr),
             instr::Opcode::Div => todo!(),
 
             instr::Opcode::Special => self.handler_instr_special(&instr),
@@ -524,7 +524,9 @@ impl MixMachine {
             reg.set(0..=5, &new_word[0..=5])
                 .map_err(|_| TrapCode::MemAccessError)?;
             // Should we overflow?
-            self.overflow = overflow;
+            if overflow {
+                self.overflow = overflow;
+            }
             return Ok(());
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
@@ -566,7 +568,9 @@ impl MixMachine {
             reg.set(0..=2, &new_word[0..=2])
                 .map_err(|_| TrapCode::MemAccessError)?;
             // Should we overflow?
-            self.overflow = overflow;
+            if overflow {
+                self.overflow = overflow;
+            }
             return Ok(());
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
@@ -589,7 +593,7 @@ impl MixMachine {
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let (field, has_sign) = instr.field.to_range_inclusive_signless();
         let (orig_value, _) = self.r_a.to_i64();
-        let target_sign = if has_sign && target_mem[0] == 1 {
+        let target_sign = if has_sign && !target_mem.is_positive() {
             -1
         } else {
             1
@@ -606,7 +610,7 @@ impl MixMachine {
             instr::Opcode::Sub => -1,
             _ => unreachable!(),
         };
-        // Build a value form byte array.
+        // Build a value from byte array.
         let target_value = i64::from_be_bytes([
             0,
             0,
@@ -625,14 +629,65 @@ impl MixMachine {
         self.r_a
             .set(0..=5, &new_word[0..=5])
             .map_err(|_| TrapCode::MemAccessError)?;
-        self.overflow = overflow;
+        // Should we overflow?
+        if overflow {
+            self.overflow = overflow;
+        }
 
         Ok(())
     }
 
     /// Handler for `MUL`.
     fn handler_instr_mul(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
-        todo!()
+        // Obtain V from memory.
+        let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let (field, has_sign) = instr.field.to_range_inclusive_signless();
+        let (orig_value, _) = self.r_a.to_i64();
+        let target_sign = if has_sign && !target_mem.is_positive() {
+            -1
+        } else {
+            1
+        };
+        // Extract fields as an array of bytes.
+        let target_mem_fields = &target_mem[field];
+        let mut target_bytes: [u8; 5] = [0; 5];
+        for (target_bytes_i, mem_field) in (0..5).rev().zip(target_mem_fields.iter().rev()) {
+            target_bytes[target_bytes_i] = *mem_field;
+        }
+        // Build a value from byte array.
+        let target_value = i64::from_be_bytes([
+            0,
+            0,
+            0,
+            target_bytes[0],
+            target_bytes[1],
+            target_bytes[2],
+            target_bytes[3],
+            target_bytes[4],
+        ]) * target_sign;
+        // Copy value into registers.
+        let new_val = orig_value as i128 * target_value as i128;
+        let new_val_bytes = new_val.abs().to_be_bytes();
+        let mut new_val_bytes_dirty = new_val_bytes.map(|b| b != 0);
+        for (reg_i, byte_i) in (0..10).rev().zip((0..16).rev()) {
+            let byte = new_val_bytes[byte_i];
+            if reg_i >= 5 {
+                self.r_x[reg_i - 5 + 1] = byte;
+            } else {
+                self.r_a[reg_i + 1] = byte;
+            }
+            new_val_bytes_dirty[byte_i] = false;
+        }
+        // Treat sign.
+        let new_sign = if new_val < 0 { 1 } else { 0 };
+        self.r_a[0] = new_sign;
+        self.r_x[0] = new_sign;
+        // Should we overflow?
+        let overflow = new_val_bytes_dirty.iter().any(|&b| b);
+        if overflow {
+            self.overflow = overflow;
+        }
+        Ok(())
     }
 
     /// Trap handler for illegal instructions.
