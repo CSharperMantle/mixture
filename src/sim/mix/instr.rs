@@ -497,6 +497,10 @@ pub enum Opcode {
 pub trait ToRangeInclusive<T> {
     /// Convert some value to `std::ops::RangeInclusive<T>`.
     fn to_range_inclusive(self) -> std::ops::RangeInclusive<T>;
+
+    /// Convert some value to a `std::ops::RangeInclusive<usize>`, but
+    /// moving sign byte from range if necessary.
+    fn to_range_inclusive_signless(self) -> (std::ops::RangeInclusive<T>, bool);
 }
 
 impl ToRangeInclusive<usize> for u8 {
@@ -505,7 +509,10 @@ impl ToRangeInclusive<usize> for u8 {
     ///
     /// `F <- 8 * L + R`.
     ///
-    /// # Examples
+    /// # Returns
+    /// * `std::ops::RangeInclusive<usize>`
+    /// 
+    /// # Example
     /// ```rust
     /// use mixture::sim::mix::instr::*;
     ///
@@ -514,5 +521,26 @@ impl ToRangeInclusive<usize> for u8 {
     /// ```
     fn to_range_inclusive(self) -> std::ops::RangeInclusive<usize> {
         ((self / 8) as usize)..=((self % 8) as usize)
+    }
+
+    /// Convert `u8` to a `std::ops::RangeInclusive<usize>`, but moving
+    /// out 0th byte from range if necessary.
+    /// 
+    /// # Example
+    /// ```rust
+    /// use mixture::sim::mix::instr::*;
+    ///
+    /// assert_eq!(1.to_range_inclusive_signless(), (1..=1, true));
+    /// assert_eq!(13.to_range_inclusive_signless(), (1..=5, false));
+    /// ```
+    fn to_range_inclusive_signless(self) -> (std::ops::RangeInclusive<usize>, bool) {
+        let orig_range = self.to_range_inclusive();
+        let has_sign = *orig_range.start() == 0;
+        let new_start = if has_sign {
+            *orig_range.start() + 1
+        } else {
+            *orig_range.start()
+        };
+        (new_start..=*orig_range.end(), has_sign)
     }
 }

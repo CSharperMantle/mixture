@@ -20,3 +20,15 @@ fn test_instruction_into() {
     let word: Word<6, false> = instr.try_into().unwrap();
     assert_eq!(word[0..=5], [0, 0x07, 0xD0, 0x02, 0x03, 0x08]);
 }
+
+#[test]
+fn test_field_into_range_inclusive() {
+    assert_eq!(1.to_range_inclusive(), 0..=1);
+    assert_eq!(13.to_range_inclusive(), 1..=5);
+}
+
+#[test]
+fn test_field_into_range_inclusive_signless() {
+    assert_eq!(1.to_range_inclusive_signless(), (1..=1, true));
+    assert_eq!(13.to_range_inclusive_signless(), (1..=5, false));
+}

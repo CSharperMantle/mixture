@@ -209,7 +209,7 @@ impl MixMachine {
     /// Handler for `LDA` and `LDX`.
     fn handler_instr_load_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
         // Obtain everything.
-        let mut field = instr.field.to_range_inclusive();
+        let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::LdA => &mut self.r_a,
@@ -219,12 +219,6 @@ impl MixMachine {
         // Zero reg before copying. Handle 'understood' positive sign too.
         reg.set(0..=5, &[1, 0, 0, 0, 0, 0])
             .map_err(|_| TrapCode::MemAccessError)?;
-        // Do we need to update the sign byte?
-        let sign_copy_needed = *field.start() == 0;
-        if sign_copy_needed {
-            // Treat sign bit specially by moving it out.
-            field = (*field.start() + 1)..=(*field.end());
-        }
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
             reg[reg_cursor] = memory_cell[memory_cell_cursor];
@@ -239,7 +233,7 @@ impl MixMachine {
     /// Handler for `LDAN` and `LDXN`.
     fn handler_instr_load_neg_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
         // Obtain everything.
-        let mut field = instr.field.to_range_inclusive();
+        let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::LdAN => &mut self.r_a,
@@ -249,12 +243,6 @@ impl MixMachine {
         // Zero reg before copying. Handle 'understood' negative sign.
         reg.set(0..=5, &[0, 0, 0, 0, 0, 0])
             .map_err(|_| TrapCode::MemAccessError)?;
-        // Do we need to update the sign byte?
-        let sign_copy_needed = *field.start() == 0;
-        if sign_copy_needed {
-            // Treat sign bit specially by moving it out.
-            field = (*field.start() + 1)..=(*field.end());
-        }
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
             reg[reg_cursor] = memory_cell[memory_cell_cursor];
@@ -273,7 +261,7 @@ impl MixMachine {
     /// the said 'undefined behavior' from happening.
     fn handler_instr_load_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
         // Obtain everything.
-        let mut field = instr.field.to_range_inclusive();
+        let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::Ld1 => &mut self.r_in[1],
@@ -290,12 +278,6 @@ impl MixMachine {
         let mut temp = mem::Word::<6, false>::new();
         temp.set(0..=2, &[1, 0, 0])
             .map_err(|_| TrapCode::MemAccessError)?;
-        // Do we need to update the sign byte?
-        let sign_copy_needed = *field.start() == 0;
-        if sign_copy_needed {
-            // Treat sign bit specially by moving it out.
-            field = (*field.start() + 1)..=(*field.end());
-        }
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
             temp[reg_cursor] = memory_cell[memory_cell_cursor];
@@ -318,7 +300,7 @@ impl MixMachine {
     /// the said 'undefined behavior' from happening.
     fn handler_instr_load_neg_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
         // Obtain everything.
-        let mut field = instr.field.to_range_inclusive();
+        let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             instr::Opcode::Ld1N => &mut self.r_in[1],
@@ -335,12 +317,6 @@ impl MixMachine {
         let mut temp = mem::Word::<6, false>::new();
         temp.set(0..=2, &[0, 0, 0])
             .map_err(|_| TrapCode::MemAccessError)?;
-        // Do we need to update the sign byte?
-        let sign_copy_needed = *field.start() == 0;
-        if sign_copy_needed {
-            // Treat sign bit specially by moving it out.
-            field = (*field.start() + 1)..=(*field.end());
-        }
 
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
@@ -480,7 +456,7 @@ impl MixMachine {
     /// Handler for `STA` and `STX`.
     fn handler_instr_store_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
         // Obtain everything.
-        let mut field = instr.field.to_range_inclusive();
+        let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         let memory_cell = &mut self.mem[addr];
         let reg = match instr.opcode {
@@ -488,11 +464,6 @@ impl MixMachine {
             instr::Opcode::StX => &self.r_x,
             _ => unreachable!(),
         };
-        let sign_copy_needed = *field.start() == 0;
-        if sign_copy_needed {
-            // Treat sign bit specially by moving it out.
-            field = (*field.start() + 1)..=(*field.end());
-        }
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
             memory_cell[memory_cell_cursor] = reg[reg_cursor];
@@ -507,7 +478,7 @@ impl MixMachine {
     /// Handler for `ST1-6`.
     fn handler_instr_store_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
         // Obtain everything.
-        let mut field = instr.field.to_range_inclusive();
+        let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         let memory_cell = &mut self.mem[addr];
         let reg = match instr.opcode {
@@ -520,11 +491,6 @@ impl MixMachine {
             _ => unreachable!(),
         };
         let padded_reg = [reg[0], 0, 0, 0, reg[1], reg[2]];
-        let sign_copy_needed = *field.start() == 0;
-        if sign_copy_needed {
-            // Treat sign bit specially by moving it out.
-            field = (*field.start() + 1)..=(*field.end());
-        }
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
             memory_cell[memory_cell_cursor] = padded_reg[reg_cursor];
@@ -621,16 +587,13 @@ impl MixMachine {
     fn handler_instr_add_sub(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let mut field = instr.field.to_range_inclusive();
+        let (field, has_sign) = instr.field.to_range_inclusive_signless();
         let (orig_value, _) = self.r_a.to_i64();
-        let mut target_sign = 1;
-        if *field.start() == 0 {
-            // Treat sign bit specially by moving it out.
-            field = (*field.start() + 1)..=(*field.end());
-            if target_mem[0] == 1 {
-                target_sign = -1;
-            }
-        }
+        let target_sign = if has_sign && target_mem[0] == 1 {
+            -1
+        } else {
+            1
+        };
         // Extract fields as an array of bytes.
         let target_mem_fields = &target_mem[field];
         let mut target_bytes: [u8; 5] = [0; 5];
@@ -665,6 +628,11 @@ impl MixMachine {
         self.overflow = overflow;
 
         Ok(())
+    }
+
+    /// Handler for `MUL`.
+    fn handler_instr_mul(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+        todo!()
     }
 
     /// Trap handler for illegal instructions.
