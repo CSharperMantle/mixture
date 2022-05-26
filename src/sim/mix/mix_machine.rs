@@ -591,37 +591,15 @@ impl MixMachine {
     fn handler_instr_add_sub(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let (field, has_sign) = instr.field.to_range_inclusive_signless();
         let (orig_value, _) = self.r_a.to_i64();
-        let target_sign = if has_sign && !target_mem.is_positive() {
-            -1
-        } else {
-            1
-        };
-        // Extract fields as an array of bytes.
-        let target_mem_fields = &target_mem[field];
-        let mut target_bytes: [u8; 5] = [0; 5];
-        for (target_bytes_i, mem_field) in (0..5).rev().zip(target_mem_fields.iter().rev()) {
-            target_bytes[target_bytes_i] = *mem_field;
-        }
         // Are we adding or subtracting?
         let coefficient = match instr.opcode {
             instr::Opcode::Add => 1,
             instr::Opcode::Sub => -1,
             _ => unreachable!(),
         };
-        // Build a value from byte array.
-        let target_value = i64::from_be_bytes([
-            0,
-            0,
-            0,
-            target_bytes[0],
-            target_bytes[1],
-            target_bytes[2],
-            target_bytes[3],
-            target_bytes[4],
-        ]) * target_sign
-            * coefficient;
+        let target_value =
+            target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 * coefficient;
         // Calculate and pack new value.
         let new_value = orig_value + target_value;
         let (new_word, overflow) = mem::Word::<6, false>::from_i64(new_value);
@@ -641,30 +619,8 @@ impl MixMachine {
     fn handler_instr_mul(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let (field, has_sign) = instr.field.to_range_inclusive_signless();
         let (orig_value, _) = self.r_a.to_i64();
-        let target_sign = if has_sign && !target_mem.is_positive() {
-            -1
-        } else {
-            1
-        };
-        // Extract fields as an array of bytes.
-        let target_mem_fields = &target_mem[field];
-        let mut target_bytes: [u8; 5] = [0; 5];
-        for (target_bytes_i, mem_field) in (0..5).rev().zip(target_mem_fields.iter().rev()) {
-            target_bytes[target_bytes_i] = *mem_field;
-        }
-        // Build a value from byte array.
-        let target_value = i64::from_be_bytes([
-            0,
-            0,
-            0,
-            target_bytes[0],
-            target_bytes[1],
-            target_bytes[2],
-            target_bytes[3],
-            target_bytes[4],
-        ]) * target_sign;
+        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
         // Copy value into registers.
         let new_val = orig_value as i128 * target_value as i128;
         let new_val_bytes = new_val.abs().to_be_bytes();
@@ -688,6 +644,21 @@ impl MixMachine {
             self.overflow = overflow;
         }
         Ok(())
+    }
+
+    /// Handler for `CMPA` and `CMPX`.
+    fn handler_instr_cmp_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+        // Obtain CONTENT(M).
+        let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
+        let reg = match instr.opcode {
+            instr::Opcode::CmpA => &self.r_a,
+            instr::Opcode::CmpX => &self.r_x,
+            _ => unreachable!(),
+        };
+        let reg_value = reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
+
+        todo!()
     }
 
     /// Trap handler for illegal instructions.

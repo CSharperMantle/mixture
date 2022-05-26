@@ -200,6 +200,56 @@ impl<const N: usize, const P: bool> Word<N, P> {
         let value = i64::from_be_bytes(bytes);
         (value * sign, data_bytes_dirty.iter().any(|&dirty| dirty))
     }
+
+    /// Convert the corresponding range of an word to an `i64`.
+    /// 
+    /// # Arguments
+    /// * `field` - The field to convert. Value: `F <- L * 8 + R`.
+    /// 
+    /// # Returns
+    /// * `i64` - The converted value.
+    /// * `bool` - `true` if the word is too large, `false` otherwise.
+    /// 
+    /// # Example
+    /// ```rust
+    /// use mixture::sim::mix::mem::*;
+    /// 
+    /// let mut word = Word::<6, false>::new();
+    /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    /// 
+    /// let (value, overflow) = word.to_i64_ranged(1..=1);
+    /// assert_eq!(overflow, false);
+    /// assert_eq!(value, 0x01);
+    /// ```
+    pub fn to_i64_ranged(&self, field: std::ops::RangeInclusive<usize>) -> (i64, bool) {
+        // Move range out.
+        let sign_included = *field.start() == 0;
+        let new_start = if sign_included {
+            *field.start() + 1
+        } else {
+            *field.start()
+        };
+        let field = new_start..=*field.end();
+        // Get sliced data.
+        let data = &self.data[field];
+        // Find sign.
+        let sign = if !sign_included || self.is_positive() { 1 } else { -1 };
+        let mut result_bytes: [u8; 8] = [0; 8];
+        // Bytes marked 'dirty' have not been copied yet.
+        let mut data_bytes_dirty = data.iter().map(|&byte| byte != 0).collect::<Vec<_>>();
+        if data_bytes_dirty.len() == 0 {
+            return (0, false);
+        }
+        // Copy bytes from the slice.
+        for (bytes_i, data_i) in (0..8).rev().zip((0..data.len()).rev()) {
+            result_bytes[bytes_i] = data[data_i];
+            // We have copied the byte; make it clean.
+            data_bytes_dirty[data_i] = false;
+        }
+        let value = i64::from_be_bytes(result_bytes);
+
+        (value * sign, data_bytes_dirty.iter().any(|&dirty| dirty))
+    }
 }
 
 impl<const N: usize, const P: bool> std::ops::Index<std::ops::Range<usize>> for Word<N, P> {

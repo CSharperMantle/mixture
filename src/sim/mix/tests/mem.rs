@@ -109,6 +109,40 @@ fn test_word_to_i64() {
 }
 
 #[test]
+fn test_word_to_i64_ranged() {
+    let mut word = Word::<6, false>::new();
+    word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    let (value, overflow) = word.to_i64_ranged(0..=5);
+    assert_eq!(overflow, false);
+    assert_eq!(value, 0x0102030405);
+
+    let mut word_big = Word::<10, false>::new();
+    word_big
+        .set(0..=9, &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        .unwrap();
+    let (value, overflow) = word_big.to_i64_ranged(0..=9);
+    assert_eq!(overflow, true);
+    assert_eq!(value, 0x0203040506070809);
+
+    let mut word_neg = Word::<6, false>::new();
+    word_neg.set(0..=5, &[1, 1, 2, 3, 4, 5]).unwrap();
+    let (value, overflow) = word_neg.to_i64_ranged(1..=5);
+    assert_eq!(overflow, false);
+    assert_eq!(value, 0x0102030405);
+
+    let mut word_big_neg = Word::<10, false>::new();
+    word_big_neg
+        .set(
+            0..=9,
+            &[1, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+        )
+        .unwrap();
+    let (value, overflow) = word_big_neg.to_i64_ranged(1..=1);
+    assert_eq!(overflow, false);
+    assert_eq!(value, 0xFF);
+}
+
+#[test]
 fn test_word_toggle_sign() {
     let mut word = Word::<6, false>::new();
     word[0] = 0;
