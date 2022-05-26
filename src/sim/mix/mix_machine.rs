@@ -1,6 +1,9 @@
 use crate::sim::mix::instr::ToRangeInclusive;
 use crate::sim::mix::*;
 
+/// A internal shortcut to Word.
+type Word = mem::Word<6, false>;
+
 /// Error codes for the MIX machine.
 #[derive(PartialEq, Eq, Debug)]
 pub enum TrapCode {
@@ -167,14 +170,14 @@ impl MixMachine {
             instr::Opcode::Modify6 => self.handler_instr_modify_3b(&instr),
             instr::Opcode::ModifyX => self.handler_instr_modify_6b(&instr),
 
-            instr::Opcode::CmpA => todo!(),
+            instr::Opcode::CmpA => self.handler_instr_cmp_6b(&instr),
             instr::Opcode::Cmp1 => todo!(),
             instr::Opcode::Cmp2 => todo!(),
             instr::Opcode::Cmp3 => todo!(),
             instr::Opcode::Cmp4 => todo!(),
             instr::Opcode::Cmp5 => todo!(),
             instr::Opcode::Cmp6 => todo!(),
-            instr::Opcode::CmpX => todo!(),
+            instr::Opcode::CmpX => self.handler_instr_cmp_6b(&instr),
         }?;
 
         Ok(())
@@ -217,7 +220,7 @@ impl MixMachine {
             _ => unreachable!(),
         };
         // Zero reg before copying. Handle 'understood' positive sign too.
-        reg.set(0..=5, &[1, 0, 0, 0, 0, 0])
+        reg.set(0..=5, &[Word::POS, 0, 0, 0, 0, 0])
             .map_err(|_| TrapCode::MemAccessError)?;
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
@@ -249,7 +252,11 @@ impl MixMachine {
         }
         // Copy negated sign byte if needed.
         if sign_copy_needed {
-            reg[0] = if memory_cell.is_positive() { 1 } else { 0 };
+            reg[0] = if memory_cell.is_positive() {
+                Word::NEG
+            } else {
+                Word::POS
+            };
         }
         Ok(())
     }
@@ -275,7 +282,7 @@ impl MixMachine {
         // We need to care about only the 4th, 5th and the sign byte.
         // So we make a temporary word and fill back the reg only the
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
-        let mut temp = mem::Word::<6, false>::new();
+        let mut temp = Word::new();
         temp.set(0..=2, &[1, 0, 0])
             .map_err(|_| TrapCode::MemAccessError)?;
         // Copy bytes shifted right.
@@ -314,7 +321,7 @@ impl MixMachine {
         // We need to care about only the 4th, 5th and the sign byte.
         // So we make a temporary word and fill back the reg only the
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
-        let mut temp = mem::Word::<6, false>::new();
+        let mut temp = Word::new();
         temp.set(0..=2, &[0, 0, 0])
             .map_err(|_| TrapCode::MemAccessError)?;
 
@@ -324,7 +331,11 @@ impl MixMachine {
         }
         // Copy negated sign byte if needed.
         if sign_copy_needed {
-            temp[0] = if memory_cell.is_positive() { 1 } else { 0 };
+            temp[0] = if memory_cell.is_positive() {
+                Word::NEG
+            } else {
+                Word::POS
+            };
         }
         // Fill back the reg.
         reg[0] = temp[0];
@@ -363,7 +374,6 @@ impl MixMachine {
                     .set(1..=2, &pc_unpacked)
                     .map_err(|_| TrapCode::MemAccessError)?;
             }
-            println!("{:?}", self.pc);
             // Do jump.
             self.pc = target_addr;
         }
@@ -384,7 +394,7 @@ impl MixMachine {
                 result = result * 10 + digit as i64;
             }
             // Rebuild a word of 4 bytes.
-            let (result_word, _) = mem::Word::<6, false>::from_i64(result);
+            let (result_word, _) = Word::from_i64(result);
             self.r_a
                 .set(0..=5, &result_word[0..=5])
                 .map_err(|_| TrapCode::MemAccessError)?;
@@ -520,7 +530,7 @@ impl MixMachine {
             // Convert to i64.
             let (value, _) = reg.to_i64();
             // Convert back modified value.
-            let (new_word, overflow) = mem::Word::<6, false>::from_i64(value + offset);
+            let (new_word, overflow) = Word::from_i64(value + offset);
             reg.set(0..=5, &new_word[0..=5])
                 .map_err(|_| TrapCode::MemAccessError)?;
             // Should we overflow?
@@ -530,7 +540,7 @@ impl MixMachine {
             return Ok(());
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
-            let (new_word, _) = mem::Word::<6, false>::from_i64(addr as i64);
+            let (new_word, _) = Word::from_i64(addr as i64);
             // Copy new word into reg.
             reg.set(0..=5, &new_word[0..=5])
                 .map_err(|_| TrapCode::MemAccessError)?;
@@ -602,7 +612,7 @@ impl MixMachine {
             target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 * coefficient;
         // Calculate and pack new value.
         let new_value = orig_value + target_value;
-        let (new_word, overflow) = mem::Word::<6, false>::from_i64(new_value);
+        let (new_word, overflow) = Word::from_i64(new_value);
         // Set new value.
         self.r_a
             .set(0..=5, &new_word[0..=5])
@@ -635,7 +645,7 @@ impl MixMachine {
             new_val_bytes_dirty[byte_i] = false;
         }
         // Treat sign.
-        let new_sign = if new_val < 0 { 1 } else { 0 };
+        let new_sign = if new_val < 0 { Word::NEG } else { Word::POS };
         self.r_a[0] = new_sign;
         self.r_x[0] = new_sign;
         // Should we overflow?
@@ -657,8 +667,18 @@ impl MixMachine {
             _ => unreachable!(),
         };
         let reg_value = reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
-
-        todo!()
+        // Calculate and set flags.
+        self.indicator_comp = if reg_value.abs() == 0 && target_value.abs() == 0 {
+            // +0 and -0 are equal.
+            reg::ComparisonIndicatorValue::Equal
+        } else if reg_value == target_value {
+            reg::ComparisonIndicatorValue::Equal
+        } else if reg_value > target_value {
+            reg::ComparisonIndicatorValue::Greater
+        } else {
+            reg::ComparisonIndicatorValue::Lesser
+        };
+        Ok(())
     }
 
     /// Trap handler for illegal instructions.

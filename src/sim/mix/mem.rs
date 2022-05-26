@@ -15,7 +15,7 @@ use crate::sim::mix::*;
 ///
 /// # Generic Parameters
 /// * `N` - The number of bytes in the word, including sign.
-/// * `P` - Whether the sign byte is always `1`, positive.
+/// * `P` - Whether the sign byte is always positive.
 ///
 /// # Example
 /// ```rust
@@ -38,11 +38,17 @@ pub struct Word<const N: usize, const P: bool> {
 }
 
 impl<const N: usize, const P: bool> Word<N, P> {
+    /// Negative sign byte content.
+    pub const NEG: u8 = 1;
+
+    /// Positive sign byte content.
+    pub const POS: u8 = 0;
+
     /// Create a new word with default values.
     pub fn new() -> Self {
         let mut w: Word<N, P> = Word { data: [0; N] };
         if P {
-            w.data[0] = 1;
+            w.data[0] = Self::POS;
         }
         w
     }
@@ -77,7 +83,11 @@ impl<const N: usize, const P: bool> Word<N, P> {
         // See if we have something not copied.
         // Bytes marked 'dirty' have not been copied yet.
         let mut bytes_dirty = bytes.map(|byte| byte != 0);
-        word[0] = if !P && value < 0 { 1 } else { 0 };
+        word[0] = if !P && value < 0 {
+            Self::NEG
+        } else {
+            Self::POS
+        };
         for (word_i, bytes_i) in (1..N).rev().zip((0..8).rev()) {
             word[word_i] = bytes[bytes_i];
             // We have copied the byte; make it clean.
@@ -118,8 +128,12 @@ impl<const N: usize, const P: bool> Word<N, P> {
 
         for i in start..=end {
             // If we are always positive and we are setting sign,
-            // then make it 1.
-            self.data[i] = if P && i == 0 { 1 } else { value[i - start] };
+            // then make it `Self::POS`.
+            self.data[i] = if P && i == 0 {
+                Self::POS
+            } else {
+                value[i - start]
+            };
         }
 
         Ok(())
@@ -128,8 +142,8 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// Check if the word is positive.
     ///
     /// # Returns
-    /// * `true` - If the word is positive, `word[0] == 0`.
-    /// * `false` - If the word is negative, `word[0] == 1`.
+    /// * `true` - If the word is positive, `word[0] == Self::POS`.
+    /// * `false` - If the word is negative, `word[0] != Self::POS`.
     ///
     /// # Example
     /// ```rust
@@ -141,7 +155,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// assert_eq!(word.is_positive(), true);
     /// ```
     pub fn is_positive(&self) -> bool {
-        self.data[0] == 0
+        self.data[0] == Self::POS
     }
 
     /// Toggle the sign of the word.
@@ -162,7 +176,11 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// assert_eq!(word[0], 0);
     /// ```
     pub fn toggle_sign(&mut self) {
-        self.data[0] = if !P && self.is_positive() { 1 } else { 0 };
+        self.data[0] = if !P && self.is_positive() {
+            Self::NEG
+        } else {
+            Self::POS
+        };
     }
 
     /// Convert the word to an `i64`.
@@ -202,27 +220,27 @@ impl<const N: usize, const P: bool> Word<N, P> {
     }
 
     /// Convert the corresponding range of an word to an `i64`.
-    /// 
+    ///
     /// # Arguments
     /// * `field` - The field to convert. Value: `F <- L * 8 + R`.
-    /// 
+    ///
     /// # Returns
     /// * `i64` - The converted value.
     /// * `bool` - `true` if the word is too large, `false` otherwise.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use mixture::sim::mix::mem::*;
-    /// 
+    ///
     /// let mut word = Word::<6, false>::new();
     /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    /// 
+    ///
     /// let (value, overflow) = word.to_i64_ranged(1..=1);
     /// assert_eq!(overflow, false);
     /// assert_eq!(value, 0x01);
     /// ```
     pub fn to_i64_ranged(&self, field: std::ops::RangeInclusive<usize>) -> (i64, bool) {
-        // Move range out.
+        // Move sign byte out.
         let sign_included = *field.start() == 0;
         let new_start = if sign_included {
             *field.start() + 1
@@ -232,15 +250,23 @@ impl<const N: usize, const P: bool> Word<N, P> {
         let field = new_start..=*field.end();
         // Get sliced data.
         let data = &self.data[field];
+        // If the range is empty, fast-fail.
+        if data.len() == 0 {
+            return (0, false);
+        }
         // Find sign.
-        let sign = if !sign_included || self.is_positive() { 1 } else { -1 };
+        let sign = if !sign_included || self.is_positive() {
+            1
+        } else {
+            -1
+        };
         let mut result_bytes: [u8; 8] = [0; 8];
         // Bytes marked 'dirty' have not been copied yet.
         let mut data_bytes_dirty = data.iter().map(|&byte| byte != 0).collect::<Vec<_>>();
-        if data_bytes_dirty.len() == 0 {
-            return (0, false);
-        }
         // Copy bytes from the slice.
+        // Ranges are chained by zip, and the shorter range is
+        // iterated over in order to prevent out-of-bound indices.
+        // Filling starts from the LSB.
         for (bytes_i, data_i) in (0..8).rev().zip((0..data.len()).rev()) {
             result_bytes[bytes_i] = data[data_i];
             // We have copied the byte; make it clean.
