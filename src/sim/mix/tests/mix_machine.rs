@@ -845,3 +845,47 @@ fn test_simple_cmp_6b() {
     assert_eq!(mix.halted, false);
     assert_eq!(mix.indicator_comp, ComparisonIndicatorValue::Equal);
 }
+
+#[test]
+fn test_simple_cmp_3b() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Cmp1)
+        .try_into()
+        .unwrap();
+    mix.mem[1] = Instruction::new(1001, 5, 0, Opcode::Cmp1)
+        .try_into()
+        .unwrap();
+    mix.mem[2] = Instruction::new(1002, 5, 0, Opcode::Cmp1)
+        .try_into()
+        .unwrap();
+    mix.mem[3] = Instruction::new(1003, 5, 0, Opcode::Cmp2)
+        .try_into()
+        .unwrap();
+
+    mix.mem[1000].set(0..=5, &[0, 0, 0, 0, 0, 2]).unwrap();
+    mix.mem[1001].set(0..=5, &[1, 0, 0, 0, 0, 2]).unwrap();
+    mix.mem[1002].set(0..=5, &[0, 0, 0, 0, 0, 1]).unwrap();
+    mix.mem[1003].set(0..=5, &[1, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_in[1].set(0..=2, &[0, 0, 1]).unwrap();
+    mix.r_in[2].set(0..=2, &[0, 0, 0]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.indicator_comp, ComparisonIndicatorValue::Lesser);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.indicator_comp, ComparisonIndicatorValue::Greater);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.indicator_comp, ComparisonIndicatorValue::Equal);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.indicator_comp, ComparisonIndicatorValue::Equal);
+}

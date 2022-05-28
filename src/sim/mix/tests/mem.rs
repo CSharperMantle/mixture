@@ -1,6 +1,15 @@
 use crate::sim::mix::mem::*;
 
 #[test]
+fn test_word_from_bytes() {
+    let word = Word::<6, false>::from_bytes([1, 2, 3, 4, 5, 6]);
+    assert_eq!(word[0..6], [1, 2, 3, 4, 5, 6]);
+
+    let word_pos = Word::<6, true>::from_bytes([1, 2, 3, 4, 5, 6]);
+    assert_eq!(word_pos[0..6], [0, 2, 3, 4, 5, 6]);
+}
+
+#[test]
 fn test_word_mutation() {
     let mut word = Word::<6, false>::new();
 

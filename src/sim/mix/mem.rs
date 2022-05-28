@@ -53,6 +53,28 @@ impl<const N: usize, const P: bool> Word<N, P> {
         w
     }
 
+    /// Create a new word from the given content.
+    ///
+    /// Sign byte settings of `P` will be honored.
+    ///
+    /// # Arguments
+    /// * `bytes` - The content of the word.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mixture::sim::mix::mem::*;
+    ///
+    /// let word = Word::<6, false>::from_bytes([0, 1, 2, 3, 4, 5]);
+    /// assert_eq!(word[0..=5], [0, 1, 2, 3, 4, 5]);
+    /// ```
+    pub fn from_bytes(bytes: [u8; N]) -> Self {
+        let mut word = Word { data: bytes };
+        if P {
+            word.data[0] = Self::POS;
+        }
+        word
+    }
+
     /// Create a new word from an `i64`.
     ///
     /// The function stores big-endian representation of the
