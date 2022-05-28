@@ -803,6 +803,45 @@ fn test_simple_mul() {
 }
 
 #[test]
+fn test_simple_div() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div)
+        .try_into()
+        .unwrap();
+    
+    mix.mem[1000].set(0..=5, &[0, 0, 0, 0, 0, 3]).unwrap();
+    mix.r_a.set(0..=5, &[0, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_x.set(0..=5, &[1, 0, 0, 0, 0, 0x11]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0, 0, 5]);
+    assert_eq!(mix.r_x[0..=5], [0, 0, 0, 0, 0, 2]);
+
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div)
+        .try_into()
+        .unwrap();
+    
+    mix.mem[1000].set(0..=5, &[1, 0, 0, 0, 2, 0]).unwrap();
+    mix.r_a.set(0..=5, &[1, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_x.set(0..=5, &[0, 0x04, 0xD3, 0, 3, 1]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[0..=3], [0, 0, 0x02, 0x69]);
+    assert_eq!(mix.r_x[0], 1);
+    assert_eq!(mix.r_x[5], 1);
+}
+
+#[test]
 fn test_simple_cmp_6b() {
     let mut mix = MixMachine::new();
     mix.reset();

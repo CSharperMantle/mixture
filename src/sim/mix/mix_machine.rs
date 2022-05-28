@@ -113,7 +113,7 @@ impl MixMachine {
             instr::Opcode::Add => self.handler_instr_add_sub(&instr),
             instr::Opcode::Sub => self.handler_instr_add_sub(&instr),
             instr::Opcode::Mul => self.handler_instr_mul(&instr),
-            instr::Opcode::Div => todo!(),
+            instr::Opcode::Div => self.handler_instr_div(&instr),
 
             instr::Opcode::Special => self.handler_instr_special(&instr),
             instr::Opcode::Shift => todo!(),
@@ -654,6 +654,75 @@ impl MixMachine {
         let overflow = new_val_bytes_dirty.iter().any(|&b| b);
         if overflow {
             self.overflow = overflow;
+        }
+        Ok(())
+    }
+
+    /// Handler for `DIV`.
+    fn handler_instr_div(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+        // TODO: Make a generic version of Word::from_int().
+        // Obtain value.
+        let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 as i128;
+        let orig_value = i128::from_be_bytes([
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            self.r_a[1],
+            self.r_a[2],
+            self.r_a[3],
+            self.r_a[4],
+            self.r_a[5],
+            self.r_x[1],
+            self.r_x[2],
+            self.r_x[3],
+            self.r_x[4],
+            self.r_x[5],
+        ]) * if self.r_a.is_positive() { 1 } else { -1 };
+        // Calculate results.
+        let quotient: i64 = (orig_value / target_value)
+            .abs()
+            .try_into()
+            .map_err(|_| {
+                // Conversion overflowed.
+                self.overflow = true;
+            })
+            .unwrap_or(0);
+        let remainder: i64 = (orig_value % target_value)
+            .abs()
+            .try_into()
+            .map_err(|_| {
+                // Conversion overflowed.
+                self.overflow = true;
+            })
+            .unwrap_or(0);
+        // Calculate new sign.
+        let new_sign_positive = if orig_value.signum() == target_value.signum() {
+            true
+        } else {
+            false
+        };
+        // Copy results into registers.
+        let (new_a, overflow_a) = FullWord::from_i64(quotient);
+        let (new_x, overflow_x) = FullWord::from_i64(remainder);
+        self.r_x[0] = self.r_a[0];
+        self.r_a[0] = if new_sign_positive {
+            FullWord::POS
+        } else {
+            FullWord::NEG
+        };
+        self.r_a
+            .set(1..=5, &new_a[1..=5])
+            .map_err(|_| TrapCode::MemAccessError)?;
+        self.r_x
+            .set(1..=5, &new_x[1..=5])
+            .map_err(|_| TrapCode::MemAccessError)?;
+        if overflow_a || overflow_x {
+            // Copy overflowed.
+            self.overflow = true;
         }
         Ok(())
     }

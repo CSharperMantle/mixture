@@ -26,9 +26,10 @@
         "LdAn",
         "LdXn",
         "repr",
+        "signless",
+        "signum",
         "Slax",
         "Srax",
-        "unhalts",
-        "signless"
+        "unhalts"
     ]
 }
