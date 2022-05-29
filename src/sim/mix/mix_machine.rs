@@ -155,14 +155,14 @@ impl MixMachine {
             instr::Opcode::Jred => todo!(),
             instr::Opcode::Jmp => self.handler_instr_jmp(&instr),
 
-            instr::Opcode::JA => todo!(),
-            instr::Opcode::J1 => todo!(),
-            instr::Opcode::J2 => todo!(),
-            instr::Opcode::J3 => todo!(),
-            instr::Opcode::J4 => todo!(),
-            instr::Opcode::J5 => todo!(),
-            instr::Opcode::J6 => todo!(),
-            instr::Opcode::JX => todo!(),
+            instr::Opcode::JA => self.handler_instr_jmp_reg_6b(&instr),
+            instr::Opcode::J1 => self.handler_instr_jmp_reg_3b(&instr),
+            instr::Opcode::J2 => self.handler_instr_jmp_reg_3b(&instr),
+            instr::Opcode::J3 => self.handler_instr_jmp_reg_3b(&instr),
+            instr::Opcode::J4 => self.handler_instr_jmp_reg_3b(&instr),
+            instr::Opcode::J5 => self.handler_instr_jmp_reg_3b(&instr),
+            instr::Opcode::J6 => self.handler_instr_jmp_reg_3b(&instr),
+            instr::Opcode::JX => self.handler_instr_jmp_reg_6b(&instr),
 
             instr::Opcode::ModifyA => self.handler_instr_modify_6b(&instr),
             instr::Opcode::Modify1 => self.handler_instr_modify_3b(&instr),
@@ -202,6 +202,19 @@ impl MixMachine {
         let reg = self.r_in[index as usize];
         let (reg_val, _) = reg.to_i64();
         reg_val as i16 + addr
+    }
+
+    /// Do actual jump.
+    fn helper_do_jump(&mut self, location: u16, save_r_j: bool) -> Result<(), TrapCode> {
+        if save_r_j {
+            let pc_unpacked = (self.pc as u16).to_be_bytes();
+            self.r_j
+                .set(1..=2, &pc_unpacked)
+                .map_err(|_| TrapCode::MemAccessError)?;
+        }
+        // Do jump.
+        self.pc = location;
+        Ok(())
     }
 
     /// Handler for `NOP`.
@@ -365,15 +378,7 @@ impl MixMachine {
         }
 
         if should_jump {
-            // Save PC in rJ.
-            if instr.field != 1 {
-                let pc_unpacked = (self.pc as u16).to_be_bytes();
-                self.r_j
-                    .set(1..=2, &pc_unpacked)
-                    .map_err(|_| TrapCode::MemAccessError)?;
-            }
-            // Do jump.
-            self.pc = target_addr;
+            self.helper_do_jump(target_addr, instr.field != 1)?;
         }
         Ok(())
     }
@@ -779,6 +784,58 @@ impl MixMachine {
         } else {
             reg::ComparisonIndicatorValue::Lesser
         };
+        Ok(())
+    }
+
+    /// Handler for `JA` and `JX`.
+    fn handler_instr_jmp_reg_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+        let target_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        let reg = match instr.opcode {
+            instr::Opcode::JA => &self.r_a,
+            instr::Opcode::JX => &self.r_x,
+            _ => unreachable!(),
+        };
+        let reg_value_sign = reg.to_i64().0.signum();
+        let should_jump = match instr.field {
+            0 => reg_value_sign == -1,
+            1 => reg_value_sign == 0,
+            2 => reg_value_sign == 1,
+            3 => reg_value_sign != -1,
+            4 => reg_value_sign != 0,
+            5 => reg_value_sign != 1,
+            _ => return Err(TrapCode::InvalidField),
+        };
+        if should_jump {
+            self.helper_do_jump(target_addr, true)?;
+        }
+        Ok(())
+    }
+
+    /// Handler for `J1-6`.
+    fn handler_instr_jmp_reg_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+        let target_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        let reg = match instr.opcode {
+            instr::Opcode::J1 => &self.r_in[1],
+            instr::Opcode::J2 => &self.r_in[2],
+            instr::Opcode::J3 => &self.r_in[3],
+            instr::Opcode::J4 => &self.r_in[4],
+            instr::Opcode::J5 => &self.r_in[5],
+            instr::Opcode::J6 => &self.r_in[6],
+            _ => unreachable!(),
+        };
+        let reg_value_sign = reg.to_i64().0.signum();
+        let should_jump = match instr.field {
+            0 => reg_value_sign == -1,
+            1 => reg_value_sign == 0,
+            2 => reg_value_sign == 1,
+            3 => reg_value_sign != -1,
+            4 => reg_value_sign != 0,
+            5 => reg_value_sign != 1,
+            _ => return Err(TrapCode::InvalidField),
+        };
+        if should_jump {
+            self.helper_do_jump(target_addr, true)?;
+        }
         Ok(())
     }
 
