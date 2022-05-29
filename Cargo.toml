@@ -1,6 +1,6 @@
 [package]
 name = "mixture"
-description = "MIX and MMIX simulator and assembler"
+description = "MIX simulator and assembler"
 version = "0.1.0"
 edition = "2021"
 authors = [ "CSharperMantle <baorong2005@126.com>" ]
