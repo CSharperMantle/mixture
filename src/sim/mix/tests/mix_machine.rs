@@ -51,6 +51,52 @@ fn test_error_halted() {
 }
 
 #[test]
+fn test_error_invalid_addr() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(-1, 0, 0, Opcode::Shift)
+        .try_into()
+        .unwrap();
+
+    mix.restart();
+
+    let err = mix.step().expect_err("Expect error");
+    assert_eq!(err, TrapCode::InvalidAddress);
+    assert_eq!(mix.halted, true);
+}
+
+#[test]
+fn test_error_invalid_field() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(0, 255, 0, Opcode::Shift)
+        .try_into()
+        .unwrap();
+
+    mix.restart();
+
+    let err = mix.step().expect_err("Expect error");
+    assert_eq!(err, TrapCode::InvalidField);
+    assert_eq!(mix.halted, true);
+}
+
+#[test]
+fn test_error_invalid_index() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(0, 5, 255, Opcode::LdA).try_into().unwrap();
+
+    mix.restart();
+
+    let err = mix.step().expect_err("Expect error");
+    assert_eq!(err, TrapCode::InvalidIndex);
+    assert_eq!(mix.halted, true);
+}
+
+#[test]
 fn test_simple_nop() {
     let mut mix = MixMachine::new();
     mix.reset();
@@ -1023,7 +1069,9 @@ fn test_simple_shift() {
     mix.mem[1] = Instruction::new(2, 0, 0, Opcode::Shift).try_into().unwrap();
     mix.mem[2] = Instruction::new(4, 5, 0, Opcode::Shift).try_into().unwrap();
     mix.mem[3] = Instruction::new(2, 1, 0, Opcode::Shift).try_into().unwrap();
-    mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift).try_into().unwrap();
+    mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift)
+        .try_into()
+        .unwrap();
     mix.r_a.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
     mix.r_x.set(0..=5, &[1, 6, 7, 8, 9, 10]).unwrap();
 
@@ -1064,21 +1112,31 @@ fn test_comp_euclid() {
     // * Algorithm: Euclid's GCD algorithm. U, V are the two numbers
     // * awaiting processing.
     //     LDX U
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::LdX).try_into().unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::LdX)
+        .try_into()
+        .unwrap();
     //     JMP 2F
     mix.mem[1] = Instruction::new(5, 0, 0, Opcode::Jmp).try_into().unwrap();
     // 1H  STX V
-    mix.mem[2] = Instruction::new(1001, 5, 0, Opcode::StX).try_into().unwrap();
+    mix.mem[2] = Instruction::new(1001, 5, 0, Opcode::StX)
+        .try_into()
+        .unwrap();
     //     SRAX 5
     mix.mem[3] = Instruction::new(5, 3, 0, Opcode::Shift).try_into().unwrap();
     //     DIV V
-    mix.mem[4] = Instruction::new(1001, 5, 0, Opcode::Div).try_into().unwrap();
+    mix.mem[4] = Instruction::new(1001, 5, 0, Opcode::Div)
+        .try_into()
+        .unwrap();
     // 2H  LDA V
-    mix.mem[5] = Instruction::new(1001, 5, 0, Opcode::LdA).try_into().unwrap();
+    mix.mem[5] = Instruction::new(1001, 5, 0, Opcode::LdA)
+        .try_into()
+        .unwrap();
     //     JXNZ 1B
     mix.mem[6] = Instruction::new(2, 4, 0, Opcode::JX).try_into().unwrap();
     //     HLT
-    mix.mem[7] = Instruction::new(0, 2, 0, Opcode::Special).try_into().unwrap();
+    mix.mem[7] = Instruction::new(0, 2, 0, Opcode::Special)
+        .try_into()
+        .unwrap();
     //     ORIG 1000
     // U   CON 1360
     mix.mem[1000] = Word::<6, false>::from_i64(1360).0;

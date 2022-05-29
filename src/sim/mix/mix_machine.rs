@@ -14,6 +14,7 @@ pub enum TrapCode {
     IllegalInstruction,
     InvalidAddress,
     InvalidField,
+    InvalidIndex,
     MemAccessError,
     Halted,
 }
@@ -90,19 +91,17 @@ impl MixMachine {
     ///
     /// # Returns
     /// * `Ok(())` - The machine successfully completed its operation.
-    /// * `Err(String)` - The machine encountered an error and is now halted.
+    /// * `Err(TrapCode)` - The machine encountered an error and is now halted.
     pub fn step(&mut self) -> Result<(), TrapCode> {
         if self.halted {
             return Err(TrapCode::Halted);
         }
 
         // Fetch the instruction.
-        let instr: instr::Instruction = match self.mem[self.pc].try_into() {
-            Ok(instr) => instr,
-            Err(_) => {
-                return Err(self.trap_illegal_instruction());
-            }
-        };
+        let instr: instr::Instruction = self.mem[self.pc].try_into().map_err(|_| {
+            self.halt();
+            TrapCode::IllegalInstruction
+        })?;
 
         self.pc += 1;
 
@@ -181,15 +180,28 @@ impl MixMachine {
             instr::Opcode::Cmp5 => self.handler_instr_cmp_3b(&instr),
             instr::Opcode::Cmp6 => self.handler_instr_cmp_3b(&instr),
             instr::Opcode::CmpX => self.handler_instr_cmp_6b(&instr),
-        }?;
+        }
+        .map_err(|err| {
+            self.halt();
+            err
+        })?;
 
         Ok(())
+    }
+
+    /// Halt the machine.
+    pub fn halt(&mut self) {
+        self.halted = true;
     }
 
     /// Get indexed address.
     fn helper_get_eff_addr(&self, addr: i16, index: u8) -> Result<u16, TrapCode> {
         // Direct or indirect addressing.
         // r_in[0] is always zero.
+        if !(0..=6).contains(&index) {
+            // We have been provided a bad index.
+            return Err(TrapCode::InvalidIndex);
+        }
         let reg = self.r_in[index as usize];
         let (reg_val, _) = reg.to_i64();
         (reg_val + addr as i64)
@@ -845,17 +857,7 @@ impl MixMachine {
         if instr.field == 0 || instr.field == 1 {
             // SLA and SRA.
             // Spread original register to bytes.
-            let orig_bytes = &self.r_a[1..=5];
-            let orig_value = u64::from_be_bytes([
-                0,
-                0,
-                0,
-                orig_bytes[0],
-                orig_bytes[1],
-                orig_bytes[2],
-                orig_bytes[3],
-                orig_bytes[4],
-            ]);
+            let orig_value = u64::from_be_bytes(self.r_a.to_i64().0.to_be_bytes());
             // Shift the value in bits (count * 8, count is in bytes).
             let shifted_value = match instr.field {
                 0 => orig_value << count * 8,
@@ -952,15 +954,5 @@ impl MixMachine {
             return Err(TrapCode::InvalidField);
         }
         Ok(())
-    }
-
-    /// Trap handler for illegal instructions.
-    ///
-    /// This function is called when an illegal instruction is
-    /// encountered. It halts the machine and prints the
-    /// offending address.
-    fn trap_illegal_instruction(&mut self) -> TrapCode {
-        self.halted = true;
-        TrapCode::IllegalInstruction
     }
 }
