@@ -1,103 +1,9 @@
 use crate::sim::mix::instr::*;
-use crate::sim::mix::mem::*;
 use crate::sim::mix::mix_machine::*;
 use crate::sim::mix::reg::*;
 
 #[test]
-fn test_operation_reset_restart() {
-    let mut mix = MixMachine::new();
-
-    mix.halted = true;
-    mix.pc = 123;
-    mix.overflow = true;
-
-    mix.reset();
-
-    assert_eq!(mix.halted, true);
-    assert_eq!(mix.pc, 0);
-    assert_eq!(mix.overflow, false);
-
-    mix.restart();
-
-    assert_eq!(mix.halted, false);
-    assert_eq!(mix.pc, 0);
-    assert_eq!(mix.overflow, false);
-}
-
-#[test]
-fn test_error_illegal_instruction() {
-    let mut mix = MixMachine::new();
-    mix.reset();
-
-    mix.mem[0]
-        .set(0..=5, &[0, 255, 255, 255, 255, 255])
-        .unwrap();
-
-    mix.restart();
-
-    let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::IllegalInstruction);
-    assert_eq!(mix.halted, true);
-}
-
-#[test]
-fn test_error_halted() {
-    let mut mix = MixMachine::new();
-    mix.reset();
-
-    let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::Halted);
-    assert_eq!(mix.halted, true);
-}
-
-#[test]
-fn test_error_invalid_addr() {
-    let mut mix = MixMachine::new();
-    mix.reset();
-
-    mix.mem[0] = Instruction::new(-1, 0, 0, Opcode::Shift)
-        .try_into()
-        .unwrap();
-
-    mix.restart();
-
-    let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::InvalidAddress);
-    assert_eq!(mix.halted, true);
-}
-
-#[test]
-fn test_error_invalid_field() {
-    let mut mix = MixMachine::new();
-    mix.reset();
-
-    mix.mem[0] = Instruction::new(0, 255, 0, Opcode::Shift)
-        .try_into()
-        .unwrap();
-
-    mix.restart();
-
-    let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::InvalidField);
-    assert_eq!(mix.halted, true);
-}
-
-#[test]
-fn test_error_invalid_index() {
-    let mut mix = MixMachine::new();
-    mix.reset();
-
-    mix.mem[0] = Instruction::new(0, 5, 255, Opcode::LdA).try_into().unwrap();
-
-    mix.restart();
-
-    let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::InvalidIndex);
-    assert_eq!(mix.halted, true);
-}
-
-#[test]
-fn test_simple_nop() {
+fn test_nop() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -111,7 +17,7 @@ fn test_simple_nop() {
 }
 
 #[test]
-fn test_simple_load_6b() {
+fn test_load_6b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -171,7 +77,7 @@ fn test_simple_load_6b() {
 }
 
 #[test]
-fn test_simple_load_neg_6b() {
+fn test_load_neg_6b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -229,7 +135,7 @@ fn test_simple_load_neg_6b() {
 }
 
 #[test]
-fn test_simple_indexed_load_6b() {
+fn test_indexed_load_6b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -289,7 +195,7 @@ fn test_simple_indexed_load_6b() {
 }
 
 #[test]
-fn test_simple_load_3b() {
+fn test_load_3b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -347,7 +253,7 @@ fn test_simple_load_3b() {
 }
 
 #[test]
-fn test_simple_load_neg_3b() {
+fn test_load_neg_3b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -405,7 +311,7 @@ fn test_simple_load_neg_3b() {
 }
 
 #[test]
-fn test_simple_jmp() {
+fn test_jmp() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -436,7 +342,7 @@ fn test_simple_jmp() {
 }
 
 #[test]
-fn test_simple_special() {
+fn test_special() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -470,7 +376,7 @@ fn test_simple_special() {
 }
 
 #[test]
-fn test_simple_special_2() {
+fn test_special_2() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -504,7 +410,7 @@ fn test_simple_special_2() {
 }
 
 #[test]
-fn test_simple_store_zero() {
+fn test_store_zero() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -538,7 +444,7 @@ fn test_simple_store_zero() {
 }
 
 #[test]
-fn test_simple_move() {
+fn test_move() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -562,7 +468,7 @@ fn test_simple_move() {
 }
 
 #[test]
-fn test_simple_store_6b() {
+fn test_store_6b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -621,7 +527,7 @@ fn test_simple_store_6b() {
 }
 
 #[test]
-fn test_simple_store_3b() {
+fn test_store_3b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -680,7 +586,7 @@ fn test_simple_store_3b() {
 }
 
 #[test]
-fn test_simple_modify_6b() {
+fn test_modify_6b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -741,7 +647,7 @@ fn test_simple_modify_6b() {
 }
 
 #[test]
-fn test_simple_modify_3b() {
+fn test_modify_3b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -794,7 +700,7 @@ fn test_simple_modify_3b() {
 }
 
 #[test]
-fn test_simple_add_sub() {
+fn test_add_sub() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -840,7 +746,7 @@ fn test_simple_add_sub() {
 }
 
 #[test]
-fn test_simple_mul() {
+fn test_mul() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -876,7 +782,7 @@ fn test_simple_mul() {
 }
 
 #[test]
-fn test_simple_div() {
+fn test_div() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -915,7 +821,7 @@ fn test_simple_div() {
 }
 
 #[test]
-fn test_simple_cmp_6b() {
+fn test_cmp_6b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -959,7 +865,7 @@ fn test_simple_cmp_6b() {
 }
 
 #[test]
-fn test_simple_cmp_3b() {
+fn test_cmp_3b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -1003,7 +909,7 @@ fn test_simple_cmp_3b() {
 }
 
 #[test]
-fn test_simple_jmp_reg_6b() {
+fn test_jmp_reg_6b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -1032,7 +938,7 @@ fn test_simple_jmp_reg_6b() {
 }
 
 #[test]
-fn test_simple_jmp_reg_3b() {
+fn test_jmp_reg_3b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -1061,7 +967,7 @@ fn test_simple_jmp_reg_3b() {
 }
 
 #[test]
-fn test_simple_shift() {
+fn test_shift() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -1100,55 +1006,4 @@ fn test_simple_shift() {
     assert_eq!(mix.halted, false);
     assert_eq!(mix.r_a[0..=5], [0, 0, 6, 7, 8, 3]);
     assert_eq!(mix.r_x[0..=5], [1, 4, 0, 0, 5, 0]);
-}
-
-#[test]
-fn test_comp_euclid() {
-    let mut mix = MixMachine::new();
-    mix.reset();
-
-    // * Test sequence source: D. E. Knuth,
-    // * 'The Art of Computer Programming', Volume 2, pp. 337.
-    // * Algorithm: Euclid's GCD algorithm. U, V are the two numbers
-    // * awaiting processing.
-    //     LDX U
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::LdX)
-        .try_into()
-        .unwrap();
-    //     JMP 2F
-    mix.mem[1] = Instruction::new(5, 0, 0, Opcode::Jmp).try_into().unwrap();
-    // 1H  STX V
-    mix.mem[2] = Instruction::new(1001, 5, 0, Opcode::StX)
-        .try_into()
-        .unwrap();
-    //     SRAX 5
-    mix.mem[3] = Instruction::new(5, 3, 0, Opcode::Shift).try_into().unwrap();
-    //     DIV V
-    mix.mem[4] = Instruction::new(1001, 5, 0, Opcode::Div)
-        .try_into()
-        .unwrap();
-    // 2H  LDA V
-    mix.mem[5] = Instruction::new(1001, 5, 0, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    //     JXNZ 1B
-    mix.mem[6] = Instruction::new(2, 4, 0, Opcode::JX).try_into().unwrap();
-    //     HLT
-    mix.mem[7] = Instruction::new(0, 2, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
-    //     ORIG 1000
-    // U   CON 1360
-    mix.mem[1000] = Word::<6, false>::from_i64(1360).0;
-    // V   CON 646
-    mix.mem[1001] = Word::<6, false>::from_i64(646).0;
-
-    mix.restart();
-
-    while !mix.halted {
-        mix.step().unwrap();
-    }
-
-    // Correct answer is rA = 34.
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0, 0, 0x22]);
 }
