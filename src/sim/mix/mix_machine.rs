@@ -116,7 +116,7 @@ impl MixMachine {
             instr::Opcode::Div => self.handler_instr_div(&instr),
 
             instr::Opcode::Special => self.handler_instr_special(&instr),
-            instr::Opcode::Shift => todo!(),
+            instr::Opcode::Shift => self.handler_instr_shift(&instr),
             instr::Opcode::Move => self.handler_instr_move(&instr),
 
             instr::Opcode::LdA => self.handler_instr_load_6b(&instr),
@@ -260,7 +260,7 @@ impl MixMachine {
             _ => unreachable!(),
         };
         // Zero reg before copying. Handle 'understood' negative sign.
-        reg.set(0..=5, &[0, 0, 0, 0, 0, 0])
+        reg.set(0..=5, &[0; 6])
             .map_err(|_| TrapCode::MemAccessError)?;
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
@@ -835,6 +835,121 @@ impl MixMachine {
         };
         if should_jump {
             self.helper_do_jump(target_addr, true)?;
+        }
+        Ok(())
+    }
+
+    /// Handler for `SLA`, `SRA`, `SLAX`, `SRAX`, `SLC` and `SRC`.
+    fn handler_instr_shift(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+        let count = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        if instr.field == 0 || instr.field == 1 {
+            // SLA and SRA.
+            // Spread original register to bytes.
+            let orig_bytes = &self.r_a[1..=5];
+            let orig_value = u64::from_be_bytes([
+                0,
+                0,
+                0,
+                orig_bytes[0],
+                orig_bytes[1],
+                orig_bytes[2],
+                orig_bytes[3],
+                orig_bytes[4],
+            ]);
+            // Shift the value in bits (count * 8, count is in bytes).
+            let shifted_value = match instr.field {
+                0 => orig_value << count * 8,
+                1 => orig_value >> count * 8,
+                _ => unreachable!(),
+            };
+            // Store back.
+            self.r_a
+                .set(1..=5, &shifted_value.to_be_bytes()[3..=7])
+                .map_err(|_| TrapCode::MemAccessError)?;
+        } else if instr.field == 2 || instr.field == 3 {
+            // SLAX and SRAX.
+            // Spread original register to bytes.
+            let orig_a_bytes = &self.r_a[1..=5];
+            let orig_x_bytes = &self.r_x[1..=5];
+            let orig_value = u128::from_be_bytes([
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                orig_a_bytes[0],
+                orig_a_bytes[1],
+                orig_a_bytes[2],
+                orig_a_bytes[3],
+                orig_a_bytes[4],
+                orig_x_bytes[0],
+                orig_x_bytes[1],
+                orig_x_bytes[2],
+                orig_x_bytes[3],
+                orig_x_bytes[4],
+            ]);
+            // Shift.
+            let shifted_value = match instr.field {
+                2 => orig_value << count * 8,
+                3 => orig_value >> count * 8,
+                _ => unreachable!(),
+            };
+            // Store back.
+            let shifted_bytes = shifted_value.to_be_bytes();
+            self.r_a
+                .set(1..=5, &shifted_bytes[6..=10])
+                .map_err(|_| TrapCode::MemAccessError)?;
+            self.r_x
+                .set(1..=5, &shifted_bytes[11..=15])
+                .map_err(|_| TrapCode::MemAccessError)?;
+        } else if instr.field == 4 || instr.field == 5 {
+            // SLC and SRC.
+            // Spread out bytes.
+            let orig_bytes = [
+                self.r_a[1],
+                self.r_a[2],
+                self.r_a[3],
+                self.r_a[4],
+                self.r_a[5],
+                self.r_x[1],
+                self.r_x[2],
+                self.r_x[3],
+                self.r_x[4],
+                self.r_x[5],
+            ];
+            // Zero the registers.
+            self.r_a
+                .set(1..=5, &[0; 5])
+                .map_err(|_| TrapCode::MemAccessError)?;
+            self.r_x
+                .set(1..=5, &[0; 5])
+                .map_err(|_| TrapCode::MemAccessError)?;
+            // Create cyclic iterator.
+            let mut orig_bytes_iter = orig_bytes.iter().cycle();
+            // Get shift count.
+            let offset = if instr.field == 4 {
+                // SLC.
+                count % 10
+            } else {
+                // SRC.
+                10 - count % 10
+            };
+            for _ in 0..offset {
+                // Advance the iterator by `offset` steps,
+                // to simulate shifting.
+                orig_bytes_iter.next().unwrap();
+            }
+            // Write back.
+            for (reg_i, digit) in (0..10).zip(orig_bytes_iter) {
+                if reg_i >= 5 {
+                    self.r_x[reg_i - 5 + 1] = *digit;
+                } else {
+                    self.r_a[reg_i + 1] = *digit;
+                }
+            }
+        } else {
+            return Err(TrapCode::InvalidField);
         }
         Ok(())
     }

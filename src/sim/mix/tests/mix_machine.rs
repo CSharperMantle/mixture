@@ -183,7 +183,7 @@ fn test_simple_load_neg_6b() {
 }
 
 #[test]
-fn test_indexed_load_6b() {
+fn test_simple_indexed_load_6b() {
     let mut mix = MixMachine::new();
     mix.reset();
 
@@ -1015,10 +1015,54 @@ fn test_simple_jmp_reg_3b() {
 }
 
 #[test]
+fn test_simple_shift() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1, 3, 0, Opcode::Shift).try_into().unwrap();
+    mix.mem[1] = Instruction::new(2, 0, 0, Opcode::Shift).try_into().unwrap();
+    mix.mem[2] = Instruction::new(4, 5, 0, Opcode::Shift).try_into().unwrap();
+    mix.mem[3] = Instruction::new(2, 1, 0, Opcode::Shift).try_into().unwrap();
+    mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift).try_into().unwrap();
+    mix.r_a.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.r_x.set(0..=5, &[1, 6, 7, 8, 9, 10]).unwrap();
+
+    mix.restart();
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[0..=5], [0, 0, 1, 2, 3, 4]);
+    assert_eq!(mix.r_x[0..=5], [1, 5, 6, 7, 8, 9]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[0..=5], [0, 2, 3, 4, 0, 0]);
+    assert_eq!(mix.r_x[0..=5], [1, 5, 6, 7, 8, 9]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[0..=5], [0, 6, 7, 8, 9, 2]);
+    assert_eq!(mix.r_x[0..=5], [1, 3, 4, 0, 0, 5]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 6, 7, 8]);
+    assert_eq!(mix.r_x[0..=5], [1, 3, 4, 0, 0, 5]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[0..=5], [0, 0, 6, 7, 8, 3]);
+    assert_eq!(mix.r_x[0..=5], [1, 4, 0, 0, 5, 0]);
+}
+
+#[test]
 fn test_comp_euclid() {
     let mut mix = MixMachine::new();
     mix.reset();
 
+    // * Test sequence source: D. E. Knuth,
+    // * 'The Art of Computer Programming', Volume 2, pp. 337.
+    // * Algorithm: Euclid's GCD algorithm. U, V are the two numbers
+    // * awaiting processing.
     //     LDX U
     mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::LdX).try_into().unwrap();
     //     JMP 2F
@@ -1036,9 +1080,9 @@ fn test_comp_euclid() {
     //     HLT
     mix.mem[7] = Instruction::new(0, 2, 0, Opcode::Special).try_into().unwrap();
     //     ORIG 1000
-    // U   =1360=
+    // U   CON 1360
     mix.mem[1000] = Word::<6, false>::from_i64(1360).0;
-    // V   =646=
+    // V   CON 646
     mix.mem[1001] = Word::<6, false>::from_i64(646).0;
 
     mix.restart();
