@@ -418,25 +418,15 @@ impl MixMachine {
         } else if instr.field == 1 {
             // CHAR instruction
             // Obtain original number.
-            let (source, _) = self.r_a.to_i64();
-            let digits = source
-                .abs()
-                .to_string()
-                .chars()
-                .map(|c| c.to_digit(10).unwrap())
-                .collect::<Vec<u32>>();
-            // Iterate over digits and store them back to registers.
-            // Fill untouched bytes with 0 + 30 with a cyclic iterator
-            // of [0].
-            for (reg_i, digit) in (0..10)
-                .rev()
-                .zip(digits.iter().rev().chain([0].iter().cycle()))
-            {
+            let mut source = self.r_a.to_i64().0.abs();
+            // Extract each digit.
+            for reg_i in (0..10).rev() {
                 if reg_i >= 5 {
-                    self.r_x[reg_i - 5 + 1] = *digit as u8 + 30;
+                    self.r_x[reg_i - 5 + 1] = (source % 10 + 30) as u8;
                 } else {
-                    self.r_a[reg_i + 1] = *digit as u8 + 30;
+                    self.r_a[reg_i + 1] = (source % 10 + 30) as u8;
                 }
+                source /= 10;
             }
             return Ok(());
         } else if instr.field == 2 {
