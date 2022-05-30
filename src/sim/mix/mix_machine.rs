@@ -12,7 +12,7 @@ type PosHalfWord = mem::Word<3, true>;
 
 /// Error codes for the MIX machine.
 #[derive(PartialEq, Eq, Debug)]
-pub enum TrapCode {
+pub enum ErrorCode {
     GeneralError,
     IllegalInstruction,
     InvalidAddress,
@@ -102,16 +102,16 @@ impl MixMachine {
     ///
     /// # Returns
     /// * `Ok(())` - The machine successfully completed its operation.
-    /// * `Err(TrapCode)` - The machine encountered an error and is now halted.
-    pub fn step(&mut self) -> Result<(), TrapCode> {
+    /// * `Err(ErrorCode)` - The machine encountered an error and is now halted.
+    pub fn step(&mut self) -> Result<(), ErrorCode> {
         if self.halted {
-            return Err(TrapCode::Halted);
+            return Err(ErrorCode::Halted);
         }
 
         // Fetch the instruction.
         let instr: instr::Instruction = self.mem[self.pc].try_into().map_err(|_| {
             self.halt();
-            TrapCode::IllegalInstruction
+            ErrorCode::IllegalInstruction
         })?;
 
         self.pc += 1;
@@ -206,18 +206,18 @@ impl MixMachine {
     }
 
     /// Get indexed address.
-    fn helper_get_eff_addr(&self, addr: i16, index: u8) -> Result<u16, TrapCode> {
+    fn helper_get_eff_addr(&self, addr: i16, index: u8) -> Result<u16, ErrorCode> {
         // Direct or indirect addressing.
         // r_in[0] is always zero.
         if !(0..=6).contains(&index) {
             // We have been provided a bad index.
-            return Err(TrapCode::InvalidIndex);
+            return Err(ErrorCode::InvalidIndex);
         }
         let reg = self.r_in[index as usize];
         let (reg_val, _) = reg.to_i64();
         (reg_val + addr as i64)
             .try_into()
-            .map_err(|_| TrapCode::InvalidAddress)
+            .map_err(|_| ErrorCode::InvalidAddress)
     }
 
     /// Get indexed address. May panic or return negative value.
@@ -228,12 +228,12 @@ impl MixMachine {
     }
 
     /// Do actual jump.
-    fn helper_do_jump(&mut self, location: u16, save_r_j: bool) -> Result<(), TrapCode> {
+    fn helper_do_jump(&mut self, location: u16, save_r_j: bool) -> Result<(), ErrorCode> {
         if save_r_j {
             let pc_unpacked = (self.pc as u16).to_be_bytes();
             self.r_j
                 .set(1..=2, &pc_unpacked)
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
         }
         // Do jump.
         self.pc = location;
@@ -243,13 +243,13 @@ impl MixMachine {
     /// Handler for `NOP`.
     ///
     /// This function does nothing.
-    fn handler_instr_nop(&mut self, _: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_nop(&mut self, _: &instr::Instruction) -> Result<(), ErrorCode> {
         // Do nothing.
         Ok(())
     }
 
     /// Handler for `LDA` and `LDX`.
-    fn handler_instr_load_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_load_6b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
@@ -260,7 +260,7 @@ impl MixMachine {
         };
         // Zero reg before copying. Handle 'understood' positive sign too.
         reg.set(0..=5, &[FullWord::POS, 0, 0, 0, 0, 0])
-            .map_err(|_| TrapCode::MemAccessError)?;
+            .map_err(|_| ErrorCode::MemAccessError)?;
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
             reg[reg_cursor] = memory_cell[memory_cell_cursor];
@@ -273,7 +273,7 @@ impl MixMachine {
     }
 
     /// Handler for `LDAN` and `LDXN`.
-    fn handler_instr_load_neg_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_load_neg_6b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
@@ -284,7 +284,7 @@ impl MixMachine {
         };
         // Zero reg before copying. Handle 'understood' negative sign.
         reg.set(0..=5, &[0; 6])
-            .map_err(|_| TrapCode::MemAccessError)?;
+            .map_err(|_| ErrorCode::MemAccessError)?;
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
             reg[reg_cursor] = memory_cell[memory_cell_cursor];
@@ -305,7 +305,7 @@ impl MixMachine {
     /// Note that this instruction only sets the first sign, 4th
     /// and 5th bits of the original memory location. This prevents
     /// the said 'undefined behavior' from happening.
-    fn handler_instr_load_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_load_3b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
@@ -342,7 +342,7 @@ impl MixMachine {
     /// Note that this instruction only sets the first sign, 4th
     /// and 5th bits of the original memory location. This prevents
     /// the said 'undefined behavior' from happening.
-    fn handler_instr_load_neg_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_load_neg_3b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
@@ -379,7 +379,7 @@ impl MixMachine {
     }
 
     /// Handler for `JMP` and variants.
-    fn handler_instr_jmp(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_jmp(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         let target_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         // Match jump conditions.
         let should_jump = match instr.field {
@@ -392,7 +392,7 @@ impl MixMachine {
             7 => self.indicator_comp != ComparisonIndicatorValue::Lesser,
             8 => self.indicator_comp != ComparisonIndicatorValue::Equal,
             9 => self.indicator_comp != ComparisonIndicatorValue::Greater,
-            _ => return Err(TrapCode::InvalidField),
+            _ => return Err(ErrorCode::InvalidField),
         };
 
         // Clear overflow flag.
@@ -407,7 +407,7 @@ impl MixMachine {
     }
 
     /// Handler for `CHAR`, `NUM` and `HLT`.
-    fn handler_instr_special(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_special(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         if instr.field == 0 {
             // NUM instruction
             let a_content = &self.r_a[1..=5];
@@ -424,7 +424,7 @@ impl MixMachine {
             // We do not modify the sign byte.
             self.r_a
                 .set(1..=5, &result_word[1..=5])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
             return Ok(());
         } else if instr.field == 1 {
             // CHAR instruction
@@ -447,12 +447,12 @@ impl MixMachine {
             self.halted = true;
             return Ok(());
         } else {
-            return Err(TrapCode::InvalidField);
+            return Err(ErrorCode::InvalidField);
         }
     }
 
     /// Handler for `STZ`.
-    fn handler_instr_store_zero(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_store_zero(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         let field = instr.field.to_range_inclusive();
@@ -470,7 +470,7 @@ impl MixMachine {
     }
 
     /// Handler for `MOVE`.
-    fn handler_instr_move(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_move(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain from address.
         let from_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         // Obtain to address.
@@ -481,13 +481,13 @@ impl MixMachine {
             let orig_mem = self.mem[from_addr + i as u16];
             self.mem[to_addr + i as u16]
                 .set(0..=5, &orig_mem[0..=5])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
         }
         let new_r_i1_val = self.r_in[1].to_i64().0 + num_words as i64;
         let (new_r_i1, overflow) = HalfWord::from_i64(new_r_i1_val);
         self.r_in[1]
             .set(0..=2, &new_r_i1[0..=2])
-            .map_err(|_| TrapCode::MemAccessError)?;
+            .map_err(|_| ErrorCode::MemAccessError)?;
         if overflow {
             self.overflow = overflow;
         }
@@ -495,7 +495,7 @@ impl MixMachine {
     }
 
     /// Handler for `STA` and `STX`.
-    fn handler_instr_store_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_store_6b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
@@ -517,7 +517,7 @@ impl MixMachine {
     }
 
     /// Handler for `ST1-6`.
-    fn handler_instr_store_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_store_3b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
@@ -545,7 +545,7 @@ impl MixMachine {
 
     /// Handler for `INCA`, `DECA`, `ENTA`, `ENNA`, `INCX`,
     /// `DECX`, `ENTX` and `ENNX`.
-    fn handler_instr_modify_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_modify_6b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         let reg = match instr.opcode {
             instr::Opcode::ModifyA => &mut self.r_a,
@@ -563,7 +563,7 @@ impl MixMachine {
             // Convert back modified value.
             let (new_word, overflow) = FullWord::from_i64(value + offset);
             reg.set(0..=5, &new_word[0..=5])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
             // Should we overflow?
             if overflow {
                 self.overflow = overflow;
@@ -574,18 +574,18 @@ impl MixMachine {
             let (new_word, _) = FullWord::from_i64(addr as i64);
             // Copy new word into reg.
             reg.set(0..=5, &new_word[0..=5])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
             if instr.field == 3 {
                 reg.toggle_sign();
             }
             return Ok(());
         } else {
-            return Err(TrapCode::InvalidField);
+            return Err(ErrorCode::InvalidField);
         }
     }
 
     /// Handler for `INC1-6`, `DEC1-6`, `ENT1-6`, `ENN1-6`.
-    fn handler_instr_modify_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_modify_3b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         let addr = self.helper_get_eff_addr_unchecked(instr.addr, instr.index);
         let reg = match instr.opcode {
             instr::Opcode::Modify1 => &mut self.r_in[1],
@@ -607,7 +607,7 @@ impl MixMachine {
             // Convert back modified value.
             let (new_word, overflow) = HalfWord::from_i64(value + offset);
             reg.set(0..=2, &new_word[0..=2])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
             // Should we overflow?
             if overflow {
                 self.overflow = overflow;
@@ -618,18 +618,18 @@ impl MixMachine {
             let (new_word, _) = HalfWord::from_i64(addr as i64);
             // Copy new word into reg.
             reg.set(0..=2, &new_word[0..=2])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
             if instr.field == 3 {
                 reg.toggle_sign();
             }
             return Ok(());
         } else {
-            return Err(TrapCode::InvalidField);
+            return Err(ErrorCode::InvalidField);
         }
     }
 
     /// Handler for `ADD` and `SUB`.
-    fn handler_instr_add_sub(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_add_sub(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let orig_value = self.r_a.to_i64().0;
@@ -647,7 +647,7 @@ impl MixMachine {
         // Set new value.
         self.r_a
             .set(0..=5, &new_word[0..=5])
-            .map_err(|_| TrapCode::MemAccessError)?;
+            .map_err(|_| ErrorCode::MemAccessError)?;
         // Should we overflow?
         if overflow {
             self.overflow = overflow;
@@ -657,7 +657,7 @@ impl MixMachine {
     }
 
     /// Handler for `MUL`.
-    fn handler_instr_mul(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_mul(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let orig_value = self.r_a.to_i64().0;
@@ -692,7 +692,7 @@ impl MixMachine {
     }
 
     /// Handler for `DIV`.
-    fn handler_instr_div(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_div(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // TODO: Make a generic version of Word::from_int().
         // Obtain value.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
@@ -749,10 +749,10 @@ impl MixMachine {
         };
         self.r_a
             .set(1..=5, &new_a[1..=5])
-            .map_err(|_| TrapCode::MemAccessError)?;
+            .map_err(|_| ErrorCode::MemAccessError)?;
         self.r_x
             .set(1..=5, &new_x[1..=5])
-            .map_err(|_| TrapCode::MemAccessError)?;
+            .map_err(|_| ErrorCode::MemAccessError)?;
         if overflow_a || overflow_x {
             // Copy overflowed.
             self.overflow = true;
@@ -761,7 +761,7 @@ impl MixMachine {
     }
 
     /// Handler for `CMPA` and `CMPX`.
-    fn handler_instr_cmp_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_cmp_6b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain CONTENT(M).
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
@@ -786,7 +786,7 @@ impl MixMachine {
     }
 
     /// Handler for `CMP1-6`.
-    fn handler_instr_cmp_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_cmp_3b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Obtain CONTENT(M).
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
@@ -816,7 +816,7 @@ impl MixMachine {
     }
 
     /// Handler for `JA` and `JX`.
-    fn handler_instr_jmp_reg_6b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_jmp_reg_6b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         let target_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         let reg = match instr.opcode {
             instr::Opcode::JA => &self.r_a,
@@ -831,7 +831,7 @@ impl MixMachine {
             3 => reg_value_sign != -1,
             4 => reg_value_sign != 0,
             5 => reg_value_sign != 1,
-            _ => return Err(TrapCode::InvalidField),
+            _ => return Err(ErrorCode::InvalidField),
         };
         if should_jump {
             self.helper_do_jump(target_addr, true)?;
@@ -840,7 +840,7 @@ impl MixMachine {
     }
 
     /// Handler for `J1-6`.
-    fn handler_instr_jmp_reg_3b(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_jmp_reg_3b(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         let target_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         let reg = match instr.opcode {
             instr::Opcode::J1 => &self.r_in[1],
@@ -859,7 +859,7 @@ impl MixMachine {
             3 => reg_value_sign != -1,
             4 => reg_value_sign != 0,
             5 => reg_value_sign != 1,
-            _ => return Err(TrapCode::InvalidField),
+            _ => return Err(ErrorCode::InvalidField),
         };
         if should_jump {
             self.helper_do_jump(target_addr, true)?;
@@ -868,7 +868,7 @@ impl MixMachine {
     }
 
     /// Handler for `SLA`, `SRA`, `SLAX`, `SRAX`, `SLC` and `SRC`.
-    fn handler_instr_shift(&mut self, instr: &instr::Instruction) -> Result<(), TrapCode> {
+    fn handler_instr_shift(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         let count = self.helper_get_eff_addr(instr.addr, instr.index)?;
         if instr.field == 0 || instr.field == 1 {
             // SLA and SRA.
@@ -883,7 +883,7 @@ impl MixMachine {
             // Store back.
             self.r_a
                 .set(1..=5, &shifted_value.to_be_bytes()[3..=7])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
         } else if instr.field == 2 || instr.field == 3 {
             // SLAX and SRAX.
             // Spread original register to bytes.
@@ -917,10 +917,10 @@ impl MixMachine {
             let shifted_bytes = shifted_value.to_be_bytes();
             self.r_a
                 .set(1..=5, &shifted_bytes[6..=10])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
             self.r_x
                 .set(1..=5, &shifted_bytes[11..=15])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
         } else if instr.field == 4 || instr.field == 5 {
             // SLC and SRC.
             // Spread out bytes.
@@ -939,10 +939,10 @@ impl MixMachine {
             // Zero the registers.
             self.r_a
                 .set(1..=5, &[0; 5])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
             self.r_x
                 .set(1..=5, &[0; 5])
-                .map_err(|_| TrapCode::MemAccessError)?;
+                .map_err(|_| ErrorCode::MemAccessError)?;
             // Create cyclic iterator.
             let mut orig_bytes_iter = orig_bytes.iter().cycle();
             // Get shift count.
@@ -967,7 +967,7 @@ impl MixMachine {
                 }
             }
         } else {
-            return Err(TrapCode::InvalidField);
+            return Err(ErrorCode::InvalidField);
         }
         Ok(())
     }

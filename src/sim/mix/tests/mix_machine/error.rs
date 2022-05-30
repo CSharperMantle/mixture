@@ -13,7 +13,7 @@ fn test_illegal_instruction() {
     mix.restart();
 
     let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::IllegalInstruction);
+    assert_eq!(err, ErrorCode::IllegalInstruction);
     assert_eq!(mix.halted, true);
 }
 
@@ -23,7 +23,7 @@ fn test_halted() {
     mix.reset();
 
     let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::Halted);
+    assert_eq!(err, ErrorCode::Halted);
     assert_eq!(mix.halted, true);
 }
 
@@ -39,7 +39,7 @@ fn test_invalid_addr() {
     mix.restart();
 
     let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::InvalidAddress);
+    assert_eq!(err, ErrorCode::InvalidAddress);
     assert_eq!(mix.halted, true);
 }
 
@@ -55,7 +55,7 @@ fn test_invalid_field() {
     mix.restart();
 
     let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::InvalidField);
+    assert_eq!(err, ErrorCode::InvalidField);
     assert_eq!(mix.halted, true);
 }
 
@@ -69,6 +69,6 @@ fn test_invalid_index() {
     mix.restart();
 
     let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, TrapCode::InvalidIndex);
+    assert_eq!(err, ErrorCode::InvalidIndex);
     assert_eq!(mix.halted, true);
 }
