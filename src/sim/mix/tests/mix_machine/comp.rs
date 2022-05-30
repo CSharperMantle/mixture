@@ -1,7 +1,6 @@
 use crate::sim::mix::instr::*;
 use crate::sim::mix::mem::*;
 use crate::sim::mix::mix_machine::*;
-use crate::sim::mix::reg::*;
 
 #[test]
 fn test_euclid() {
@@ -124,4 +123,73 @@ fn test_ones() {
     assert_eq!(mix.r_in[1][0..=2], [0, 0, 3]);
     assert_eq!(mix.indicator_comp, ComparisonIndicatorValue::Equal);
     assert_eq!(mix.overflow, true);
+}
+
+#[test]
+fn test_exp_13() {
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    // * Test sequence source: D. E. Knuth,
+    // * 'The Art of Computer Programming', Volume 1, pp 509.
+    // * Algorithm: 'X^13 program'
+    //     ORIG 3000
+    //     LDA  2000
+    //     MUL  2000(1:5)
+    //     STX  3500(1:1)
+    //     SRC  1
+    //     MUL  3500
+    //     STA  3501
+    //     ADD  2000
+    //     MUL  3501(1:5)
+    //     STX  3501
+    //     MUL  3501(1:5)
+    //     SLAX 1
+    //     HLT  0
+    //     ORIG 3500
+    //     CON  0
+    //     CON  0
+    mix.mem[3000] = Instruction::new(2000, 5, 0, Opcode::LdA)
+        .try_into()
+        .unwrap();
+    mix.mem[3001] = Instruction::new(2000, 13, 0, Opcode::Mul)
+        .try_into()
+        .unwrap();
+    mix.mem[3002] = Instruction::new(3500, 9, 0, Opcode::StX)
+        .try_into()
+        .unwrap();
+    mix.mem[3003] = Instruction::new(1, 5, 0, Opcode::Shift).try_into().unwrap();
+    mix.mem[3004] = Instruction::new(3500, 5, 0, Opcode::Mul)
+        .try_into()
+        .unwrap();
+    mix.mem[3005] = Instruction::new(3501, 5, 0, Opcode::StA)
+        .try_into()
+        .unwrap();
+    mix.mem[3006] = Instruction::new(2000, 5, 0, Opcode::Add)
+        .try_into()
+        .unwrap();
+    mix.mem[3007] = Instruction::new(3501, 13, 0, Opcode::Mul)
+        .try_into()
+        .unwrap();
+    mix.mem[3008] = Instruction::new(3501, 5, 0, Opcode::StX)
+        .try_into()
+        .unwrap();
+    mix.mem[3009] = Instruction::new(3501, 13, 0, Opcode::Mul)
+        .try_into()
+        .unwrap();
+    mix.mem[3010] = Instruction::new(1, 2, 0, Opcode::Shift).try_into().unwrap();
+    mix.mem[3011] = Instruction::new(0, 2, 0, Opcode::Special)
+        .try_into()
+        .unwrap();
+    mix.mem[2000] = Word::from_i64(3).0;
+
+    mix.pc = 3000;
+
+    mix.restart();
+
+    while !mix.halted {
+        mix.step().unwrap();
+    }
+
+    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0x18, 0x53, 0xD3]);
 }

@@ -1,6 +1,5 @@
 use crate::sim::mix::instr::*;
 use crate::sim::mix::mix_machine::*;
-use crate::sim::mix::reg::*;
 
 #[test]
 fn test_nop() {

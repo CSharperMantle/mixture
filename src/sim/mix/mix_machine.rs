@@ -7,6 +7,9 @@ type FullWord = mem::Word<6, false>;
 /// A internal shortcut to a 3-byte Word.
 type HalfWord = mem::Word<3, false>;
 
+/// A internal shortcut to a always-positive 3-byte Word.
+type PosHalfWord = mem::Word<3, true>;
+
 /// Error codes for the MIX machine.
 #[derive(PartialEq, Eq, Debug)]
 pub enum TrapCode {
@@ -19,26 +22,34 @@ pub enum TrapCode {
     Halted,
 }
 
+/// Values of the comparison indicator.
+#[derive(PartialEq, Eq, Debug)]
+pub enum ComparisonIndicatorValue {
+    Equal,
+    Lesser,
+    Greater,
+}
+
 /// The state of a MIX machine.
 pub struct MixMachine {
     /// The register `rA`.
-    pub r_a: reg::GenericRegister,
+    pub r_a: FullWord,
 
     /// The register `rX`.
-    pub r_x: reg::GenericRegister,
+    pub r_x: FullWord,
 
     /// The register `rIn`, where `n = 1, 2, 3, 4, 5, 6`.
     /// `r_in[0]` should always used as a source of 0.
-    pub r_in: [reg::IndexRegister; 7],
+    pub r_in: [HalfWord; 7],
 
     /// The register `rJ`.
-    pub r_j: reg::JumpRegister,
+    pub r_j: PosHalfWord,
 
     /// The overflow toggle.
     pub overflow: bool,
 
     /// The comparison indicator.
-    pub indicator_comp: reg::ComparisonIndicatorValue,
+    pub indicator_comp: ComparisonIndicatorValue,
 
     /// The memory.
     pub mem: mem::Mem,
@@ -54,12 +65,12 @@ impl MixMachine {
     /// Create a new MIX machine.
     pub fn new() -> Self {
         MixMachine {
-            r_a: reg::GenericRegister::new(),
-            r_x: reg::GenericRegister::new(),
-            r_in: [reg::IndexRegister::new(); 7],
-            r_j: reg::JumpRegister::new(),
+            r_a: FullWord::new(),
+            r_x: FullWord::new(),
+            r_in: [HalfWord::new(); 7],
+            r_j: PosHalfWord::new(),
             overflow: false,
-            indicator_comp: reg::ComparisonIndicatorValue::Equal,
+            indicator_comp: ComparisonIndicatorValue::Equal,
             mem: mem::Mem::new(),
             pc: 0,
             halted: true,
@@ -74,10 +85,10 @@ impl MixMachine {
     pub fn reset(&mut self) {
         self.pc = 0;
         self.overflow = false;
-        self.r_a = reg::GenericRegister::new();
-        self.r_x = reg::GenericRegister::new();
-        self.r_in = [reg::IndexRegister::new(); 7];
-        self.r_j = reg::JumpRegister::new();
+        self.r_a = FullWord::new();
+        self.r_x = FullWord::new();
+        self.r_in = [HalfWord::new(); 7];
+        self.r_j = PosHalfWord::new();
     }
 
     /// Restart the machine.
@@ -375,12 +386,12 @@ impl MixMachine {
             0 | 1 => true,
             2 => self.overflow,
             3 => !self.overflow,
-            4 => self.indicator_comp == reg::ComparisonIndicatorValue::Lesser,
-            5 => self.indicator_comp == reg::ComparisonIndicatorValue::Equal,
-            6 => self.indicator_comp == reg::ComparisonIndicatorValue::Greater,
-            7 => self.indicator_comp != reg::ComparisonIndicatorValue::Lesser,
-            8 => self.indicator_comp != reg::ComparisonIndicatorValue::Equal,
-            9 => self.indicator_comp != reg::ComparisonIndicatorValue::Greater,
+            4 => self.indicator_comp == ComparisonIndicatorValue::Lesser,
+            5 => self.indicator_comp == ComparisonIndicatorValue::Equal,
+            6 => self.indicator_comp == ComparisonIndicatorValue::Greater,
+            7 => self.indicator_comp != ComparisonIndicatorValue::Lesser,
+            8 => self.indicator_comp != ComparisonIndicatorValue::Equal,
+            9 => self.indicator_comp != ComparisonIndicatorValue::Greater,
             _ => return Err(TrapCode::InvalidField),
         };
 
@@ -763,13 +774,13 @@ impl MixMachine {
         // Calculate and set flags.
         self.indicator_comp = if reg_value.abs() == 0 && target_value.abs() == 0 {
             // +0 and -0 are equal.
-            reg::ComparisonIndicatorValue::Equal
+            ComparisonIndicatorValue::Equal
         } else if reg_value == target_value {
-            reg::ComparisonIndicatorValue::Equal
+            ComparisonIndicatorValue::Equal
         } else if reg_value > target_value {
-            reg::ComparisonIndicatorValue::Greater
+            ComparisonIndicatorValue::Greater
         } else {
-            reg::ComparisonIndicatorValue::Lesser
+            ComparisonIndicatorValue::Lesser
         };
         Ok(())
     }
@@ -793,13 +804,13 @@ impl MixMachine {
         // Calculate and set flags.
         self.indicator_comp = if reg_value.abs() == 0 && target_value.abs() == 0 {
             // +0 and -0 are equal.
-            reg::ComparisonIndicatorValue::Equal
+            ComparisonIndicatorValue::Equal
         } else if reg_value == target_value {
-            reg::ComparisonIndicatorValue::Equal
+            ComparisonIndicatorValue::Equal
         } else if reg_value > target_value {
-            reg::ComparisonIndicatorValue::Greater
+            ComparisonIndicatorValue::Greater
         } else {
-            reg::ComparisonIndicatorValue::Lesser
+            ComparisonIndicatorValue::Lesser
         };
         Ok(())
     }
