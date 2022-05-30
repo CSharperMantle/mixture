@@ -410,8 +410,9 @@ impl MixMachine {
             }
             // Rebuild a word of 4 bytes.
             let (result_word, _) = FullWord::from_i64(result);
+            // We do not modify the sign byte.
             self.r_a
-                .set(0..=5, &result_word[0..=5])
+                .set(1..=5, &result_word[1..=5])
                 .map_err(|_| TrapCode::MemAccessError)?;
             return Ok(());
         } else if instr.field == 1 {
@@ -424,7 +425,13 @@ impl MixMachine {
                 .chars()
                 .map(|c| c.to_digit(10).unwrap())
                 .collect::<Vec<u32>>();
-            for (reg_i, digit) in (0..10).rev().zip(digits.iter().rev()) {
+            // Iterate over digits and store them back to registers.
+            // Fill untouched bytes with 0 + 30 with a cyclic iterator
+            // of [0].
+            for (reg_i, digit) in (0..10)
+                .rev()
+                .zip(digits.iter().rev().chain([0].iter().cycle()))
+            {
                 if reg_i >= 5 {
                     self.r_x[reg_i - 5 + 1] = *digit as u8 + 30;
                 } else {
@@ -474,6 +481,14 @@ impl MixMachine {
             self.mem[to_addr + i as u16]
                 .set(0..=5, &orig_mem[0..=5])
                 .map_err(|_| TrapCode::MemAccessError)?;
+        }
+        let new_r_i1_val = self.r_in[1].to_i64().0 + num_words as i64;
+        let (new_r_i1, overflow) = HalfWord::from_i64(new_r_i1_val);
+        self.r_in[1]
+            .set(0..=2, &new_r_i1[0..=2])
+            .map_err(|_| TrapCode::MemAccessError)?;
+        if overflow {
+            self.overflow = overflow;
         }
         Ok(())
     }
