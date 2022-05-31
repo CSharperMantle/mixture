@@ -31,6 +31,19 @@ pub enum ComparisonIndicatorValue {
 }
 
 /// The state of a MIX machine.
+///
+/// # Example
+/// ```rust
+/// use mixture::sim::mix::mix_machine::*;
+///
+/// let mut machine = MixMachine::new();
+/// machine.reset();
+/// machine.restart();
+///
+/// assert_eq!(machine.halted, false);
+///
+/// machine.step().unwrap();
+/// ```
 pub struct MixMachine {
     /// The register `rA`.
     pub r_a: FullWord,
@@ -323,7 +336,7 @@ impl MixMachine {
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
         let mut temp = FullWord::from_bytes([1, 0, 0, 0, 0, 0]);
         // Copy bytes shifted right.
-        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+        for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
             temp[reg_cursor] = memory_cell[memory_cell_cursor];
         }
         // Copy sign byte if needed.
@@ -358,9 +371,9 @@ impl MixMachine {
         // We need to care about only the 4th, 5th and the sign byte.
         // So we make a temporary word and fill back the reg only the
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
-        let mut temp = FullWord::from_bytes([0, 0, 0, 0, 0, 0]);
+        let mut temp = FullWord::from_bytes([0; 6]);
         // Copy bytes shifted right.
-        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+        for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
             temp[reg_cursor] = memory_cell[memory_cell_cursor];
         }
         // Copy negated sign byte if needed.
@@ -394,12 +407,10 @@ impl MixMachine {
             9 => self.indicator_comp != ComparisonIndicatorValue::Greater,
             _ => return Err(ErrorCode::InvalidField),
         };
-
         // Clear overflow flag.
         if instr.field == 2 || instr.field == 3 {
             self.overflow = false;
         }
-
         if should_jump {
             self.helper_do_jump(target_addr, instr.field != 1)?;
         }
@@ -415,8 +426,8 @@ impl MixMachine {
             let mut result: i64 = 0;
             // For each byte, we extract its 1st position,
             // and push it to `result`.
-            for byte in a_content.iter().chain(x_content.iter()) {
-                let digit = *byte % 10;
+            for &byte in a_content.iter().chain(x_content.iter()) {
+                let digit = byte % 10;
                 result = result * 10 + digit as i64;
             }
             // Rebuild a word of 4 bytes.
@@ -457,14 +468,14 @@ impl MixMachine {
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         let field = instr.field.to_range_inclusive();
         let memory_cell = &mut self.mem[addr];
-        let start = *field.start();
         // Zero the memory cell.
         for i in field {
-            memory_cell[i] = 0;
-        }
-        // Deal with signs.
-        if start == 0 {
-            memory_cell[0] = 1;
+            if i == 0 {
+                // Deal with signs.
+                memory_cell[0] = 1;
+            } else {
+                memory_cell[i] = 0;
+            }
         }
         Ok(())
     }
@@ -506,7 +517,7 @@ impl MixMachine {
             _ => unreachable!(),
         };
         // Copy bytes shifted right.
-        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+        for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
             memory_cell[memory_cell_cursor] = reg[reg_cursor];
         }
         if sign_copy_needed {
@@ -533,7 +544,7 @@ impl MixMachine {
         };
         let padded_reg = [reg[0], 0, 0, 0, reg[1], reg[2]];
         // Copy bytes shifted right.
-        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
+        for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
             memory_cell[memory_cell_cursor] = padded_reg[reg_cursor];
         }
         if sign_copy_needed {
@@ -571,7 +582,7 @@ impl MixMachine {
             return Ok(());
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
-            let (new_word, _) = FullWord::from_i64(addr as i64);
+            let new_word = FullWord::from_i64(addr as i64).0;
             // Copy new word into reg.
             reg.set(0..=5, &new_word[0..=5])
                 .map_err(|_| ErrorCode::MemAccessError)?;
@@ -959,11 +970,11 @@ impl MixMachine {
                 orig_bytes_iter.next().unwrap();
             }
             // Write back.
-            for (reg_i, digit) in (0..10).zip(orig_bytes_iter) {
+            for (reg_i, &digit) in (0..10).zip(orig_bytes_iter) {
                 if reg_i >= 5 {
-                    self.r_x[reg_i - 5 + 1] = *digit;
+                    self.r_x[reg_i - 5 + 1] = digit;
                 } else {
-                    self.r_a[reg_i + 1] = *digit;
+                    self.r_a[reg_i + 1] = digit;
                 }
             }
         } else {
