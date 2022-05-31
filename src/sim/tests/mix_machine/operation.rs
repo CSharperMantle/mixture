@@ -1,4 +1,4 @@
-use crate::sim::mix::mix_machine::*;
+use crate::sim::mix_machine::*;
 
 #[test]
 fn test_reset_restart() {

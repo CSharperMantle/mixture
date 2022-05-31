@@ -1,4 +1,4 @@
-use crate::sim::mix::mem::*;
+use crate::sim::mem::*;
 
 #[test]
 fn test_word_from_bytes() {

@@ -1,5 +1,5 @@
-use crate::sim::mix::instr::*;
-use crate::sim::mix::mix_machine::*;
+use crate::sim::instr::*;
+use crate::sim::mix_machine::*;
 
 #[test]
 fn test_illegal_instruction() {

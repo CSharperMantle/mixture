@@ -1,5 +1,5 @@
-use crate::sim::mix::instr::*;
-use crate::sim::mix::mem::*;
+use crate::sim::instr::*;
+use crate::sim::mem::*;
 
 #[test]
 fn test_instruction_from() {

@@ -1,5 +1,5 @@
-use crate::sim::mix::instr::ToRangeInclusive;
-use crate::sim::mix::*;
+use crate::sim::instr::ToRangeInclusive;
+use crate::sim::*;
 
 /// A internal shortcut to a 6-byte Word.
 type FullWord = mem::Word<6, false>;
@@ -34,7 +34,7 @@ pub enum ComparisonIndicatorValue {
 ///
 /// # Example
 /// ```rust
-/// use mixture::sim::mix::mix_machine::*;
+/// use mixture::sim::mix_machine::*;
 ///
 /// let mut machine = MixMachine::new();
 /// machine.reset();

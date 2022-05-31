@@ -1,4 +1,4 @@
-use crate::sim::mix::*;
+use crate::sim::*;
 
 /// A word in MIX machine, with variable number of bytes.
 ///
@@ -19,7 +19,7 @@ use crate::sim::mix::*;
 ///
 /// # Example
 /// ```rust
-/// use mixture::sim::mix::mem::*;
+/// use mixture::sim::mem::*;
 ///
 /// let mut word = Word::<6, false>::new();
 ///
@@ -62,7 +62,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
+    /// use mixture::sim::mem::*;
     ///
     /// let word = Word::<6, false>::from_bytes([0, 1, 2, 3, 4, 5]);
     /// assert_eq!(word[0..=5], [0, 1, 2, 3, 4, 5]);
@@ -91,7 +91,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
+    /// use mixture::sim::mem::*;
     ///
     /// let v = -0x0102030405060708;
     ///
@@ -132,7 +132,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
+    /// use mixture::sim::mem::*;
     ///
     /// let mut word = Word::<6, false>::new();
     ///
@@ -169,7 +169,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
+    /// use mixture::sim::mem::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
@@ -187,7 +187,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
+    /// use mixture::sim::mem::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word[0] = 0;
@@ -216,7 +216,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
+    /// use mixture::sim::mem::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
@@ -252,7 +252,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
+    /// use mixture::sim::mem::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
@@ -354,8 +354,8 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
-    /// use mixture::sim::mix::instr::*;
+    /// use mixture::sim::mem::*;
+    /// use mixture::sim::instr::*;
     ///
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     ///
@@ -387,7 +387,7 @@ impl Mem {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
+    /// use mixture::sim::mem::*;
     ///
     /// let mem = Mem::new();
     /// assert_eq!(mem[0][0..=5], [0, 0, 0, 0, 0, 0]);

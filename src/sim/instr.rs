@@ -1,4 +1,4 @@
-use crate::sim::mix::*;
+use crate::sim::*;
 
 /// An instruction of the MIX machine.
 ///
@@ -30,7 +30,7 @@ impl Instruction {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::instr::*;
+    /// use mixture::sim::instr::*;
     ///
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     /// assert_eq!(instr.addr, 2000);
@@ -62,8 +62,8 @@ impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::mem::*;
-    /// use mixture::sim::mix::instr::*;
+    /// use mixture::sim::mem::*;
+    /// use mixture::sim::instr::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set(0..=5, &[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
@@ -514,7 +514,7 @@ impl ToRangeInclusive<usize> for u8 {
     /// 
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::instr::*;
+    /// use mixture::sim::instr::*;
     ///
     /// assert_eq!(1.to_range_inclusive(), 0..=1);
     /// assert_eq!(13.to_range_inclusive(), 1..=5);
@@ -528,7 +528,7 @@ impl ToRangeInclusive<usize> for u8 {
     /// 
     /// # Example
     /// ```rust
-    /// use mixture::sim::mix::instr::*;
+    /// use mixture::sim::instr::*;
     ///
     /// assert_eq!(1.to_range_inclusive_signless(), (1..=1, true));
     /// assert_eq!(13.to_range_inclusive_signless(), (1..=5, false));
