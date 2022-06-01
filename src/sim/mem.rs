@@ -19,7 +19,7 @@ use crate::sim::*;
 ///
 /// # Example
 /// ```rust
-/// use mixture::sim::mem::*;
+/// use mixture::sim::*;
 ///
 /// let mut word = Word::<6, false>::new();
 ///
@@ -45,7 +45,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     pub const POS: u8 = 0;
 
     /// Create a new word with default values.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         let mut w: Word<N, P> = Word { data: [0; N] };
         if P {
             w.data[0] = Self::POS;
@@ -62,12 +62,12 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
+    /// use mixture::sim::*;
     ///
     /// let word = Word::<6, false>::from_bytes([0, 1, 2, 3, 4, 5]);
     /// assert_eq!(word[0..=5], [0, 1, 2, 3, 4, 5]);
     /// ```
-    pub fn from_bytes(bytes: [u8; N]) -> Self {
+    pub const fn from_bytes(bytes: [u8; N]) -> Self {
         let mut word = Word { data: bytes };
         if P {
             word.data[0] = Self::POS;
@@ -91,7 +91,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
+    /// use mixture::sim::*;
     ///
     /// let v = -0x0102030405060708;
     ///
@@ -132,7 +132,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     ///
@@ -169,14 +169,14 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
     ///
     /// assert_eq!(word.is_positive(), true);
     /// ```
-    pub fn is_positive(&self) -> bool {
+    pub const fn is_positive(&self) -> bool {
         self.data[0] == Self::POS
     }
 
@@ -187,7 +187,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word[0] = 0;
@@ -216,7 +216,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
@@ -252,7 +252,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
@@ -354,8 +354,8 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
-    /// use mixture::sim::instr::*;
+    /// use mixture::sim::*;
+    /// use mixture::sim::*;
     ///
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     ///
@@ -387,12 +387,12 @@ impl Mem {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
+    /// use mixture::sim::*;
     ///
     /// let mem = Mem::new();
     /// assert_eq!(mem[0][0..=5], [0, 0, 0, 0, 0, 0]);
     /// ```
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Mem {
             data: [Word::<6, false>::new(); 4000],
         }

@@ -1,6 +1,6 @@
-pub mod instr;
-pub mod mem;
-pub mod mix_machine;
+mod instr;
+mod mem;
+mod mix_machine;
 
 pub use instr::*;
 pub use mem::*;

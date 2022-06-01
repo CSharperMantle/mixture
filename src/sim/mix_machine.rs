@@ -34,7 +34,7 @@ pub enum ComparisonIndicatorValue {
 ///
 /// # Example
 /// ```rust
-/// use mixture::sim::mix_machine::*;
+/// use mixture::sim::*;
 ///
 /// let mut machine = MixMachine::new();
 /// machine.reset();

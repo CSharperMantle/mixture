@@ -1,4 +1,5 @@
 use crate::sim::*;
+use crate::*;
 
 /// An instruction of the MIX machine.
 ///
@@ -6,7 +7,7 @@ use crate::sim::*;
 /// given that all the fields are valid and vice versa.
 #[derive(Clone, Copy, Debug)]
 pub struct Instruction {
-    /// The signed address, `A`, read little-endian.
+    /// The signed address, `A`, read big-endian.
     pub addr: i16,
 
     /// The field, `F`.
@@ -23,14 +24,14 @@ impl Instruction {
     /// Create a new instruction.
     ///
     /// # Arguments
-    /// * `addr` - The signed address, `A`, read little-endian.
+    /// * `addr` - The signed address, `A`, read big-endian.
     /// * `field` - The field, `F`.
     /// * `index` - The index, `I`.
     /// * `opcode` - The operation code, `C`.
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::instr::*;
+    /// use mixture::sim::*;
     ///
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     /// assert_eq!(instr.addr, 2000);
@@ -38,7 +39,7 @@ impl Instruction {
     /// assert_eq!(instr.index, 0x02);
     /// assert_eq!(instr.opcode, Opcode::LdA);
     /// ```
-    pub fn new(addr: i16, field: u8, index: u8, opcode: Opcode) -> Self {
+    pub const fn new(addr: i16, field: u8, index: u8, opcode: Opcode) -> Self {
         Instruction {
             addr,
             field,
@@ -62,8 +63,8 @@ impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::mem::*;
-    /// use mixture::sim::instr::*;
+    /// use mixture::sim::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set(0..=5, &[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
@@ -83,6 +84,56 @@ impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
             field: source[4..=4][0],
             index: source[3..=3][0],
             addr,
+        })
+    }
+}
+
+impl std::convert::TryFrom<parse::AbstractInstruction> for Instruction {
+    type Error = &'static str;
+
+    /// Convert an `AbstractInstruction` to an `Instruction`.
+    ///
+    /// # Arguments
+    /// * `source` - The `AbstractInstruction` to convert.
+    ///
+    /// # Returns
+    /// * `Ok(Instruction)` - The conversion was successful.
+    /// * `Err(&'static str)` - The conversion failed.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mixture::*;
+    /// use mixture::sim::*;
+    /// use mixture::parse::Maybe;
+    ///
+    /// let instr = parse::AbstractInstruction {
+    ///     addr: Maybe::Concrete(2000),
+    ///     field: Maybe::Concrete(0x03),
+    ///     index: Maybe::Concrete(0x02),
+    ///     opcode: Opcode::LdA,
+    /// };
+    ///
+    /// let instr = Instruction::try_from(instr).unwrap();
+    /// assert_eq!(instr.opcode, Opcode::LdA);
+    /// assert_eq!(instr.field, 0x03);
+    /// assert_eq!(instr.index, 0x02);
+    /// assert_eq!(instr.addr, 2000);
+    /// ```
+    fn try_from(source: parse::AbstractInstruction) -> Result<Self, &'static str> {
+        Ok(Instruction {
+            addr: source
+                .addr
+                .try_unwrap()
+                .map_err(|_| "source.addr is a placeholder")?,
+            field: source
+                .field
+                .try_unwrap()
+                .map_err(|_| "source.addr is a placeholder")?,
+            index: source
+                .index
+                .try_unwrap()
+                .map_err(|_| "source.addr is a placeholder")?,
+            opcode: source.opcode,
         })
     }
 }
@@ -511,10 +562,10 @@ impl ToRangeInclusive<usize> for u8 {
     ///
     /// # Returns
     /// * `std::ops::RangeInclusive<usize>`
-    /// 
+    ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::instr::*;
+    /// use mixture::sim::*;
     ///
     /// assert_eq!(1.to_range_inclusive(), 0..=1);
     /// assert_eq!(13.to_range_inclusive(), 1..=5);
@@ -525,10 +576,10 @@ impl ToRangeInclusive<usize> for u8 {
 
     /// Convert `u8` to a `std::ops::RangeInclusive<usize>`, but moving
     /// out 0th byte from range if necessary.
-    /// 
+    ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::instr::*;
+    /// use mixture::sim::*;
     ///
     /// assert_eq!(1.to_range_inclusive_signless(), (1..=1, true));
     /// assert_eq!(13.to_range_inclusive_signless(), (1..=5, false));
