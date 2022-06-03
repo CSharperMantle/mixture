@@ -1,5 +1,4 @@
 use crate::sim::*;
-use crate::*;
 
 /// An instruction of the MIX machine.
 ///
@@ -52,14 +51,14 @@ impl Instruction {
 impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
     type Error = &'static str;
 
-    /// Convert a `Word<6, false>` to an `Instruction`.
+    /// Convert a [`Word<6, false>`] to an [`Instruction`].
     ///
     /// # Arguments
-    /// * `source` - The `Word<6, false>` to convert.
+    /// * `source` - The [`Word<6, false>`] to convert.
     ///
     /// # Returns
-    /// * `Ok(Instruction)` - The conversion was successful.
-    /// * `Err(&'static str)` - The conversion failed.
+    /// * [`Ok(Instruction)`] - The conversion was successful.
+    /// * [`Err(&'static str)`] - The conversion failed.
     ///
     /// # Example
     /// ```rust
@@ -84,56 +83,6 @@ impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
             field: source[4..=4][0],
             index: source[3..=3][0],
             addr,
-        })
-    }
-}
-
-impl std::convert::TryFrom<parse::AbstractInstruction> for Instruction {
-    type Error = &'static str;
-
-    /// Convert an `AbstractInstruction` to an `Instruction`.
-    ///
-    /// # Arguments
-    /// * `source` - The `AbstractInstruction` to convert.
-    ///
-    /// # Returns
-    /// * `Ok(Instruction)` - The conversion was successful.
-    /// * `Err(&'static str)` - The conversion failed.
-    ///
-    /// # Example
-    /// ```rust
-    /// use mixture::*;
-    /// use mixture::sim::*;
-    /// use mixture::parse::Maybe;
-    ///
-    /// let instr = parse::AbstractInstruction {
-    ///     addr: Maybe::Concrete(2000),
-    ///     field: Maybe::Concrete(0x03),
-    ///     index: Maybe::Concrete(0x02),
-    ///     opcode: Opcode::LdA,
-    /// };
-    ///
-    /// let instr = Instruction::try_from(instr).unwrap();
-    /// assert_eq!(instr.opcode, Opcode::LdA);
-    /// assert_eq!(instr.field, 0x03);
-    /// assert_eq!(instr.index, 0x02);
-    /// assert_eq!(instr.addr, 2000);
-    /// ```
-    fn try_from(source: parse::AbstractInstruction) -> Result<Self, &'static str> {
-        Ok(Instruction {
-            addr: source
-                .addr
-                .try_unwrap()
-                .map_err(|_| "source.addr is a placeholder")?,
-            field: source
-                .field
-                .try_unwrap()
-                .map_err(|_| "source.addr is a placeholder")?,
-            index: source
-                .index
-                .try_unwrap()
-                .map_err(|_| "source.addr is a placeholder")?,
-            opcode: source.opcode,
         })
     }
 }

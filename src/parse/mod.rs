@@ -1,10 +1,8 @@
-mod maybe;
-mod parse;
 mod abs_instr;
+mod maybe;
 
-pub use maybe::*;
-pub use parse::*;
 pub use abs_instr::*;
+pub use maybe::*;
 
 #[cfg(test)]
 mod tests;

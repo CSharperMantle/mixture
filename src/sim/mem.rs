@@ -86,8 +86,8 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// * `value` - The value to initialize the word with.
     ///
     /// # Returns
-    /// * `Self` - The initialized word.
-    /// * `bool` - `true` if the given `i64` is too large, `false` otherwise.
+    /// * [`Word`] - The initialized word.
+    /// * [`bool`] - `true` if the given `i64` is too large, `false` otherwise.
     ///
     /// # Example
     /// ```rust
@@ -126,8 +126,8 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// * `value` - The value to set the register to.
     ///
     /// # Returns
-    /// * `Ok(())` - If `start` is less than 0.
-    /// * `Err(())` - If `range` is empty or given `value` is
+    /// * [`Ok(())`] - If `start` is less than 0.
+    /// * [`Err(())`] - If `range` is empty or given `value` is
     /// not the same length as `range`.
     ///
     /// # Example

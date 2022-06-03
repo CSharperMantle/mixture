@@ -19,6 +19,9 @@ MIXes: Frontend for MIX emulator/simulator.
     about = MIXES_BANNER,
 )]
 struct Args {
+    /// Input MIX bytecode file
+    file: String,
+
     /// Suppress banner display after startup
     #[clap(long)]
     no_banner: bool,
@@ -29,4 +32,7 @@ fn main() {
     if !args.no_banner {
         println!("{}", MIXES_BANNER);
     }
+    let path = std::path::Path::new(&args.file);
+    let content = String::from_utf8_lossy(&std::fs::read(path).unwrap()).to_string();
+    println!("{:?}", content);
 }

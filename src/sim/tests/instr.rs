@@ -1,4 +1,3 @@
-use crate::parse::*;
 use crate::sim::instr::*;
 use crate::sim::mem::*;
 
@@ -12,31 +11,6 @@ fn test_from_word() {
     assert_eq!(instr.field, 3);
     assert_eq!(instr.index, 2);
     assert_eq!(instr.addr, 2000);
-}
-
-#[test]
-fn test_from_abstract_instruction() {
-    let instr = AbstractInstruction {
-        addr: Maybe::<i16, i32>::Concrete(2000),
-        field: Maybe::<u8, i32>::Concrete(3),
-        index: Maybe::<u8, i32>::Concrete(2),
-        opcode: Opcode::LdA,
-    };
-
-    let instr = Instruction::try_from(instr).unwrap();
-    assert_eq!(instr.opcode, Opcode::LdA);
-    assert_eq!(instr.field, 3);
-    assert_eq!(instr.index, 2);
-    assert_eq!(instr.addr, 2000);
-
-    let abs_instr = AbstractInstruction {
-        addr: Maybe::<i16, i32>::Placeholder(1),
-        field: Maybe::<u8, i32>::Placeholder(2),
-        index: Maybe::<u8, i32>::Placeholder(3),
-        opcode: Opcode::LdA,
-    };
-
-    assert_eq!(Instruction::try_from(abs_instr).is_err(), true);
 }
 
 #[test]
