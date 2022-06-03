@@ -19,6 +19,8 @@ pub enum ErrorCode {
     InvalidField,
     InvalidIndex,
     MemAccessError,
+    UnknownDevice,
+    IOError,
     Halted,
 }
 
@@ -72,6 +74,9 @@ pub struct MixMachine {
 
     /// The machine running state.
     pub halted: bool,
+
+    /// IO devices.
+    pub io_devices: [Option<io::IODevice>; 21],
 }
 
 impl MixMachine {
@@ -87,6 +92,7 @@ impl MixMachine {
             mem: mem::Mem::new(),
             pc: 0,
             halted: true,
+            io_devices: [None; 21],
         }
     }
 
@@ -171,11 +177,11 @@ impl MixMachine {
             instr::Opcode::StJ => self.handler_instr_store_3b(&instr),
             instr::Opcode::StZ => self.handler_instr_store_zero(&instr),
 
-            instr::Opcode::Jbus => todo!(),
-            instr::Opcode::Ioc => todo!(),
-            instr::Opcode::In => todo!(),
-            instr::Opcode::Out => todo!(),
-            instr::Opcode::Jred => todo!(),
+            instr::Opcode::Jbus => self.handler_instr_jbus_jred(&instr),
+            instr::Opcode::Ioc => self.handler_instr_ioc(&instr),
+            instr::Opcode::In => self.handler_instr_in_out(&instr),
+            instr::Opcode::Out => self.handler_instr_in_out(&instr),
+            instr::Opcode::Jred => self.handler_instr_jbus_jred(&instr),
             instr::Opcode::Jmp => self.handler_instr_jmp(&instr),
 
             instr::Opcode::JA => self.handler_instr_jmp_reg_6b(&instr),
@@ -251,6 +257,18 @@ impl MixMachine {
         // Do jump.
         self.pc = location;
         Ok(())
+    }
+
+    /// Get IO device.
+    fn helper_get_io_device(&self, dev_id: usize) -> Result<&IODevice, ErrorCode> {
+        let dev = self
+            .io_devices
+            .get(dev_id)
+            .ok_or(ErrorCode::InvalidField)?
+            .as_ref()
+            .ok_or(ErrorCode::UnknownDevice)?;
+
+        Ok(dev)
     }
 
     /// Handler for `NOP`.
@@ -980,6 +998,59 @@ impl MixMachine {
         } else {
             return Err(ErrorCode::InvalidField);
         }
+        Ok(())
+    }
+
+    /// Handler for `JBUS` and `JRED`.
+    fn handler_instr_jbus_jred(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
+        // Get device ID.
+        let dev_id: usize = instr.field as usize;
+        // Get device reference.
+        let dev = self.helper_get_io_device(dev_id)?;
+        // Call appropriate callbacks.
+        let should_jump = match instr.opcode {
+            instr::Opcode::Jbus => (dev.is_busy_handler)().map_err(|_| ErrorCode::IOError)?,
+            instr::Opcode::Jred => (dev.is_ready_handler)().map_err(|_| ErrorCode::IOError)?,
+            _ => unreachable!(),
+        };
+        if should_jump {
+            // Do jump.
+            let jump_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+            self.helper_do_jump(jump_addr, true)?;
+        }
+        Ok(())
+    }
+
+    /// Handler for `IOC`.
+    fn handler_instr_ioc(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
+        // Get device ID.
+        let dev_id: usize = instr.field as usize;
+        // Get device reference.
+        let dev = self.helper_get_io_device(dev_id)?;
+        // Get command.
+        let command = self.helper_get_eff_addr_unchecked(instr.addr, instr.index);
+        // Call appropriate callbacks.
+        (dev.control_handler)(command).map_err(|_| ErrorCode::IOError)?;
+        Ok(())
+    }
+
+    /// Handler for `IN` and `OUT`.
+    fn handler_instr_in_out(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
+        // Get device ID.
+        let dev_id: usize = instr.field as usize;
+        // Get device reference.
+        let dev = self.helper_get_io_device(dev_id)?;
+        let count = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        // Call appropriate callbacks.
+        match instr.opcode {
+            instr::Opcode::In => {
+                (dev.in_handler)(&mut self.mem, count).map_err(|_| ErrorCode::IOError)?
+            }
+            instr::Opcode::Out => {
+                (dev.out_handler)(&self.mem, count).map_err(|_| ErrorCode::IOError)?
+            }
+            _ => unreachable!(),
+        };
         Ok(())
     }
 }

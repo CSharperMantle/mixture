@@ -1,4 +1,5 @@
 use crate::sim::instr::*;
+use crate::sim::io::*;
 use crate::sim::mix_machine::*;
 
 #[test]
@@ -1005,4 +1006,124 @@ fn test_shift() {
     assert_eq!(mix.halted, false);
     assert_eq!(mix.r_a[0..=5], [0, 0, 6, 7, 8, 3]);
     assert_eq!(mix.r_x[0..=5], [1, 4, 0, 0, 5, 0]);
+}
+
+#[test]
+fn test_jbus_jred() {
+    let dev_always_ready = IODevice {
+        in_handler: |_, _| unimplemented!(),
+        out_handler: |_, _| unimplemented!(),
+        control_handler: |_| unimplemented!(),
+        is_ready_handler: || Ok(true),
+        is_busy_handler: || Ok(false),
+    };
+
+    let dev_always_busy = IODevice {
+        in_handler: |_, _| unimplemented!(),
+        out_handler: |_, _| unimplemented!(),
+        control_handler: |_| unimplemented!(),
+        is_ready_handler: || Ok(false),
+        is_busy_handler: || Ok(true),
+    };
+
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.io_devices[0] = Some(dev_always_ready);
+    mix.io_devices[1] = Some(dev_always_busy);
+
+    mix.mem[0] = Instruction::new(100, 0, 0, Opcode::Jred)
+        .try_into()
+        .unwrap();
+    mix.mem[100] = Instruction::new(200, 1, 0, Opcode::Jred)
+        .try_into()
+        .unwrap();
+    mix.mem[101] = Instruction::new(200, 0, 0, Opcode::Jbus)
+        .try_into()
+        .unwrap();
+    mix.mem[102] = Instruction::new(0, 1, 0, Opcode::Jbus).try_into().unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 100);
+    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 101);
+    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 102);
+    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 0);
+    assert_eq!(mix.r_j[0..=2], [0, 0, 0x67]);
+}
+
+#[test]
+fn test_ioc() {
+    let dev_logged = IODevice {
+        in_handler: |_, _| unimplemented!(),
+        out_handler: |_, _| unimplemented!(),
+        control_handler: |cmd| {
+            assert_eq!(cmd, -101);
+            Ok(())
+        },
+        is_ready_handler: || unimplemented!(),
+        is_busy_handler: || unimplemented!(),
+    };
+
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.io_devices[0] = Some(dev_logged);
+
+    mix.mem[0] = Instruction::new(-101, 0, 0, Opcode::Ioc)
+        .try_into()
+        .unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+}
+
+#[test]
+fn test_in_out() {
+    let dev_in_out = IODevice {
+        in_handler: |m, a| m[a].set(0..=5, &[0, 9, 8, 7, 6, 5]),
+        out_handler: |m, a| {
+            assert_eq!(m[a][0..=5], [0, 1, 2, 3, 4, 5]);
+            Ok(())
+        },
+        control_handler: |_| unimplemented!(),
+        is_ready_handler: || unimplemented!(),
+        is_busy_handler: || unimplemented!(),
+    };
+
+    let mut mix = MixMachine::new();
+    mix.reset();
+
+    mix.io_devices[0] = Some(dev_in_out);
+
+    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).try_into().unwrap();
+    mix.mem[1] = Instruction::new(2000, 0, 0, Opcode::Out)
+        .try_into()
+        .unwrap();
+    mix.mem[2000].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[1000][0..=5], [0, 9, 8, 7, 6, 5]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
 }
