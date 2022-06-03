@@ -211,8 +211,8 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// into a single quantity, ignoring too significant bytes.
     ///
     /// # Returns
-    /// * `i64` - The converted value.
-    /// * `bool` - `true` if the word is too large, `false` otherwise.
+    /// * [`i64`] - The converted value.
+    /// * [`bool`] - `true` if the word is too large, `false` otherwise.
     ///
     /// # Example
     /// ```rust
@@ -247,8 +247,8 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// * `field` - The field to convert. Value: `F <- L * 8 + R`.
     ///
     /// # Returns
-    /// * `i64` - The converted value.
-    /// * `bool` - `true` if the word is too large, `false` otherwise.
+    /// * [`i64`] - The converted value.
+    /// * [`bool`] - `true` if the word is too large, `false` otherwise.
     ///
     /// # Example
     /// ```rust
@@ -349,8 +349,8 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
     /// * `source` - The instruction to convert.
     ///
     /// # Returns
-    /// * `Ok(Word<6, false>)` - If the instruction is successful.
-    /// * `Err(&'static str)` - If the instruction is invalid.
+    /// * [`Ok(Word<6, false>)`] - If the instruction is successful.
+    /// * [`Err(&'static str)`] - If the instruction is invalid.
     ///
     /// # Example
     /// ```rust
@@ -383,7 +383,7 @@ impl Mem {
     /// Create a new memory area with all-zero words.
     ///
     /// # Returns
-    /// * `Mem` - The new memory area.
+    /// * [`Mem`] - The new memory area.
     ///
     /// # Example
     /// ```rust

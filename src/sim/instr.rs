@@ -504,13 +504,13 @@ pub trait ToRangeInclusive<T> {
 }
 
 impl ToRangeInclusive<usize> for u8 {
-    /// Convert `u8` to a `std::ops::RangeInclusive<usize>`
+    /// Convert [`u8`] to a [`std::ops::RangeInclusive<usize>`]
     /// representing a `F` value.
     ///
     /// `F <- 8 * L + R`.
     ///
     /// # Returns
-    /// * `std::ops::RangeInclusive<usize>`
+    /// * [`std::ops::RangeInclusive<usize>`]
     ///
     /// # Example
     /// ```rust

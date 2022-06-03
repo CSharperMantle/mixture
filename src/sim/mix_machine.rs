@@ -114,8 +114,8 @@ impl MixMachine {
     /// Run the next instruction of the machine.
     ///
     /// # Returns
-    /// * `Ok(())` - The machine successfully completed its operation.
-    /// * `Err(ErrorCode)` - The machine encountered an error and is now halted.
+    /// * [`Ok(())`] - The machine successfully completed its operation.
+    /// * [`Err(ErrorCode)`] - The machine encountered an error and is now halted.
     pub fn step(&mut self) -> Result<(), ErrorCode> {
         if self.halted {
             return Err(ErrorCode::Halted);
