@@ -1,7 +1,16 @@
 use crate::sim::mem::*;
 
 #[test]
-fn test_word_from_bytes() {
+fn test_clone() {
+    let mut word = Word::<6, false>::new();
+    word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+
+    let word2 = word.clone();
+    assert_eq!(word[0..6], word2[0..6]);
+}
+
+#[test]
+fn test_from_bytes() {
     let word = Word::<6, false>::from_bytes([1, 2, 3, 4, 5, 6]);
     assert_eq!(word[0..6], [1, 2, 3, 4, 5, 6]);
 
@@ -10,7 +19,7 @@ fn test_word_from_bytes() {
 }
 
 #[test]
-fn test_word_mutation() {
+fn test_mutation() {
     let mut word = Word::<6, false>::new();
 
     assert_eq!(word[0..6], [0; 6]);
@@ -23,7 +32,7 @@ fn test_word_mutation() {
 }
 
 #[test]
-fn test_word_pos_sign_mutation() {
+fn test_pos_sign_mutation() {
     let mut word = Word::<3, true>::new();
 
     assert_eq!(word[0..3], [0, 0, 0]);
@@ -34,7 +43,7 @@ fn test_word_pos_sign_mutation() {
 }
 
 #[test]
-fn test_word_interchange() {
+fn test_interchange() {
     let mut word_1 = Word::<6, false>::new();
     let mut word_2 = Word::<6, false>::new();
     word_1.set(0..=5, &[1, 2, 3, 4, 5, 6]).unwrap();
@@ -49,7 +58,7 @@ fn test_word_interchange() {
 }
 
 #[test]
-fn test_word_error_handling() {
+fn test_error_handling() {
     let mut word = Word::<6, false>::new();
 
     assert_eq!(word.set(8..=0, &[]), Err(()));
@@ -59,7 +68,7 @@ fn test_word_error_handling() {
 }
 
 #[test]
-fn test_word_from_i64() {
+fn test_from_i64() {
     let v = -0x0102030405060708;
     let v_small = 0x01i64;
 
@@ -84,7 +93,7 @@ fn test_word_from_i64() {
 }
 
 #[test]
-fn test_word_to_i64() {
+fn test_to_i64() {
     let mut word = Word::<6, false>::new();
     word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
     let (value, overflow) = word.to_i64();
@@ -118,7 +127,7 @@ fn test_word_to_i64() {
 }
 
 #[test]
-fn test_word_to_i64_ranged() {
+fn test_to_i64_ranged() {
     let mut word = Word::<6, false>::new();
     word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
     let (value, overflow) = word.to_i64_ranged(0..=5);
@@ -152,7 +161,7 @@ fn test_word_to_i64_ranged() {
 }
 
 #[test]
-fn test_word_toggle_sign() {
+fn test_toggle_sign() {
     let mut word = Word::<6, false>::new();
     word[0] = 0;
 

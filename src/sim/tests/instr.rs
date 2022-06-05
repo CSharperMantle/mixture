@@ -2,6 +2,17 @@ use crate::sim::instr::*;
 use crate::sim::mem::*;
 
 #[test]
+fn test_clone() {
+    let instr = Instruction::new(0, 1, 2, Opcode::Div);
+    let instr2 = instr.clone();
+
+    assert_eq!(instr.addr, instr2.addr);
+    assert_eq!(instr.field, instr2.field);
+    assert_eq!(instr.index, instr2.index);
+    assert_eq!(instr.opcode, instr2.opcode);
+}
+
+#[test]
 fn test_from_word() {
     let mut word = Word::<6, false>::new();
     word.set(0..=5, &[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
