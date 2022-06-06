@@ -4,7 +4,7 @@ use crate::sim::*;
 ///
 /// It is possible to convert `Word<6, false>` to an instruction,
 /// given that all the fields are valid and vice versa.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Instruction {
     /// The signed address, `A`, read big-endian.
     pub addr: i16,
@@ -88,7 +88,7 @@ impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
 }
 
 /// All possible operation codes in MIX.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, num_enum::TryFromPrimitive)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, num_enum::TryFromPrimitive)]
 #[repr(u8)]
 pub enum Opcode {
     /// * `NOP(0)` - No operation.

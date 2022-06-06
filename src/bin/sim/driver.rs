@@ -11,7 +11,7 @@ const MIXES_BANNER: &'static str = r#"
 MIXes: Frontend for MIX emulator/simulator.
 "#;
 
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[clap(
     name = "mixes",
     author,

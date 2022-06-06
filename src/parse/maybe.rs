@@ -11,7 +11,7 @@
 /// let x = Maybe::<i32, i32>::Concrete(1);
 /// assert_eq!(x.unwrap(), 1);
 /// ```
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Maybe<O, P> {
     /// A concrete value.
     Concrete(O),
