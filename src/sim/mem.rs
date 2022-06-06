@@ -376,7 +376,7 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
 /// The memory area of a MIX machine.
 pub struct Mem {
     /// The memory area.
-    data: [Word<6, false>; 4000],
+    data: [Word<6, false>; Self::SIZE],
 }
 
 impl Mem {
@@ -397,6 +397,9 @@ impl Mem {
             data: [Word::<6, false>::new(); 4000],
         }
     }
+
+    /// Number of words in the memory area.
+    pub const SIZE: usize = 4000;
 }
 
 impl std::ops::Index<u16> for Mem {

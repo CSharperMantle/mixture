@@ -52,6 +52,36 @@ pub struct IODevice {
     pub is_busy_handler: fn() -> Result<bool, ()>,
 }
 
+/// An instance of [`IODevice`] for a standard line printer.
+///
+/// The line printer has a block size of 24 [`Word<6, false>`]s.
+/// It works by writing directly to `stdout` with [`print!`] and
+/// [`println!`].
+pub static DEVICE_LINE_PRINTER: IODevice = IODevice {
+    in_handler: |_, _| Err(()),
+    out_handler: |mem, start| {
+        // The block size for a line printer is 24 words.
+        const BLOCK_SIZE: u16 = 24;
+        let end = std::cmp::min(start + BLOCK_SIZE, Mem::SIZE as u16);
+        for i in start..end {
+            let word = &mem[i];
+            for &j in word[1..=5].iter() {
+                let ch: char = Alphabet::try_from(j).map_err(|_| ())?.try_into()?;
+                print!("{}", ch);
+            }
+        }
+        // End each line.
+        println!();
+        Ok(())
+    },
+    control_handler: |c| match c {
+        0 => Ok(()),
+        _ => Err(()),
+    },
+    is_ready_handler: || Ok(true),
+    is_busy_handler: || Ok(false),
+};
+
 /// The common alphabet used in MIX and IO.
 ///
 /// See D. E. Knuth, 'The Art of Computer Programming', Volume 1, pp 140
