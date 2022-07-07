@@ -76,7 +76,7 @@ pub struct MixMachine {
     pub halted: bool,
 
     /// IO devices.
-    pub io_devices: [Option<io::IODevice>; 21],
+    pub io_devices: [Option<Box<dyn io::IODevice>>; 21],
 }
 
 impl MixMachine {
@@ -92,7 +92,7 @@ impl MixMachine {
             mem: mem::Mem::new(),
             pc: 0,
             halted: true,
-            io_devices: [None; 21],
+            io_devices: Default::default(),
         }
     }
 
@@ -260,14 +260,27 @@ impl MixMachine {
     }
 
     /// Get IO device.
-    fn helper_get_io_device(&self, dev_id: usize) -> Result<&IODevice, ErrorCode> {
+    fn helper_get_io_device(&self, dev_id: usize) -> Result<&Box<dyn IODevice>, ErrorCode> {
         let dev = self
             .io_devices
             .get(dev_id)
             .ok_or(ErrorCode::InvalidField)?
             .as_ref()
             .ok_or(ErrorCode::UnknownDevice)?;
+        Ok(dev)
+    }
 
+    /// Get IO device.
+    fn helper_get_io_device_mut(
+        &mut self,
+        dev_id: usize,
+    ) -> Result<&mut Box<dyn IODevice>, ErrorCode> {
+        let dev = self
+            .io_devices
+            .get_mut(dev_id)
+            .ok_or(ErrorCode::InvalidField)?
+            .as_mut()
+            .ok_or(ErrorCode::UnknownDevice)?;
         Ok(dev)
     }
 
@@ -1009,8 +1022,8 @@ impl MixMachine {
         let dev = self.helper_get_io_device(dev_id)?;
         // Call appropriate callbacks.
         let should_jump = match instr.opcode {
-            instr::Opcode::Jbus => (dev.is_busy_handler)().map_err(|_| ErrorCode::IOError)?,
-            instr::Opcode::Jred => (dev.is_ready_handler)().map_err(|_| ErrorCode::IOError)?,
+            instr::Opcode::Jbus => dev.is_busy().map_err(|_| ErrorCode::IOError)?,
+            instr::Opcode::Jred => dev.is_ready().map_err(|_| ErrorCode::IOError)?,
             _ => unreachable!(),
         };
         if should_jump {
@@ -1023,31 +1036,56 @@ impl MixMachine {
 
     /// Handler for `IOC`.
     fn handler_instr_ioc(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
+        // Get command.
+        let command = self.helper_get_eff_addr_unchecked(instr.addr, instr.index);
         // Get device ID.
         let dev_id: usize = instr.field as usize;
         // Get device reference.
-        let dev = self.helper_get_io_device(dev_id)?;
-        // Get command.
-        let command = self.helper_get_eff_addr_unchecked(instr.addr, instr.index);
+        let dev = self.helper_get_io_device_mut(dev_id)?;
         // Call appropriate callbacks.
-        (dev.control_handler)(command).map_err(|_| ErrorCode::IOError)?;
+        dev.control(command).map_err(|_| ErrorCode::IOError)?;
         Ok(())
     }
 
     /// Handler for `IN` and `OUT`.
     fn handler_instr_in_out(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
+        // Check starting address.
+        let addr_start = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        if !(0..mem::Mem::SIZE as u16).contains(&addr_start) {
+            return Err(ErrorCode::InvalidAddress);
+        }
         // Get device ID.
         let dev_id: usize = instr.field as usize;
         // Get device reference.
-        let dev = self.helper_get_io_device(dev_id)?;
-        let count = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        let dev = self
+            .io_devices
+            .get_mut(dev_id)
+            .ok_or(ErrorCode::InvalidField)?
+            .as_mut()
+            .ok_or(ErrorCode::UnknownDevice)?;
+        let dev_blk_size = dev.get_block_size();
+        // Check ending address.
+        let addr_end = addr_start + dev_blk_size as u16;
+        if !(0..mem::Mem::SIZE as u16).contains(&addr_end) {
+            return Err(ErrorCode::InvalidAddress);
+        }
         // Call appropriate callbacks.
         match instr.opcode {
             instr::Opcode::In => {
-                (dev.in_handler)(&mut self.mem, count).map_err(|_| ErrorCode::IOError)?
+                let words = dev.read().map_err(|_| ErrorCode::IOError)?;
+                // Reject blocks with wrong length.
+                if words.len() != dev_blk_size {
+                    return Err(ErrorCode::IOError);
+                }
+                // Copy words to memory.
+                for (i, word) in words.iter().enumerate() {
+                    self.mem[addr_start + i as u16] = *word;
+                }
             }
             instr::Opcode::Out => {
-                (dev.out_handler)(&self.mem, count).map_err(|_| ErrorCode::IOError)?
+                // Clone words.
+                let words = self.mem[addr_start as usize..addr_end as usize].to_vec();
+                dev.write(&words).map_err(|_| ErrorCode::IOError)?;
             }
             _ => unreachable!(),
         };

@@ -1,86 +1,64 @@
 use crate::sim::*;
 
-/// An IO device used in [`MixMachine`].
-#[derive(Copy, Clone)]
-pub struct IODevice {
-    /// Callback function for inputting data to [`MixMachine`].
+pub trait IODevice {
+    /// Read a block of [`Word<6, false>`]s from the device.
     ///
-    /// # Callback Arguments
-    /// * `0` - The mutable memory of the [`MixMachine`].
-    /// * `1` - The amount of [`Word<6, false>`]s to input.
+    /// The amount of words in a block is defined by the device
+    /// via [`IODevice::get_block_size`]. This method must return
+    /// exactly one block of words on success. Otherwise it will
+    /// fail.
     ///
-    /// # Callback Return Value
-    /// * [`Ok(())`] - All [`Word<6, false>`]s have been written.
-    /// * [`Err(())`] - The writing fails.
-    pub in_handler: fn(&mut mem::Mem, u16) -> Result<(), ()>,
+    /// # Return Value
+    /// * [`Ok(Vec<mem::Word<6, false>)`] - The words read form the device.
+    /// * [`Err(())`] - The transfer fails.
+    fn read(&mut self) -> Result<Vec<mem::Word<6, false>>, ()>;
 
-    /// Callback function for outputting data from [`MixMachine`].
+    /// Write a block of [`Word<6, false>`]s out through the device.
     ///
-    /// # Callback Arguments
-    /// * `0` - The memory of the [`MixMachine`].
-    /// * `1` - The amount of [`Word<6, false>`]s to output.
+    /// This method will always try to write a whole block. It will fail
+    /// if the given slice of data has a length that is not exactly equal
+    /// to the block size. On the case of non-rolling-back write failures,
+    /// the actual amount of words already written is returned.
     ///
-    /// # Callback Return Value
-    /// * [`Ok(())`] - All [`Word<6, false>`]s have been written.
-    /// * [`Err(())`] - The writing fails.
-    pub out_handler: fn(&mem::Mem, u16) -> Result<(), ()>,
+    /// # Arguments
+    /// * `data` - The words to write.
+    ///
+    /// # Returns
+    /// * [`Ok(())`] - All words have been correctly written.
+    /// * [`Err(usize)`] - The transfer fails with count of actual words written.
+    fn write(&mut self, data: &[mem::Word<6, false>]) -> Result<(), usize>;
 
-    /// Callback function for issuing control commands to an [`IODevice`].
+    /// Issue a control command to the device.
     ///
-    /// # Callback Arguments
-    /// * `0` - The command to the [`IODevice`].
+    /// # Arguments
+    /// * `command` - The command to issue.
     ///
-    /// # Callback Return Value
+    /// # Returns
     /// * [`Ok(())`] - The operation succeeds.
     /// * [`Err(())`] - The operation fails.
-    pub control_handler: fn(i16) -> Result<(), ()>,
+    fn control(&mut self, command: i16) -> Result<(), ()>;
 
-    /// Callback function for checking if an [`IODevice`] is ready
-    /// for a next batch of data.
+    /// Check if the device is busy.
     ///
-    /// # Callback Return Value
+    /// # Returns
     /// * [`Ok(bool)`] - The state of the device.
     /// * [`Err(())`] - The operation fails.
-    pub is_ready_handler: fn() -> Result<bool, ()>,
+    fn is_busy(&self) -> Result<bool, ()>;
 
-    /// Callback function for checking if an [`IODevice`] is busy
-    /// with its own operation.
+    /// Check if the device is ready for next operations.
     ///
-    /// # Callback Return Value
+    /// # Returns
     /// * [`Ok(bool)`] - The state of the device.
     /// * [`Err(())`] - The operation fails.
-    pub is_busy_handler: fn() -> Result<bool, ()>,
+    fn is_ready(&self) -> Result<bool, ()>;
+
+    /// Get the count of [`Word<6, false>`]s in a device block,
+    /// that is, read or written in a single operation.
+    ///
+    /// # Returns
+    /// The count of words in a single block.
+    fn get_block_size(&self) -> usize;
 }
-
-/// An instance of [`IODevice`] for a standard line printer.
-///
-/// The line printer has a block size of 24 [`Word<6, false>`]s.
-/// It works by writing directly to `stdout` with [`print!`] and
-/// [`println!`].
-pub static DEVICE_LINE_PRINTER: IODevice = IODevice {
-    in_handler: |_, _| Err(()),
-    out_handler: |mem, start| {
-        // The block size for a line printer is 24 words.
-        const BLOCK_SIZE: u16 = 24;
-        let end = std::cmp::min(start + BLOCK_SIZE, Mem::SIZE as u16);
-        for i in start..end {
-            let word = &mem[i];
-            for &j in word[1..=5].iter() {
-                let ch: char = Alphabet::try_from(j).map_err(|_| ())?.try_into()?;
-                print!("{}", ch);
-            }
-        }
-        // End each line.
-        println!();
-        Ok(())
-    },
-    control_handler: |c| match c {
-        0 => Ok(()),
-        _ => Err(()),
-    },
-    is_ready_handler: || Ok(true),
-    is_busy_handler: || Ok(false),
-};
 
 /// The common alphabet used in MIX and IO.
 ///

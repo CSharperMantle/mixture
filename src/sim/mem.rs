@@ -300,6 +300,13 @@ impl<const N: usize, const P: bool> Word<N, P> {
     }
 }
 
+impl<const N: usize, const P: bool> Default for Word<N, P> {
+    /// Create a new word with default value.
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<const N: usize, const P: bool> std::ops::Index<std::ops::Range<usize>> for Word<N, P> {
     type Output = [u8];
 
@@ -374,9 +381,10 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
 }
 
 /// The memory area of a MIX machine.
+#[derive(Debug, Clone)]
 pub struct Mem {
     /// The memory area.
-    data: [Word<6, false>; Self::SIZE],
+    pub(crate) data: [Word<6, false>; Self::SIZE],
 }
 
 impl Mem {
@@ -415,5 +423,21 @@ impl std::ops::IndexMut<u16> for Mem {
     /// Access the mutable word at a memory location.
     fn index_mut(&mut self, index: u16) -> &mut Self::Output {
         &mut self.data[index as usize]
+    }
+}
+
+impl std::ops::Index<std::ops::Range<usize>> for Mem {
+    type Output = [Word<6, false>];
+
+    /// Access the word at a range.
+    fn index(&self, index: std::ops::Range<usize>) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
+impl std::ops::IndexMut<std::ops::Range<usize>> for Mem {
+    /// Access the mutable word at a range.
+    fn index_mut(&mut self, index: std::ops::Range<usize>) -> &mut Self::Output {
+        &mut self.data[index]
     }
 }

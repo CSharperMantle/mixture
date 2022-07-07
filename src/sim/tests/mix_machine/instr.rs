@@ -1,5 +1,6 @@
 use crate::sim::instr::*;
 use crate::sim::io::*;
+use crate::sim::mem::*;
 use crate::sim::mix_machine::*;
 
 #[test]
@@ -1008,29 +1009,69 @@ fn test_shift() {
     assert_eq!(mix.r_x[0..=5], [1, 4, 0, 0, 5, 0]);
 }
 
+struct BusyIODevice {}
+
+impl IODevice for BusyIODevice {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+        unimplemented!()
+    }
+
+    fn write(&mut self, _: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+        unimplemented!()
+    }
+
+    fn control(&mut self, _: i16) -> Result<(), ()> {
+        unimplemented!()
+    }
+
+    fn is_busy(&self) -> Result<bool, ()> {
+        Ok(true)
+    }
+
+    fn is_ready(&self) -> Result<bool, ()> {
+        Ok(false)
+    }
+
+    fn get_block_size(&self) -> usize {
+        0
+    }
+}
+
+struct ReadyIODevice {}
+
+impl IODevice for ReadyIODevice {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+        unimplemented!()
+    }
+
+    fn write(&mut self, _: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+        unimplemented!()
+    }
+
+    fn control(&mut self, _: i16) -> Result<(), ()> {
+        unimplemented!()
+    }
+
+    fn is_busy(&self) -> Result<bool, ()> {
+        Ok(false)
+    }
+
+    fn is_ready(&self) -> Result<bool, ()> {
+        Ok(true)
+    }
+
+    fn get_block_size(&self) -> usize {
+        0
+    }
+}
+
 #[test]
 fn test_jbus_jred() {
-    let dev_always_ready = IODevice {
-        in_handler: |_, _| unimplemented!(),
-        out_handler: |_, _| unimplemented!(),
-        control_handler: |_| unimplemented!(),
-        is_ready_handler: || Ok(true),
-        is_busy_handler: || Ok(false),
-    };
-
-    let dev_always_busy = IODevice {
-        in_handler: |_, _| unimplemented!(),
-        out_handler: |_, _| unimplemented!(),
-        control_handler: |_| unimplemented!(),
-        is_ready_handler: || Ok(false),
-        is_busy_handler: || Ok(true),
-    };
-
     let mut mix = MixMachine::new();
     mix.reset();
 
-    mix.io_devices[0] = Some(dev_always_ready);
-    mix.io_devices[1] = Some(dev_always_busy);
+    mix.io_devices[0] = Some(Box::new(ReadyIODevice {}));
+    mix.io_devices[1] = Some(Box::new(BusyIODevice {}));
 
     mix.mem[0] = Instruction::new(100, 0, 0, Opcode::Jred)
         .try_into()
@@ -1066,23 +1107,45 @@ fn test_jbus_jred() {
     assert_eq!(mix.r_j[0..=2], [0, 0, 0x67]);
 }
 
+struct LoggedControlIODevice {
+    expected_command: i16,
+}
+
+impl IODevice for LoggedControlIODevice {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+        unimplemented!()
+    }
+
+    fn write(&mut self, _: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+        unimplemented!()
+    }
+
+    fn control(&mut self, command: i16) -> Result<(), ()> {
+        assert_eq!(command, self.expected_command);
+        Ok(())
+    }
+
+    fn is_busy(&self) -> Result<bool, ()> {
+        unimplemented!()
+    }
+
+    fn is_ready(&self) -> Result<bool, ()> {
+        unimplemented!()
+    }
+
+    fn get_block_size(&self) -> usize {
+        0
+    }
+}
+
 #[test]
 fn test_ioc() {
-    let dev_logged = IODevice {
-        in_handler: |_, _| unimplemented!(),
-        out_handler: |_, _| unimplemented!(),
-        control_handler: |cmd| {
-            assert_eq!(cmd, -101);
-            Ok(())
-        },
-        is_ready_handler: || unimplemented!(),
-        is_busy_handler: || unimplemented!(),
-    };
-
     let mut mix = MixMachine::new();
     mix.reset();
 
-    mix.io_devices[0] = Some(dev_logged);
+    mix.io_devices[0] = Some(Box::new(LoggedControlIODevice {
+        expected_command: -101,
+    }));
 
     mix.mem[0] = Instruction::new(-101, 0, 0, Opcode::Ioc)
         .try_into()
@@ -1094,23 +1157,44 @@ fn test_ioc() {
     assert_eq!(mix.halted, false);
 }
 
+struct InOutIODevice {}
+
+impl IODevice for InOutIODevice {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+        let mut w = Word::<6, false>::new();
+        w.set(0..=5, &[0, 9, 8, 7, 6, 5])?;
+        Ok(vec![w])
+    }
+
+    fn write(&mut self, data: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+        assert_eq!(data.len(), self.get_block_size());
+        assert_eq!(data[0][0..=5], [0, 1, 2, 3, 4, 5]);
+        Ok(())
+    }
+
+    fn control(&mut self, _: i16) -> Result<(), ()> {
+        unimplemented!()
+    }
+
+    fn is_busy(&self) -> Result<bool, ()> {
+        unimplemented!()
+    }
+
+    fn is_ready(&self) -> Result<bool, ()> {
+        unimplemented!()
+    }
+
+    fn get_block_size(&self) -> usize {
+        1
+    }
+}
+
 #[test]
 fn test_in_out() {
-    let dev_in_out = IODevice {
-        in_handler: |m, a| m[a].set(0..=5, &[0, 9, 8, 7, 6, 5]),
-        out_handler: |m, a| {
-            assert_eq!(m[a][0..=5], [0, 1, 2, 3, 4, 5]);
-            Ok(())
-        },
-        control_handler: |_| unimplemented!(),
-        is_ready_handler: || unimplemented!(),
-        is_busy_handler: || unimplemented!(),
-    };
-
     let mut mix = MixMachine::new();
     mix.reset();
 
-    mix.io_devices[0] = Some(dev_in_out);
+    mix.io_devices[0] = Some(Box::new(InOutIODevice {}));
 
     mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).try_into().unwrap();
     mix.mem[1] = Instruction::new(2000, 0, 0, Opcode::Out)

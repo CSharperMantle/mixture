@@ -88,20 +88,42 @@ fn test_unknown_device() {
     assert_eq!(mix.halted, true);
 }
 
+struct ErrorIODevice {}
+
+impl IODevice for ErrorIODevice {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+        Err(())
+    }
+
+    fn write(&mut self, _: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+        Err(0)
+    }
+
+    fn control(&mut self, _: i16) -> Result<(), ()> {
+        Err(())
+    }
+
+    fn is_busy(&self) -> Result<bool, ()> {
+        Err(())
+    }
+
+    fn is_ready(&self) -> Result<bool, ()> {
+        Err(())
+    }
+
+    fn get_block_size(&self) -> usize {
+        0
+    }
+}
+
 #[test]
 fn test_io_error() {
-    let dev_err = IODevice {
-        in_handler: |_, _| Err(()),
-        out_handler: |_, _| Err(()),
-        control_handler: |_| Err(()),
-        is_ready_handler: || Err(()),
-        is_busy_handler: || Err(()),
-    };
+    let dev_err = ErrorIODevice {};
 
     let mut mix = MixMachine::new();
     mix.reset();
 
-    mix.io_devices[0] = Some(dev_err);
+    mix.io_devices[0] = Some(Box::new(dev_err));
 
     mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).try_into().unwrap();
 

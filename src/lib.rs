@@ -1,2 +1,2 @@
-pub mod sim;
 pub mod parse;
+pub mod sim;

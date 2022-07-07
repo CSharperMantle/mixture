@@ -54,45 +54,68 @@ const PRIMES_OUTPUT_EXPECTED: &'static str = r#"FIRST|FIVE|HUNDRED|PRIMES|||||||
 |||||0229|0541|0863|1223|1583|1987|2357|2741|3181|3571||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 "#;
 
-#[test]
-fn primes() {
-    let dev_line_collector = IODevice {
-        in_handler: |_, _| Err(()),
-        out_handler: |mem, start| {
-            // The block size for a line printer is 24 words.
-            const BLOCK_SIZE: u16 = 24;
-            let end = std::cmp::min(start + BLOCK_SIZE, Mem::SIZE as u16);
-            for i in start..end {
-                let word = &mem[i];
-                for &j in word[1..=5].iter() {
-                    let ch: char = Alphabet::try_from(j).map_err(|_| ())?.try_into()?;
-                    unsafe {
-                        if ch != ' ' {
-                            PRIMES_OUTPUT += format!("{}", ch).as_str();
-                        } else {
-                            PRIMES_OUTPUT += "|";
-                        }
+struct LineCollectorIODevice {}
+
+impl IODevice for LineCollectorIODevice {
+    fn read(&mut self) -> Result<Vec<Word<6, false>>, ()> {
+        unimplemented!()
+    }
+
+    fn write(&mut self, data: &[Word<6, false>]) -> Result<(), usize> {
+        assert_eq!(data.len(), self.get_block_size());
+        let mut count_written: usize = 0;
+        // For each word...
+        for word in data {
+            // Each byte in a word...
+            for &byte in word[1..=5].iter() {
+                // Convert to char.
+                let ch: char = Alphabet::try_from(byte)
+                    .map_err(|_| count_written)?
+                    .try_into()
+                    .map_err(|_| count_written)?;
+                unsafe {
+                    if ch != ' ' {
+                        PRIMES_OUTPUT += format!("{}", ch).as_str();
+                    } else {
+                        PRIMES_OUTPUT += "|";
                     }
                 }
+                count_written += 1;
             }
-            // End each line.
-            unsafe {
-                PRIMES_OUTPUT += "\n";
-            }
-            Ok(())
-        },
-        control_handler: |c| match c {
+        }
+        unsafe {
+            // End a block of data.
+            PRIMES_OUTPUT += "\n";
+        }
+        Ok(())
+    }
+
+    fn control(&mut self, command: i16) -> Result<(), ()> {
+        match command {
             0 => Ok(()),
             _ => Err(()),
-        },
-        is_ready_handler: || Ok(true),
-        is_busy_handler: || Ok(false),
-    };
+        }
+    }
 
+    fn is_busy(&self) -> Result<bool, ()> {
+        Ok(false)
+    }
+
+    fn is_ready(&self) -> Result<bool, ()> {
+        Ok(true)
+    }
+
+    fn get_block_size(&self) -> usize {
+        24
+    }
+}
+
+#[test]
+fn primes() {
     let mut mix = MixMachine::new();
     mix.reset();
 
-    mix.io_devices[18] = Some(dev_line_collector);
+    mix.io_devices[18] = Some(Box::new(LineCollectorIODevice {}));
 
     // Test sequence: D. E. Knuth, 'The Art of Computer Programming',
     // Volume 1, pp 148.
@@ -181,7 +204,6 @@ fn primes() {
     while !mix.halted {
         mix.step().unwrap();
     }
-
     unsafe {
         assert_eq!(PRIMES_OUTPUT, PRIMES_OUTPUT_EXPECTED);
     }
