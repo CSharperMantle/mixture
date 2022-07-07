@@ -1,15 +1,6 @@
 use crate::sim::instr::ToRangeInclusive;
 use crate::sim::*;
 
-/// A internal shortcut to a 6-byte Word.
-type FullWord = mem::Word<6, false>;
-
-/// A internal shortcut to a 3-byte Word.
-type HalfWord = mem::Word<3, false>;
-
-/// A internal shortcut to a always-positive 3-byte Word.
-type PosHalfWord = mem::Word<3, true>;
-
 /// Error codes for the MIX machine.
 #[derive(PartialEq, Eq, Debug)]
 pub enum ErrorCode {
@@ -32,6 +23,13 @@ pub enum ComparisonIndicatorValue {
     Greater,
 }
 
+impl Default for ComparisonIndicatorValue {
+    /// Get the default value of the comparison indicator.
+    fn default() -> Self {
+        ComparisonIndicatorValue::Equal
+    }
+}
+
 /// The state of a MIX machine.
 ///
 /// # Example
@@ -48,17 +46,17 @@ pub enum ComparisonIndicatorValue {
 /// ```
 pub struct MixMachine {
     /// The register `rA`.
-    pub r_a: FullWord,
+    pub r_a: mem::FullWord,
 
     /// The register `rX`.
-    pub r_x: FullWord,
+    pub r_x: mem::FullWord,
 
     /// The register `rIn`, where `n = 1, 2, 3, 4, 5, 6`.
     /// `r_in[0]` should always used as a source of 0.
-    pub r_in: [HalfWord; 7],
+    pub r_in: [mem::HalfWord; 7],
 
     /// The register `rJ`.
-    pub r_j: PosHalfWord,
+    pub r_j: mem::PosHalfWord,
 
     /// The overflow toggle.
     pub overflow: bool,
@@ -83,12 +81,12 @@ impl MixMachine {
     /// Create a new MIX machine.
     pub fn new() -> Self {
         MixMachine {
-            r_a: FullWord::new(),
-            r_x: FullWord::new(),
-            r_in: [HalfWord::new(); 7],
-            r_j: PosHalfWord::new(),
+            r_a: Default::default(),
+            r_x: Default::default(),
+            r_in: Default::default(),
+            r_j: Default::default(),
             overflow: false,
-            indicator_comp: ComparisonIndicatorValue::Equal,
+            indicator_comp: Default::default(),
             mem: mem::Mem::new(),
             pc: 0,
             halted: true,
@@ -104,10 +102,10 @@ impl MixMachine {
     pub fn reset(&mut self) {
         self.pc = 0;
         self.overflow = false;
-        self.r_a = FullWord::new();
-        self.r_x = FullWord::new();
-        self.r_in = [HalfWord::new(); 7];
-        self.r_j = PosHalfWord::new();
+        self.r_a = Default::default();
+        self.r_x = Default::default();
+        self.r_in = Default::default();
+        self.r_j = Default::default();
     }
 
     /// Restart the machine.
@@ -303,7 +301,7 @@ impl MixMachine {
             _ => unreachable!(),
         };
         // Zero reg before copying. Handle 'understood' positive sign too.
-        reg.set(0..=5, &[FullWord::POS, 0, 0, 0, 0, 0])
+        reg.set(0..=5, &[mem::FullWord::POS, 0, 0, 0, 0, 0])
             .map_err(|_| ErrorCode::MemAccessError)?;
         // Copy bytes shifted right.
         for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
@@ -336,9 +334,9 @@ impl MixMachine {
         // Copy negated sign byte if needed.
         if sign_copy_needed {
             reg[0] = if memory_cell.is_positive() {
-                FullWord::NEG
+                mem::FullWord::NEG
             } else {
-                FullWord::POS
+                mem::FullWord::POS
             };
         }
         Ok(())
@@ -365,7 +363,7 @@ impl MixMachine {
         // We need to care about only the 4th, 5th and the sign byte.
         // So we make a temporary word and fill back the reg only the
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
-        let mut temp = FullWord::from_bytes([1, 0, 0, 0, 0, 0]);
+        let mut temp = mem::FullWord::from_bytes([1, 0, 0, 0, 0, 0]);
         // Copy bytes shifted right.
         for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
             temp[reg_cursor] = memory_cell[memory_cell_cursor];
@@ -402,7 +400,7 @@ impl MixMachine {
         // We need to care about only the 4th, 5th and the sign byte.
         // So we make a temporary word and fill back the reg only the
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
-        let mut temp = FullWord::from_bytes([0; 6]);
+        let mut temp = mem::FullWord::from_bytes([0; 6]);
         // Copy bytes shifted right.
         for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
             temp[reg_cursor] = memory_cell[memory_cell_cursor];
@@ -410,9 +408,9 @@ impl MixMachine {
         // Copy negated sign byte if needed.
         if sign_copy_needed {
             temp[0] = if memory_cell.is_positive() {
-                FullWord::NEG
+                mem::FullWord::NEG
             } else {
-                FullWord::POS
+                mem::FullWord::POS
             };
         }
         // Fill back the reg.
@@ -462,7 +460,7 @@ impl MixMachine {
                 result = result * 10 + digit as i64;
             }
             // Rebuild a word of 4 bytes.
-            let (result_word, _) = FullWord::from_i64(result);
+            let (result_word, _) = mem::FullWord::from_i64(result);
             // We do not modify the sign byte.
             self.r_a
                 .set(1..=5, &result_word[1..=5])
@@ -526,7 +524,7 @@ impl MixMachine {
                 .map_err(|_| ErrorCode::MemAccessError)?;
         }
         let new_r_i1_val = self.r_in[1].to_i64().0 + num_words as i64;
-        let (new_r_i1, overflow) = HalfWord::from_i64(new_r_i1_val);
+        let (new_r_i1, overflow) = mem::HalfWord::from_i64(new_r_i1_val);
         self.r_in[1]
             .set(0..=2, &new_r_i1[0..=2])
             .map_err(|_| ErrorCode::MemAccessError)?;
@@ -603,7 +601,7 @@ impl MixMachine {
             // Convert to i64.
             let value = reg.to_i64().0;
             // Convert back modified value.
-            let (new_word, overflow) = FullWord::from_i64(value + offset);
+            let (new_word, overflow) = mem::FullWord::from_i64(value + offset);
             reg.set(0..=5, &new_word[0..=5])
                 .map_err(|_| ErrorCode::MemAccessError)?;
             // Should we overflow?
@@ -613,7 +611,7 @@ impl MixMachine {
             return Ok(());
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
-            let new_word = FullWord::from_i64(addr as i64).0;
+            let new_word = mem::FullWord::from_i64(addr as i64).0;
             // Copy new word into reg.
             reg.set(0..=5, &new_word[0..=5])
                 .map_err(|_| ErrorCode::MemAccessError)?;
@@ -647,7 +645,7 @@ impl MixMachine {
             // Convert to i64.
             let value = reg.to_i64().0;
             // Convert back modified value.
-            let (new_word, overflow) = HalfWord::from_i64(value + offset);
+            let (new_word, overflow) = mem::HalfWord::from_i64(value + offset);
             reg.set(0..=2, &new_word[0..=2])
                 .map_err(|_| ErrorCode::MemAccessError)?;
             // Should we overflow?
@@ -657,7 +655,7 @@ impl MixMachine {
             return Ok(());
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
-            let (new_word, _) = HalfWord::from_i64(addr as i64);
+            let (new_word, _) = mem::HalfWord::from_i64(addr as i64);
             // Copy new word into reg.
             reg.set(0..=2, &new_word[0..=2])
                 .map_err(|_| ErrorCode::MemAccessError)?;
@@ -685,7 +683,7 @@ impl MixMachine {
             target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 * coefficient;
         // Calculate and pack new value.
         let new_value = orig_value + target_value;
-        let (new_word, overflow) = FullWord::from_i64(new_value);
+        let (new_word, overflow) = mem::FullWord::from_i64(new_value);
         // Set new value.
         self.r_a
             .set(0..=5, &new_word[0..=5])
@@ -719,9 +717,9 @@ impl MixMachine {
         }
         // Treat sign.
         let new_sign = if new_val < 0 {
-            FullWord::NEG
+            mem::FullWord::NEG
         } else {
-            FullWord::POS
+            mem::FullWord::POS
         };
         self.r_a[0] = new_sign;
         self.r_x[0] = new_sign;
@@ -781,13 +779,13 @@ impl MixMachine {
             false
         };
         // Copy results into registers.
-        let (new_a, overflow_a) = FullWord::from_i64(quotient);
-        let (new_x, overflow_x) = FullWord::from_i64(remainder);
+        let (new_a, overflow_a) = mem::FullWord::from_i64(quotient);
+        let (new_x, overflow_x) = mem::FullWord::from_i64(remainder);
         self.r_x[0] = self.r_a[0];
         self.r_a[0] = if new_sign_positive {
-            FullWord::POS
+            mem::FullWord::POS
         } else {
-            FullWord::NEG
+            mem::FullWord::NEG
         };
         self.r_a
             .set(1..=5, &new_a[1..=5])
@@ -841,7 +839,7 @@ impl MixMachine {
             instr::Opcode::Cmp6 => &self.r_in[6],
             _ => unreachable!(),
         };
-        let padded_reg = FullWord::from_bytes([reg[0], 0, 0, 0, reg[1], reg[2]]);
+        let padded_reg = mem::FullWord::from_bytes([reg[0], 0, 0, 0, reg[1], reg[2]]);
         let reg_value = padded_reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
         // Calculate and set flags.
         self.indicator_comp = if reg_value.abs() == 0 && target_value.abs() == 0 {

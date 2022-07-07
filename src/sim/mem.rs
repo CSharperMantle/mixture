@@ -1,3 +1,9 @@
+use std::convert::TryFrom;
+use std::ops::Index;
+use std::ops::IndexMut;
+use std::ops::Range;
+use std::ops::RangeInclusive;
+
 use crate::sim::*;
 
 /// A word in MIX machine, with variable number of bytes.
@@ -138,7 +144,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// assert_eq!(word.set(0..=5, &[0, 1, 2, 3, 4, 5]), Ok(()));
     /// ```
-    pub fn set(&mut self, range: std::ops::RangeInclusive<usize>, value: &[u8]) -> Result<(), ()> {
+    pub fn set(&mut self, range: RangeInclusive<usize>, value: &[u8]) -> Result<(), ()> {
         if range.is_empty() {
             return Err(());
         }
@@ -261,7 +267,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// assert_eq!(overflow, false);
     /// assert_eq!(value, 0x01);
     /// ```
-    pub fn to_i64_ranged(&self, field: std::ops::RangeInclusive<usize>) -> (i64, bool) {
+    pub fn to_i64_ranged(&self, field: RangeInclusive<usize>) -> (i64, bool) {
         // Move sign byte out.
         let sign_included = *field.start() == 0;
         let new_start = if sign_included {
@@ -302,34 +308,34 @@ impl<const N: usize, const P: bool> Word<N, P> {
 
 impl<const N: usize, const P: bool> Default for Word<N, P> {
     /// Create a new word with default value.
+    ///
+    /// Equivalent to [`Word<N, P>::new`].
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<const N: usize, const P: bool> std::ops::Index<std::ops::Range<usize>> for Word<N, P> {
+impl<const N: usize, const P: bool> Index<Range<usize>> for Word<N, P> {
     type Output = [u8];
 
     /// Access the content of the word with
     /// the given range.
-    fn index(&self, index: std::ops::Range<usize>) -> &Self::Output {
+    fn index(&self, index: Range<usize>) -> &Self::Output {
         &self.data[index]
     }
 }
 
-impl<const N: usize, const P: bool> std::ops::Index<std::ops::RangeInclusive<usize>>
-    for Word<N, P>
-{
+impl<const N: usize, const P: bool> Index<RangeInclusive<usize>> for Word<N, P> {
     type Output = [u8];
 
     /// Access the content of the word with
     /// the given range.
-    fn index(&self, index: std::ops::RangeInclusive<usize>) -> &Self::Output {
+    fn index(&self, index: RangeInclusive<usize>) -> &Self::Output {
         &self.data[index]
     }
 }
 
-impl<const N: usize, const P: bool> std::ops::Index<usize> for Word<N, P> {
+impl<const N: usize, const P: bool> Index<usize> for Word<N, P> {
     type Output = u8;
 
     /// Access the content of the word with
@@ -339,7 +345,7 @@ impl<const N: usize, const P: bool> std::ops::Index<usize> for Word<N, P> {
     }
 }
 
-impl<const N: usize, const P: bool> std::ops::IndexMut<usize> for Word<N, P> {
+impl<const N: usize, const P: bool> IndexMut<usize> for Word<N, P> {
     /// Access the mutable content of the word with
     /// the given index.
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
@@ -347,7 +353,7 @@ impl<const N: usize, const P: bool> std::ops::IndexMut<usize> for Word<N, P> {
     }
 }
 
-impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
+impl TryFrom<instr::Instruction> for Word<6, false> {
     type Error = ();
 
     /// Convert an `Instruction` to a `Word<6, false>`.
@@ -380,11 +386,20 @@ impl std::convert::TryFrom<instr::Instruction> for Word<6, false> {
     }
 }
 
+/// Alias for a 6-byte Word.
+pub type FullWord = mem::Word<6, false>;
+
+/// Alias for a 3-byte Word.
+pub type HalfWord = mem::Word<3, false>;
+
+/// Alias for a always-positive 3-byte Word.
+pub type PosHalfWord = mem::Word<3, true>;
+
 /// The memory area of a MIX machine.
 #[derive(Debug, Clone)]
 pub struct Mem {
     /// The memory area.
-    pub(crate) data: [Word<6, false>; Self::SIZE],
+    data: [Word<6, false>; Self::SIZE],
 }
 
 impl Mem {
@@ -410,7 +425,7 @@ impl Mem {
     pub const SIZE: usize = 4000;
 }
 
-impl std::ops::Index<u16> for Mem {
+impl Index<u16> for Mem {
     type Output = Word<6, false>;
 
     /// Access the word at a memory location.
@@ -419,25 +434,34 @@ impl std::ops::Index<u16> for Mem {
     }
 }
 
-impl std::ops::IndexMut<u16> for Mem {
+impl IndexMut<u16> for Mem {
     /// Access the mutable word at a memory location.
     fn index_mut(&mut self, index: u16) -> &mut Self::Output {
         &mut self.data[index as usize]
     }
 }
 
-impl std::ops::Index<std::ops::Range<usize>> for Mem {
+impl Index<Range<usize>> for Mem {
     type Output = [Word<6, false>];
 
     /// Access the word at a range.
-    fn index(&self, index: std::ops::Range<usize>) -> &Self::Output {
+    fn index(&self, index: Range<usize>) -> &Self::Output {
         &self.data[index]
     }
 }
 
-impl std::ops::IndexMut<std::ops::Range<usize>> for Mem {
+impl IndexMut<Range<usize>> for Mem {
     /// Access the mutable word at a range.
-    fn index_mut(&mut self, index: std::ops::Range<usize>) -> &mut Self::Output {
+    fn index_mut(&mut self, index: Range<usize>) -> &mut Self::Output {
         &mut self.data[index]
+    }
+}
+
+impl Default for Mem {
+    /// Create a clean memory area.
+    ///
+    /// Equivalent to [`Mem::new`].
+    fn default() -> Self {
+        Self::new()
     }
 }

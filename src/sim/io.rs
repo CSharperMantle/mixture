@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use crate::sim::*;
 
 pub trait IODevice {
@@ -125,7 +127,7 @@ pub enum Alphabet {
     LowSingleQuote = 55,
 }
 
-impl std::convert::TryFrom<Alphabet> for u8 {
+impl TryFrom<Alphabet> for u8 {
     type Error = ();
 
     /// Converts an [`Alphabet`] to its numerical representation.
@@ -147,7 +149,7 @@ impl std::convert::TryFrom<Alphabet> for u8 {
     }
 }
 
-impl std::convert::TryFrom<Alphabet> for char {
+impl TryFrom<Alphabet> for char {
     type Error = ();
 
     /// Converts an [`Alphabet`] to a [`char`].

@@ -1,3 +1,6 @@
+use std::convert::TryFrom;
+use std::ops::RangeInclusive;
+
 use crate::sim::*;
 
 /// An instruction of the MIX machine.
@@ -48,7 +51,7 @@ impl Instruction {
     }
 }
 
-impl std::convert::TryFrom<mem::Word<6, false>> for Instruction {
+impl TryFrom<mem::Word<6, false>> for Instruction {
     type Error = &'static str;
 
     /// Convert a [`Word<6, false>`] to an [`Instruction`].
@@ -495,22 +498,22 @@ pub enum Opcode {
 
 /// Used when converting a type to a `RangeInclusive<T>`.
 pub trait ToRangeInclusive<T> {
-    /// Convert some value to `std::ops::RangeInclusive<T>`.
-    fn to_range_inclusive(self) -> std::ops::RangeInclusive<T>;
+    /// Convert some value to [`RangeInclusive<T>`].
+    fn to_range_inclusive(self) -> RangeInclusive<T>;
 
-    /// Convert some value to a `std::ops::RangeInclusive<usize>`, but
+    /// Convert some value to a [`RangeInclusive<usize>`], but
     /// moving sign byte from range if necessary.
-    fn to_range_inclusive_signless(self) -> (std::ops::RangeInclusive<T>, bool);
+    fn to_range_inclusive_signless(self) -> (RangeInclusive<T>, bool);
 }
 
 impl ToRangeInclusive<usize> for u8 {
-    /// Convert [`u8`] to a [`std::ops::RangeInclusive<usize>`]
+    /// Convert [`u8`] to a [`RangeInclusive<usize>`]
     /// representing a `F` value.
     ///
     /// `F <- 8 * L + R`.
     ///
     /// # Returns
-    /// * [`std::ops::RangeInclusive<usize>`]
+    /// * [`RangeInclusive<usize>`]
     ///
     /// # Example
     /// ```rust
@@ -519,11 +522,11 @@ impl ToRangeInclusive<usize> for u8 {
     /// assert_eq!(1.to_range_inclusive(), 0..=1);
     /// assert_eq!(13.to_range_inclusive(), 1..=5);
     /// ```
-    fn to_range_inclusive(self) -> std::ops::RangeInclusive<usize> {
+    fn to_range_inclusive(self) -> RangeInclusive<usize> {
         ((self / 8) as usize)..=((self % 8) as usize)
     }
 
-    /// Convert `u8` to a `std::ops::RangeInclusive<usize>`, but moving
+    /// Convert `u8` to a [`RangeInclusive<usize>`], but moving
     /// out 0th byte from range if necessary.
     ///
     /// # Example
@@ -533,7 +536,7 @@ impl ToRangeInclusive<usize> for u8 {
     /// assert_eq!(1.to_range_inclusive_signless(), (1..=1, true));
     /// assert_eq!(13.to_range_inclusive_signless(), (1..=5, false));
     /// ```
-    fn to_range_inclusive_signless(self) -> (std::ops::RangeInclusive<usize>, bool) {
+    fn to_range_inclusive_signless(self) -> (RangeInclusive<usize>, bool) {
         let orig_range = self.to_range_inclusive();
         let has_sign = *orig_range.start() == 0;
         let new_start = if has_sign {
