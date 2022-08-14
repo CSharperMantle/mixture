@@ -19,3 +19,6 @@ crate-type = [ "rlib", "cdylib", "staticlib" ]
 [[bin]]
 name = "mixes"
 path = "src/bin/sim/driver.rs"
+test = false
+bench = false
+doc = false

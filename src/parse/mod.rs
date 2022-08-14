@@ -1,3 +1,5 @@
+//! MIX binary interface.
+
 mod abs_instr;
 mod maybe;
 

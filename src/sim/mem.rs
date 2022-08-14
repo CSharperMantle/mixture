@@ -6,7 +6,7 @@ use std::ops::RangeInclusive;
 
 use crate::sim::*;
 
-/// A word in MIX machine, with variable number of bytes.
+/// A general word in [`MixMachine`] with `N` bytes in it.
 ///
 /// Word are the basic unit of memory in MIX. A normal word
 /// contains 5 bytes and a sign byte. Note, however, that a
@@ -386,16 +386,18 @@ impl TryFrom<instr::Instruction> for Word<6, false> {
     }
 }
 
-/// Alias for a 6-byte Word.
+/// Alias for a 6-byte [`Word`] including a sign byte.
 pub type FullWord = mem::Word<6, false>;
 
-/// Alias for a 3-byte Word.
+/// Alias for a 3-byte [`Word`] including a sign byte.
 pub type HalfWord = mem::Word<3, false>;
 
-/// Alias for a always-positive 3-byte Word.
+/// Alias for a 3-byte [`Word`] including a sign byte,
+/// which is always equal to [`Word::POS`].
 pub type PosHalfWord = mem::Word<3, true>;
 
-/// The memory area of a MIX machine.
+/// The memory area of a [`MixMachine`] with [`Mem::SIZE`]
+/// cells.
 #[derive(Debug, Clone)]
 pub struct Mem {
     /// The memory area.

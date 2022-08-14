@@ -1,3 +1,5 @@
+//! MIX simulation framework.
+
 mod instr;
 mod io;
 mod mem;

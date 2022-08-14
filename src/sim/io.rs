@@ -2,6 +2,52 @@ use std::convert::TryFrom;
 
 use crate::sim::*;
 
+/// A device plugged into a [`MixMachine`] to perform IO
+/// operations.
+/// 
+/// This trait is used to build IO operations that may have side
+/// effects. Implement the trait and insert the device to a [`MixMachine`]
+/// instance to apply it.
+/// 
+/// # Example
+/// ```rust
+/// use mixture::sim::IODevice;
+/// use mixture::sim::MixMachine;
+/// use mixture::sim::Word;
+///
+/// pub struct SomeDevice {}
+/// 
+/// impl IODevice for SomeDevice {
+///     fn read(&mut self) -> Result<Vec<Word<6, false>>, ()> {
+///         /* ... */
+///         unimplemented!()
+///     }
+///     fn write(&mut self, data: &[Word<6, false>]) -> Result<(), usize> {
+///         /* ... */
+///         unimplemented!()
+///     }
+///     fn control(&mut self, command: i16) -> Result<(), ()> {
+///         /* ... */
+///         unimplemented!()
+///     }
+///     fn is_busy(&self) -> Result<bool, ()> {
+///         /* ... */
+///         unimplemented!()
+///     }
+///     fn is_ready(&self) -> Result<bool, ()> {
+///         /* ... */
+///         unimplemented!()
+///     }
+///     fn get_block_size(&self) -> usize {
+///         /* ... */
+///         unimplemented!()
+///     }
+/// }
+/// 
+/// let mut mix = MixMachine::new();
+/// mix.reset();
+/// mix.io_devices[0] = Some(Box::new(SomeDevice {}));
+/// ```
 pub trait IODevice {
     /// Read a block of [`Word<6, false>`]s from the device.
     ///
@@ -9,10 +55,6 @@ pub trait IODevice {
     /// via [`IODevice::get_block_size`]. This method must return
     /// exactly one block of words on success. Otherwise it will
     /// fail.
-    ///
-    /// # Return Value
-    /// * [`Ok(Vec<mem::Word<6, false>)`] - The words read form the device.
-    /// * [`Err(())`] - The transfer fails.
     fn read(&mut self) -> Result<Vec<mem::Word<6, false>>, ()>;
 
     /// Write a block of [`Word<6, false>`]s out through the device.
@@ -24,47 +66,31 @@ pub trait IODevice {
     ///
     /// # Arguments
     /// * `data` - The words to write.
-    ///
-    /// # Returns
-    /// * [`Ok(())`] - All words have been correctly written.
-    /// * [`Err(usize)`] - The transfer fails with count of actual words written.
     fn write(&mut self, data: &[mem::Word<6, false>]) -> Result<(), usize>;
 
     /// Issue a control command to the device.
     ///
     /// # Arguments
     /// * `command` - The command to issue.
-    ///
-    /// # Returns
-    /// * [`Ok(())`] - The operation succeeds.
-    /// * [`Err(())`] - The operation fails.
     fn control(&mut self, command: i16) -> Result<(), ()>;
 
     /// Check if the device is busy.
-    ///
-    /// # Returns
-    /// * [`Ok(bool)`] - The state of the device.
-    /// * [`Err(())`] - The operation fails.
+    /// 
+    /// Note that when a device detects any malfunctions, like
+    /// paper jams, it will always appear busy.
     fn is_busy(&self) -> Result<bool, ()>;
 
     /// Check if the device is ready for next operations.
-    ///
-    /// # Returns
-    /// * [`Ok(bool)`] - The state of the device.
-    /// * [`Err(())`] - The operation fails.
     fn is_ready(&self) -> Result<bool, ()>;
 
     /// Get the count of [`Word<6, false>`]s in a device block,
     /// that is, read or written in a single operation.
-    ///
-    /// # Returns
-    /// The count of words in a single block.
     fn get_block_size(&self) -> usize;
 }
 
-/// The common alphabet used in MIX and IO.
+/// The common alphabet used in [`MixMachine`].
 ///
-/// See D. E. Knuth, 'The Art of Computer Programming', Volume 1, pp 140
+/// See D. E. Knuth, *The Art of Computer Programming*, Volume 1, pp 140
 /// for more information.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, num_enum::TryFromPrimitive)]
 #[repr(u8)]

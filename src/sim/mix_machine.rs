@@ -1,21 +1,38 @@
 use crate::sim::instr::ToRangeInclusive;
 use crate::sim::*;
 
-/// Error codes for the MIX machine.
+/// Error states for [`MixMachine`].
 #[derive(PartialEq, Eq, Debug)]
 pub enum ErrorCode {
+    /// A general error is issued with no details available.
     GeneralError,
+
+    /// An invalid `C` part is found in current instruction.
     IllegalInstruction,
+
+    /// An access to a non-existent memory address is found.
     InvalidAddress,
+
+    /// An invalid `F` part is found in current instruction.
     InvalidField,
+
+    /// An invalid `I` part is found in current instruction.
     InvalidIndex,
+
+    /// An access to a memory address has failed.
     MemAccessError,
+
+    /// An access to an unknown IO device is found.
     UnknownDevice,
+
+    /// An error is issued by an IO device.
     IOError,
+
+    /// The machine is halted. It must be reset before running.
     Halted,
 }
 
-/// Values of the comparison indicator.
+/// Values of the comparison indicator in [`MixMachine`].
 #[derive(PartialEq, Eq, Debug)]
 pub enum ComparisonIndicatorValue {
     Equal,

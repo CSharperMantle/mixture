@@ -3,10 +3,10 @@ use std::ops::RangeInclusive;
 
 use crate::sim::*;
 
-/// An instruction of the MIX machine.
+/// An instruction in [`MixMachine`].
 ///
-/// It is possible to convert `Word<6, false>` to an instruction,
-/// given that all the fields are valid and vice versa.
+/// Instructions are represented in [`Word<6, false>`]s,
+/// thus it can be converted from such type after validation.
 #[derive(Clone, Copy)]
 pub struct Instruction {
     /// The signed address, `A`, read big-endian.
@@ -19,6 +19,8 @@ pub struct Instruction {
     pub index: u8,
 
     /// The operation code, `C`.
+    /// 
+    /// See also [`Opcode`].
     pub opcode: Opcode,
 }
 
@@ -90,7 +92,7 @@ impl TryFrom<mem::Word<6, false>> for Instruction {
     }
 }
 
-/// All possible operation codes in MIX.
+/// Possible operations in [`MixMachine`].
 #[derive(Clone, Copy, PartialEq, Eq, Debug, num_enum::TryFromPrimitive)]
 #[repr(u8)]
 pub enum Opcode {
