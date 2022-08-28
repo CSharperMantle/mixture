@@ -1,24 +1,4 @@
-[package]
-name = "mixture"
-description = "MIX simulator and assembler"
-version = "0.1.0"
-edition = "2021"
-authors = [ "CSharperMantle <baorong2005@126.com>" ]
-license = "BSD-3-Clause"
-readme = "README.md"
-
-[dependencies]
-clap = { version = "3.1.18", features = ["derive", "wrap_help"] }
-num_enum = "0.5.7"
-
-[lib]
-name = "mixture"
-path = "src/lib.rs"
-crate-type = [ "rlib", "cdylib", "staticlib" ]
-
-[[bin]]
-name = "mixes"
-path = "src/bin/sim/driver.rs"
-test = false
-bench = false
-doc = false
+[workspace]
+members = [
+  "mixture"
+]

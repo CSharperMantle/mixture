@@ -1,0 +1,17 @@
+[package]
+name = "mixture"
+description = "MIX simulator and assembler"
+version = "0.1.0"
+edition = "2021"
+authors = [ "CSharperMantle <baorong2005@126.com>" ]
+license = "BSD-3-Clause"
+readme = "README.md"
+
+[dependencies]
+num_enum = "0.5.7"
+
+[lib]
+name = "mixture"
+path = "src/lib.rs"
+crate-type = [ "rlib", "cdylib", "staticlib" ]
+
