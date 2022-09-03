@@ -91,11 +91,11 @@ fn test_unknown_device() {
 struct ErrorIODevice {}
 
 impl IODevice for ErrorIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
         Err(())
     }
 
-    fn write(&mut self, _: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+    fn write(&mut self, _: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
         Err(0)
     }
 

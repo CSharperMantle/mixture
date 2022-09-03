@@ -401,7 +401,7 @@ pub type PosHalfWord = mem::Word<3, true>;
 #[derive(Debug, Clone)]
 pub struct Mem {
     /// The memory area.
-    data: [Word<6, false>; Self::SIZE],
+    data: [FullWord; Self::SIZE],
 }
 
 impl Mem {
@@ -428,7 +428,7 @@ impl Mem {
 }
 
 impl Index<u16> for Mem {
-    type Output = Word<6, false>;
+    type Output = FullWord;
 
     /// Access the word at a memory location.
     fn index(&self, index: u16) -> &Self::Output {
@@ -444,7 +444,7 @@ impl IndexMut<u16> for Mem {
 }
 
 impl Index<Range<usize>> for Mem {
-    type Output = [Word<6, false>];
+    type Output = [FullWord];
 
     /// Access the word at a range.
     fn index(&self, index: Range<usize>) -> &Self::Output {

@@ -28,7 +28,7 @@ fn test_from_word() {
 fn test_into_word() {
     let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
 
-    let word: Word<6, false> = instr.try_into().unwrap();
+    let word: FullWord = instr.try_into().unwrap();
     assert_eq!(word[0..=5], [0, 0x07, 0xD0, 0x02, 0x03, 0x08]);
 }
 

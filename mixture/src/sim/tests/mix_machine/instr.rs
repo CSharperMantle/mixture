@@ -1012,11 +1012,11 @@ fn test_shift() {
 struct BusyIODevice {}
 
 impl IODevice for BusyIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
         unimplemented!()
     }
 
-    fn write(&mut self, _: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+    fn write(&mut self, _: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
         unimplemented!()
     }
 
@@ -1040,11 +1040,11 @@ impl IODevice for BusyIODevice {
 struct ReadyIODevice {}
 
 impl IODevice for ReadyIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
         unimplemented!()
     }
 
-    fn write(&mut self, _: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+    fn write(&mut self, _: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
         unimplemented!()
     }
 
@@ -1112,11 +1112,11 @@ struct LoggedControlIODevice {
 }
 
 impl IODevice for LoggedControlIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
         unimplemented!()
     }
 
-    fn write(&mut self, _: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+    fn write(&mut self, _: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
         unimplemented!()
     }
 
@@ -1160,13 +1160,13 @@ fn test_ioc() {
 struct InOutIODevice {}
 
 impl IODevice for InOutIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::Word<6, false>>, ()> {
+    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
         let mut w = Word::<6, false>::new();
         w.set(0..=5, &[0, 9, 8, 7, 6, 5])?;
         Ok(vec![w])
     }
 
-    fn write(&mut self, data: &[crate::sim::mem::Word<6, false>]) -> Result<(), usize> {
+    fn write(&mut self, data: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
         assert_eq!(data.len(), self.get_block_size());
         assert_eq!(data[0][0..=5], [0, 1, 2, 3, 4, 5]);
         Ok(())

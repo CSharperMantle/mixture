@@ -57,11 +57,11 @@ const PRIMES_OUTPUT_EXPECTED: &'static str = r#"FIRST|FIVE|HUNDRED|PRIMES|||||||
 struct LineCollectorIODevice {}
 
 impl IODevice for LineCollectorIODevice {
-    fn read(&mut self) -> Result<Vec<Word<6, false>>, ()> {
+    fn read(&mut self) -> Result<Vec<FullWord>, ()> {
         unimplemented!()
     }
 
-    fn write(&mut self, data: &[Word<6, false>]) -> Result<(), usize> {
+    fn write(&mut self, data: &[FullWord]) -> Result<(), usize> {
         assert_eq!(data.len(), self.get_block_size());
         let mut count_written: usize = 0;
         // For each word...

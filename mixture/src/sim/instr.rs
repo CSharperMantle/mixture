@@ -5,7 +5,7 @@ use crate::sim::*;
 
 /// An instruction in [`MixMachine`].
 ///
-/// Instructions are represented in [`Word<6, false>`]s,
+/// Instructions are represented in [`FullWord`]s,
 /// thus it can be converted from such type after validation.
 #[derive(Clone, Copy)]
 pub struct Instruction {
@@ -53,13 +53,13 @@ impl Instruction {
     }
 }
 
-impl TryFrom<mem::Word<6, false>> for Instruction {
+impl TryFrom<mem::FullWord> for Instruction {
     type Error = &'static str;
 
-    /// Convert a [`Word<6, false>`] to an [`Instruction`].
+    /// Convert a [`FullWord`] to an [`Instruction`].
     ///
     /// # Arguments
-    /// * `source` - The [`Word<6, false>`] to convert.
+    /// * `source` - The [`FullWord`] to convert.
     ///
     /// # Returns
     /// * [`Ok(Instruction)`] - The conversion was successful.
@@ -68,9 +68,8 @@ impl TryFrom<mem::Word<6, false>> for Instruction {
     /// # Example
     /// ```rust
     /// use mixture::sim::*;
-    /// use mixture::sim::*;
     ///
-    /// let mut word = Word::<6, false>::new();
+    /// let mut word = FullWord::new();
     /// word.set(0..=5, &[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
     ///
     /// let instr = Instruction::try_from(word).unwrap();
@@ -79,7 +78,7 @@ impl TryFrom<mem::Word<6, false>> for Instruction {
     /// assert_eq!(instr.index, 0x02);
     /// assert_eq!(instr.addr, 2000);
     /// ```
-    fn try_from(source: mem::Word<6, false>) -> Result<Self, Self::Error> {
+    fn try_from(source: mem::FullWord) -> Result<Self, Self::Error> {
         let sign = if source.is_positive() { 1 } else { -1 };
         let addr = sign * i16::from_be_bytes([source[1], source[2]]);
         let opcode = Opcode::try_from(source[5..=5][0]).map_err(|_| "Invalid opcode")?;

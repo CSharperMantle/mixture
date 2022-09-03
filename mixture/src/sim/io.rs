@@ -13,16 +13,16 @@ use crate::sim::*;
 /// ```rust
 /// use mixture::sim::IODevice;
 /// use mixture::sim::MixMachine;
-/// use mixture::sim::Word;
+/// use mixture::sim::FullWord;
 ///
 /// pub struct SomeDevice {}
 /// 
 /// impl IODevice for SomeDevice {
-///     fn read(&mut self) -> Result<Vec<Word<6, false>>, ()> {
+///     fn read(&mut self) -> Result<Vec<FullWord>, ()> {
 ///         /* ... */
 ///         unimplemented!()
 ///     }
-///     fn write(&mut self, data: &[Word<6, false>]) -> Result<(), usize> {
+///     fn write(&mut self, data: &[FullWord]) -> Result<(), usize> {
 ///         /* ... */
 ///         unimplemented!()
 ///     }
@@ -49,15 +49,15 @@ use crate::sim::*;
 /// mix.io_devices[0] = Some(Box::new(SomeDevice {}));
 /// ```
 pub trait IODevice {
-    /// Read a block of [`Word<6, false>`]s from the device.
+    /// Read a block of [`FullWord`]s from the device into the buffer.
     ///
     /// The amount of words in a block is defined by the device
     /// via [`IODevice::get_block_size`]. This method must return
     /// exactly one block of words on success. Otherwise it will
     /// fail.
-    fn read(&mut self) -> Result<Vec<mem::Word<6, false>>, ()>;
+    fn read(&mut self) -> Result<Vec<mem::FullWord>, ()>;
 
-    /// Write a block of [`Word<6, false>`]s out through the device.
+    /// Write a block of [`FullWord`]s out through the device.
     ///
     /// This method will always try to write a whole block. It will fail
     /// if the given slice of data has a length that is not exactly equal
@@ -66,7 +66,7 @@ pub trait IODevice {
     ///
     /// # Arguments
     /// * `data` - The words to write.
-    fn write(&mut self, data: &[mem::Word<6, false>]) -> Result<(), usize>;
+    fn write(&mut self, data: &[mem::FullWord]) -> Result<(), usize>;
 
     /// Issue a control command to the device.
     ///
@@ -83,7 +83,7 @@ pub trait IODevice {
     /// Check if the device is ready for next operations.
     fn is_ready(&self) -> Result<bool, ()>;
 
-    /// Get the count of [`Word<6, false>`]s in a device block,
+    /// Get the count of [`FullWord`]s in a device block,
     /// that is, read or written in a single operation.
     fn get_block_size(&self) -> usize;
 }
