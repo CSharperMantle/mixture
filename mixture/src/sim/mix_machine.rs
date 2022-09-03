@@ -1,3 +1,6 @@
+#[cfg(any(feature = "std", test))]
+use std::prelude::v1::*;
+
 use crate::sim::instr::ToRangeInclusive;
 use crate::sim::*;
 
@@ -9,6 +12,9 @@ pub enum ErrorCode {
 
     /// An invalid `C` part is found in current instruction.
     IllegalInstruction,
+
+    /// An operation yet to be implemented is found.
+    Unimplemented,
 
     /// An access to a non-existent memory address is found.
     InvalidAddress,
@@ -91,6 +97,7 @@ pub struct MixMachine {
     pub halted: bool,
 
     /// IO devices.
+    #[cfg(feature = "io")]
     pub io_devices: [Option<Box<dyn io::IODevice>>; 21],
 }
 
@@ -107,6 +114,8 @@ impl MixMachine {
             mem: mem::Mem::new(),
             pc: 0,
             halted: true,
+
+            #[cfg(feature = "io")]
             io_devices: Default::default(),
         }
     }
@@ -275,6 +284,7 @@ impl MixMachine {
     }
 
     /// Get IO device.
+    #[cfg(feature = "io")]
     fn helper_get_io_device(&self, dev_id: usize) -> Result<&Box<dyn IODevice>, ErrorCode> {
         let dev = self
             .io_devices
@@ -286,6 +296,7 @@ impl MixMachine {
     }
 
     /// Get IO device.
+    #[cfg(feature = "io")]
     fn helper_get_io_device_mut(
         &mut self,
         dev_id: usize,
@@ -1030,6 +1041,7 @@ impl MixMachine {
     }
 
     /// Handler for `JBUS` and `JRED`.
+    #[cfg(feature = "io")]
     fn handler_instr_jbus_jred(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Get device ID.
         let dev_id: usize = instr.field as usize;
@@ -1048,8 +1060,15 @@ impl MixMachine {
         }
         Ok(())
     }
+    
+    /// Handler for `JBUS` and `JRED` when IO is disabled.
+    #[cfg(not(feature = "io"))]
+    fn handler_instr_jbus_jred(&mut self, _: &instr::Instruction) -> Result<(), ErrorCode> {
+        Err(ErrorCode::Unimplemented)
+    }
 
     /// Handler for `IOC`.
+    #[cfg(feature = "io")]
     fn handler_instr_ioc(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Get command.
         let command = self.helper_get_eff_addr_unchecked(instr.addr, instr.index);
@@ -1061,8 +1080,15 @@ impl MixMachine {
         dev.control(command).map_err(|_| ErrorCode::IOError)?;
         Ok(())
     }
+    
+    /// Handler for `IOC` when IO is disabled.
+    #[cfg(not(feature = "io"))]
+    fn handler_instr_ioc(&mut self, _: &instr::Instruction) -> Result<(), ErrorCode> {
+        Err(ErrorCode::Unimplemented)
+    }
 
     /// Handler for `IN` and `OUT`.
+    #[cfg(feature = "io")]
     fn handler_instr_in_out(&mut self, instr: &instr::Instruction) -> Result<(), ErrorCode> {
         // Check starting address.
         let addr_start = self.helper_get_eff_addr(instr.addr, instr.index)?;
@@ -1087,23 +1113,22 @@ impl MixMachine {
         // Call appropriate callbacks.
         match instr.opcode {
             instr::Opcode::In => {
-                let words = dev.read().map_err(|_| ErrorCode::IOError)?;
-                // Reject blocks with wrong length.
-                if words.len() != dev_blk_size {
-                    return Err(ErrorCode::IOError);
-                }
-                // Copy words to memory.
-                for (i, word) in words.iter().enumerate() {
-                    self.mem[addr_start + i as u16] = *word;
-                }
+                let slice = &mut self.mem[addr_start as usize .. addr_end as usize];
+                dev.read(slice).map_err(|_| ErrorCode::IOError)?;
             }
             instr::Opcode::Out => {
                 // Clone words.
-                let words = self.mem[addr_start as usize..addr_end as usize].to_vec();
-                dev.write(&words).map_err(|_| ErrorCode::IOError)?;
+                let words = &self.mem[addr_start as usize..addr_end as usize];
+                dev.write(words).map_err(|_| ErrorCode::IOError)?;
             }
             _ => unreachable!(),
         };
         Ok(())
+    }
+
+    /// Handler for `IN` and `OUT` when IO is disabled.
+    #[cfg(not(feature = "io"))]
+    fn handler_instr_in_out(&mut self, _: &instr::Instruction) -> Result<(), ErrorCode> {
+        Err(ErrorCode::Unimplemented)
     }
 }

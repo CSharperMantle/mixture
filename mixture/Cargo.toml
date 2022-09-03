@@ -15,3 +15,7 @@ name = "mixture"
 path = "src/lib.rs"
 crate-type = [ "rlib", "cdylib", "staticlib" ]
 
+[features]
+default = [ "std", "io" ]
+std = []
+io = [ "std" ]

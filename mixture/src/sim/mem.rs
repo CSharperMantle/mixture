@@ -1,8 +1,8 @@
-use std::convert::TryFrom;
-use std::ops::Index;
-use std::ops::IndexMut;
-use std::ops::Range;
-use std::ops::RangeInclusive;
+use core::convert::TryFrom;
+use core::ops::Index;
+use core::ops::IndexMut;
+use core::ops::Range;
+use core::ops::RangeInclusive;
 
 use crate::sim::*;
 
@@ -289,20 +289,18 @@ impl<const N: usize, const P: bool> Word<N, P> {
             -1
         };
         let mut result_bytes: [u8; 8] = [0; 8];
-        // Bytes marked 'dirty' have not been copied yet.
-        let mut data_bytes_dirty = data.iter().map(|&byte| byte != 0).collect::<Vec<_>>();
+        // Get count of bytes that is needed to copy.
+        let data_bytes_nonzero_count = data.iter().filter(|&&b| b != 0).count();
         // Copy bytes from the slice.
         // Ranges are chained by zip, and the shorter range is
         // iterated over in order to prevent out-of-bound indices.
         // Filling starts from the LSB.
         for (bytes_i, data_i) in (0..8).rev().zip((0..data.len()).rev()) {
             result_bytes[bytes_i] = data[data_i];
-            // We have copied the byte; make it clean.
-            data_bytes_dirty[data_i] = false;
         }
         let value = i64::from_be_bytes(result_bytes);
 
-        (value * sign, data_bytes_dirty.iter().any(|&dirty| dirty))
+        (value * sign, data_bytes_nonzero_count > 8)
     }
 }
 

@@ -1,7 +1,14 @@
+#[cfg(any(feature = "std", test))]
+use std::prelude::v1::*;
+
 use crate::sim::instr::*;
-use crate::sim::io::*;
-use crate::sim::mem::*;
 use crate::sim::mix_machine::*;
+
+#[cfg(feature = "io")]
+use crate::sim::io::*;
+
+#[cfg(feature = "io")]
+use crate::sim::mem::*;
 
 #[test]
 fn test_nop() {
@@ -1009,14 +1016,16 @@ fn test_shift() {
     assert_eq!(mix.r_x[0..=5], [1, 4, 0, 0, 5, 0]);
 }
 
+#[cfg(feature = "io")]
 struct BusyIODevice {}
 
+#[cfg(feature = "io")]
 impl IODevice for BusyIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
+    fn read(&mut self, _: &mut [FullWord]) -> Result<(), ()> {
         unimplemented!()
     }
 
-    fn write(&mut self, _: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
+    fn write(&mut self, _: &[FullWord]) -> Result<(), usize> {
         unimplemented!()
     }
 
@@ -1037,14 +1046,16 @@ impl IODevice for BusyIODevice {
     }
 }
 
+#[cfg(feature = "io")]
 struct ReadyIODevice {}
 
+#[cfg(feature = "io")]
 impl IODevice for ReadyIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
+    fn read(&mut self, _: &mut [FullWord]) -> Result<(), ()> {
         unimplemented!()
     }
 
-    fn write(&mut self, _: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
+    fn write(&mut self, _: &[FullWord]) -> Result<(), usize> {
         unimplemented!()
     }
 
@@ -1066,6 +1077,7 @@ impl IODevice for ReadyIODevice {
 }
 
 #[test]
+#[cfg(feature = "io")]
 fn test_jbus_jred() {
     let mut mix = MixMachine::new();
     mix.reset();
@@ -1107,16 +1119,18 @@ fn test_jbus_jred() {
     assert_eq!(mix.r_j[0..=2], [0, 0, 0x67]);
 }
 
+#[cfg(feature = "io")]
 struct LoggedControlIODevice {
     expected_command: i16,
 }
 
+#[cfg(feature = "io")]
 impl IODevice for LoggedControlIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
+    fn read(&mut self, _: &mut [FullWord]) -> Result<(), ()> {
         unimplemented!()
     }
 
-    fn write(&mut self, _: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
+    fn write(&mut self, _: &[FullWord]) -> Result<(), usize> {
         unimplemented!()
     }
 
@@ -1139,6 +1153,7 @@ impl IODevice for LoggedControlIODevice {
 }
 
 #[test]
+#[cfg(feature = "io")]
 fn test_ioc() {
     let mut mix = MixMachine::new();
     mix.reset();
@@ -1157,16 +1172,19 @@ fn test_ioc() {
     assert_eq!(mix.halted, false);
 }
 
+#[cfg(feature = "io")]
 struct InOutIODevice {}
 
+#[cfg(feature = "io")]
 impl IODevice for InOutIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
-        let mut w = Word::<6, false>::new();
+    fn read(&mut self, buffer: &mut [FullWord]) -> Result<(), ()> {
+        let mut w = FullWord::new();
         w.set(0..=5, &[0, 9, 8, 7, 6, 5])?;
-        Ok(vec![w])
+        buffer[0] = w;
+        Ok(())
     }
 
-    fn write(&mut self, data: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
+    fn write(&mut self, data: &[FullWord]) -> Result<(), usize> {
         assert_eq!(data.len(), self.get_block_size());
         assert_eq!(data[0][0..=5], [0, 1, 2, 3, 4, 5]);
         Ok(())
@@ -1190,6 +1208,7 @@ impl IODevice for InOutIODevice {
 }
 
 #[test]
+#[cfg(feature = "io")]
 fn test_in_out() {
     let mut mix = MixMachine::new();
     mix.reset();

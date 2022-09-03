@@ -1,5 +1,5 @@
-use std::convert::TryFrom;
-use std::ops::RangeInclusive;
+use core::convert::TryFrom;
+use core::ops::RangeInclusive;
 
 use crate::sim::*;
 

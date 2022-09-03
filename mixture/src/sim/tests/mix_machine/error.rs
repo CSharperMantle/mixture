@@ -1,6 +1,11 @@
+#[cfg(any(feature = "std", test))]
+use std::prelude::v1::*;
+
 use crate::sim::instr::*;
-use crate::sim::io::*;
 use crate::sim::mix_machine::*;
+
+#[cfg(feature = "io")]
+use crate::sim::io::*;
 
 #[test]
 fn test_illegal_instruction() {
@@ -75,6 +80,7 @@ fn test_invalid_index() {
 }
 
 #[test]
+#[cfg(feature = "io")]
 fn test_unknown_device() {
     let mut mix = MixMachine::new();
     mix.reset();
@@ -88,10 +94,12 @@ fn test_unknown_device() {
     assert_eq!(mix.halted, true);
 }
 
+#[cfg(feature = "io")]
 struct ErrorIODevice {}
 
+#[cfg(feature = "io")]
 impl IODevice for ErrorIODevice {
-    fn read(&mut self) -> Result<Vec<crate::sim::mem::FullWord>, ()> {
+    fn read(&mut self, _: &mut [crate::sim::mem::FullWord]) -> Result<(), ()> {
         Err(())
     }
 
@@ -117,7 +125,8 @@ impl IODevice for ErrorIODevice {
 }
 
 #[test]
-fn test_io_error() {
+#[cfg(feature = "io")]
+fn test_io_device_error() {
     let dev_err = ErrorIODevice {};
 
     let mut mix = MixMachine::new();

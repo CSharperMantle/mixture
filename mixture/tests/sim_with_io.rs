@@ -1,3 +1,5 @@
+#![cfg(feature = "io")]
+
 use mixture::sim::*;
 
 static mut PRIMES_OUTPUT: String = String::new();
@@ -57,7 +59,7 @@ const PRIMES_OUTPUT_EXPECTED: &'static str = r#"FIRST|FIVE|HUNDRED|PRIMES|||||||
 struct LineCollectorIODevice {}
 
 impl IODevice for LineCollectorIODevice {
-    fn read(&mut self) -> Result<Vec<FullWord>, ()> {
+    fn read(&mut self, _: &mut [FullWord]) -> Result<(), ()> {
         unimplemented!()
     }
 

@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use crate::sim::*;
 
@@ -18,7 +18,7 @@ use crate::sim::*;
 /// pub struct SomeDevice {}
 /// 
 /// impl IODevice for SomeDevice {
-///     fn read(&mut self) -> Result<Vec<FullWord>, ()> {
+///     fn read(&mut self, buffer: &mut [FullWord]) -> Result<(), ()> {
 ///         /* ... */
 ///         unimplemented!()
 ///     }
@@ -48,14 +48,21 @@ use crate::sim::*;
 /// mix.reset();
 /// mix.io_devices[0] = Some(Box::new(SomeDevice {}));
 /// ```
+#[cfg(feature = "io")]
 pub trait IODevice {
     /// Read a block of [`FullWord`]s from the device into the buffer.
     ///
     /// The amount of words in a block is defined by the device
-    /// via [`IODevice::get_block_size`]. This method must return
-    /// exactly one block of words on success. Otherwise it will
+    /// via [`IODevice::get_block_size`]. This method must write
+    /// exactly one block of words on success, otherwise it will
     /// fail.
-    fn read(&mut self) -> Result<Vec<mem::FullWord>, ()>;
+    /// 
+    /// The implementor is asked to check the size of provided `buffer`
+    /// to avoid possible out-of-bound access.
+    /// 
+    /// # Arguments
+    /// * `buffer` - The buffer to read into.
+    fn read(&mut self, buffer: &mut [mem::FullWord]) -> Result<(), ()>;
 
     /// Write a block of [`FullWord`]s out through the device.
     ///
