@@ -1,11 +1,5 @@
-#[cfg(any(feature = "std", test))]
-use std::prelude::v1::*;
-
 use crate::sim::instr::*;
 use crate::sim::mix_machine::*;
-
-#[cfg(feature = "io")]
-use crate::sim::io::*;
 
 #[test]
 fn test_illegal_instruction() {
@@ -76,69 +70,5 @@ fn test_invalid_index() {
 
     let err = mix.step().expect_err("Expect error");
     assert_eq!(err, ErrorCode::InvalidIndex);
-    assert_eq!(mix.halted, true);
-}
-
-#[test]
-#[cfg(feature = "io")]
-fn test_unknown_device() {
-    let mut mix = MixMachine::new();
-    mix.reset();
-
-    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).try_into().unwrap();
-
-    mix.restart();
-
-    let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, ErrorCode::UnknownDevice);
-    assert_eq!(mix.halted, true);
-}
-
-#[cfg(feature = "io")]
-struct ErrorIODevice {}
-
-#[cfg(feature = "io")]
-impl IODevice for ErrorIODevice {
-    fn read(&mut self, _: &mut [crate::sim::mem::FullWord]) -> Result<(), ()> {
-        Err(())
-    }
-
-    fn write(&mut self, _: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
-        Err(0)
-    }
-
-    fn control(&mut self, _: i16) -> Result<(), ()> {
-        Err(())
-    }
-
-    fn is_busy(&self) -> Result<bool, ()> {
-        Err(())
-    }
-
-    fn is_ready(&self) -> Result<bool, ()> {
-        Err(())
-    }
-
-    fn get_block_size(&self) -> usize {
-        0
-    }
-}
-
-#[test]
-#[cfg(feature = "io")]
-fn test_io_device_error() {
-    let dev_err = ErrorIODevice {};
-
-    let mut mix = MixMachine::new();
-    mix.reset();
-
-    mix.io_devices[0] = Some(Box::new(dev_err));
-
-    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).try_into().unwrap();
-
-    mix.restart();
-
-    let err = mix.step().expect_err("Expect error");
-    assert_eq!(err, ErrorCode::IOError);
     assert_eq!(mix.halted, true);
 }

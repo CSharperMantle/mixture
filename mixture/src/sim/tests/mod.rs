@@ -1,4 +1,4 @@
 mod instr;
-mod io;
+mod alphabet;
 mod mem;
 mod mix_machine;
