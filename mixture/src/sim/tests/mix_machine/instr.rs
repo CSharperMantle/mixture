@@ -1,6 +1,3 @@
-#[cfg(any(feature = "std", test))]
-use std::prelude::v1::*;
-
 use crate::sim::instr::*;
 use crate::sim::mix_machine::*;
 
