@@ -1,7 +1,7 @@
 use core::convert::TryFrom;
 use core::ops::RangeInclusive;
 
-use crate::sim::*;
+use crate::common::word::*;
 
 /// An instruction in [`MixMachine`].
 ///
@@ -35,7 +35,7 @@ impl Instruction {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::*;
+    /// use mixture::common::*;
     ///
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     /// assert_eq!(instr.addr, 2000);
@@ -53,7 +53,7 @@ impl Instruction {
     }
 }
 
-impl TryFrom<mem::FullWord> for Instruction {
+impl TryFrom<FullWord> for Instruction {
     type Error = &'static str;
 
     /// Convert a [`FullWord`] to an [`Instruction`].
@@ -67,7 +67,7 @@ impl TryFrom<mem::FullWord> for Instruction {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::*;
+    /// use mixture::common::*;
     ///
     /// let mut word = FullWord::new();
     /// word.set(0..=5, &[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
@@ -78,7 +78,7 @@ impl TryFrom<mem::FullWord> for Instruction {
     /// assert_eq!(instr.index, 0x02);
     /// assert_eq!(instr.addr, 2000);
     /// ```
-    fn try_from(source: mem::FullWord) -> Result<Self, Self::Error> {
+    fn try_from(source: FullWord) -> Result<Self, Self::Error> {
         let sign = if source.is_positive() { 1 } else { -1 };
         let addr = sign * i16::from_be_bytes([source[1], source[2]]);
         let opcode = Opcode::try_from(source[5..=5][0]).map_err(|_| "Invalid opcode")?;
@@ -518,7 +518,7 @@ impl ToRangeInclusive<usize> for u8 {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::*;
+    /// use mixture::common::*;
     ///
     /// assert_eq!(1.to_range_inclusive(), 0..=1);
     /// assert_eq!(13.to_range_inclusive(), 1..=5);
@@ -532,7 +532,7 @@ impl ToRangeInclusive<usize> for u8 {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::*;
+    /// use mixture::common::*;
     ///
     /// assert_eq!(1.to_range_inclusive_signless(), (1..=1, true));
     /// assert_eq!(13.to_range_inclusive_signless(), (1..=5, false));

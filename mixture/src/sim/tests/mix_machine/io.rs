@@ -1,8 +1,7 @@
 use std::prelude::v1::*;
 
-use crate::sim::instr::*;
+use crate::common::*;
 use crate::sim::io::*;
-use crate::sim::mem::*;
 use crate::sim::mix_machine::*;
 
 #[test]
@@ -22,11 +21,11 @@ fn test_unknown_device() {
 struct ErrorIODevice {}
 
 impl IODevice for ErrorIODevice {
-    fn read(&mut self, _: &mut [crate::sim::mem::FullWord]) -> Result<(), ()> {
+    fn read(&mut self, _: &mut [FullWord]) -> Result<(), ()> {
         Err(())
     }
 
-    fn write(&mut self, _: &[crate::sim::mem::FullWord]) -> Result<(), usize> {
+    fn write(&mut self, _: &[FullWord]) -> Result<(), usize> {
         Err(0)
     }
 

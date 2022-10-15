@@ -25,5 +25,6 @@ extern crate std;
 #[cfg(all(not(feature = "std"), not(test)))]
 extern crate core;
 
+pub mod common;
 pub mod parse;
 pub mod sim;

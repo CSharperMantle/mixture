@@ -1,4 +1,4 @@
-use crate::sim::alphabet::*;
+use crate::common::alphabet::*;
 
 #[test]
 fn test_alphabet_to_u8() {

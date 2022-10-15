@@ -1,5 +1,4 @@
-use crate::sim::instr::*;
-use crate::sim::mem::*;
+use crate::common::*;
 use crate::sim::mix_machine::*;
 
 #[test]

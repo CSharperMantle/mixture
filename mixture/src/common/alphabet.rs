@@ -75,7 +75,7 @@ impl TryFrom<Alphabet> for u8 {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::Alphabet;
+    /// use mixture::common::Alphabet;
     ///
     /// let a = Alphabet::A;
     /// let a_byte: u8 = a.try_into().unwrap();
@@ -97,7 +97,7 @@ impl TryFrom<Alphabet> for char {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::Alphabet;
+    /// use mixture::common::Alphabet;
     ///
     /// let a = Alphabet::A;
     /// let a_chr: char = a.try_into().unwrap();

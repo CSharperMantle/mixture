@@ -1,6 +1,6 @@
 use core::convert::TryFrom;
 
-use crate::sim::*;
+use crate::common::*;
 
 /// A device plugged into a [`MixMachine`] to perform IO
 /// operations.
@@ -13,7 +13,7 @@ use crate::sim::*;
 /// ```rust
 /// use mixture::sim::IODevice;
 /// use mixture::sim::MixMachine;
-/// use mixture::sim::FullWord;
+/// use mixture::common::FullWord;
 ///
 /// pub struct SomeDevice {}
 /// 
@@ -61,7 +61,7 @@ pub trait IODevice {
     /// 
     /// # Arguments
     /// * `buffer` - The buffer to read into.
-    fn read(&mut self, buffer: &mut [mem::FullWord]) -> Result<(), ()>;
+    fn read(&mut self, buffer: &mut [FullWord]) -> Result<(), ()>;
 
     /// Write a block of [`FullWord`]s out through the device.
     ///
@@ -72,7 +72,7 @@ pub trait IODevice {
     ///
     /// # Arguments
     /// * `data` - The words to write.
-    fn write(&mut self, data: &[mem::FullWord]) -> Result<(), usize>;
+    fn write(&mut self, data: &[FullWord]) -> Result<(), usize>;
 
     /// Issue a control command to the device.
     ///

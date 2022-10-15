@@ -1,5 +1,6 @@
 #![cfg(feature = "io")]
 
+use mixture::common::*;
 use mixture::sim::*;
 
 static mut PRIMES_OUTPUT: String = String::new();

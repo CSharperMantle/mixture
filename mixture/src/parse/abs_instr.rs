@@ -1,5 +1,5 @@
 use crate::parse::maybe::Maybe;
-use crate::sim;
+use crate::common::*;
 
 pub struct AbstractInstruction {
     /// The abstract address.
@@ -12,7 +12,7 @@ pub struct AbstractInstruction {
     pub index: Maybe<u8, i32>,
 
     /// The operation code.
-    pub opcode: sim::Opcode,
+    pub opcode: Opcode,
 }
 
 impl AbstractInstruction {
@@ -27,7 +27,7 @@ impl AbstractInstruction {
         addr: Maybe<i16, i32>,
         field: Maybe<u8, i32>,
         index: Maybe<u8, i32>,
-        opcode: sim::Opcode,
+        opcode: Opcode,
     ) -> Self {
         Self {
             addr,
@@ -36,32 +36,31 @@ impl AbstractInstruction {
             opcode,
         }
     }
-    /// Consume the object and turn it to a [`sim::Instruction`].
+    /// Consume the object and turn it to a [`Instruction`].
     ///
     /// # Returns
-    /// * [`Ok(sim::Instruction)`] - The converted [`sim::Instruction`].
+    /// * [`Ok(Instruction)`] - The converted [`Instruction`].
     /// * [`Err(())`] - Any of the fields is [`Maybe::Placeholder`].
     ///
     /// # Example
     /// ```rust
     /// use mixture::*;
-    /// use mixture::sim::*;
     ///
     /// let instr = parse::AbstractInstruction {
     ///     addr: parse::Maybe::Concrete(2000),
     ///     field: parse::Maybe::Concrete(0x03),
     ///     index: parse::Maybe::Concrete(0x02),
-    ///     opcode: Opcode::LdA,
+    ///     opcode: common::Opcode::LdA,
     /// };
     ///
     /// let instr = instr.concretize().unwrap();
-    /// assert_eq!(instr.opcode, Opcode::LdA);
+    /// assert_eq!(instr.opcode, common::Opcode::LdA);
     /// assert_eq!(instr.field, 0x03);
     /// assert_eq!(instr.index, 0x02);
     /// assert_eq!(instr.addr, 2000);
     /// ```
-    pub fn concretize(self) -> Result<sim::Instruction, ()> {
-        Ok(sim::Instruction {
+    pub fn concretize(self) -> Result<Instruction, ()> {
+        Ok(Instruction {
             addr: self.addr.try_unwrap()?,
             field: self.field.try_unwrap()?,
             index: self.index.try_unwrap()?,
