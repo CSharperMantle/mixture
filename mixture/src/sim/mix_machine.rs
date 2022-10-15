@@ -13,9 +13,6 @@ pub enum ErrorCode {
     /// An invalid `C` part is found in current instruction.
     IllegalInstruction,
 
-    /// An operation yet to be implemented is found.
-    Unimplemented,
-
     /// An access to a non-existent memory address is found.
     InvalidAddress,
 
@@ -273,9 +270,9 @@ impl MixMachine {
     /// Do actual jump.
     fn helper_do_jump(&mut self, location: u16, save_r_j: bool) -> Result<(), ErrorCode> {
         if save_r_j {
-            let pc_unpacked = (self.pc as u16).to_be_bytes();
+            let pc = (self.pc as u16).to_be_bytes();
             self.r_j
-                .set(1..=2, &pc_unpacked)
+                .set(1..=2, &pc)
                 .map_err(|_| ErrorCode::MemAccessError)?;
         }
         // Do jump.
@@ -322,7 +319,7 @@ impl MixMachine {
     fn handler_instr_load_6b(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
-        let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let mem_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             Opcode::LdA => &mut self.r_a,
             Opcode::LdX => &mut self.r_x,
@@ -332,12 +329,12 @@ impl MixMachine {
         reg.set(0..=5, &[FullWord::POS, 0, 0, 0, 0, 0])
             .map_err(|_| ErrorCode::MemAccessError)?;
         // Copy bytes shifted right.
-        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
-            reg[reg_cursor] = memory_cell[memory_cell_cursor];
+        for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
+            reg[reg_cursor] = mem_cell[mem_cursor];
         }
         // Copy sign byte if needed.
         if sign_copy_needed {
-            reg[0] = memory_cell[0];
+            reg[0] = mem_cell[0];
         }
         Ok(())
     }
@@ -346,7 +343,7 @@ impl MixMachine {
     fn handler_instr_load_neg_6b(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
-        let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let mem_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             Opcode::LdAN => &mut self.r_a,
             Opcode::LdXN => &mut self.r_x,
@@ -356,12 +353,12 @@ impl MixMachine {
         reg.set(0..=5, &[0; 6])
             .map_err(|_| ErrorCode::MemAccessError)?;
         // Copy bytes shifted right.
-        for (memory_cell_cursor, reg_cursor) in field.rev().zip((1..=5).rev()) {
-            reg[reg_cursor] = memory_cell[memory_cell_cursor];
+        for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
+            reg[reg_cursor] = mem_cell[mem_cursor];
         }
         // Copy negated sign byte if needed.
         if sign_copy_needed {
-            reg[0] = if memory_cell.is_positive() {
+            reg[0] = if mem_cell.is_positive() {
                 FullWord::NEG
             } else {
                 FullWord::POS
@@ -378,7 +375,7 @@ impl MixMachine {
     fn handler_instr_load_3b(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
-        let memory_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
+        let mem_cell = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let reg = match instr.opcode {
             Opcode::Ld1 => &mut self.r_in[1],
             Opcode::Ld2 => &mut self.r_in[2],
@@ -393,12 +390,12 @@ impl MixMachine {
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
         let mut temp = FullWord::from_bytes([1, 0, 0, 0, 0, 0]);
         // Copy bytes shifted right.
-        for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
-            temp[reg_cursor] = memory_cell[memory_cell_cursor];
+        for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
+            temp[reg_cursor] = mem_cell[mem_cursor];
         }
         // Copy sign byte if needed.
         if sign_copy_needed {
-            temp[0] = memory_cell[0];
+            temp[0] = mem_cell[0];
         }
         // Fill back the reg.
         reg[0] = temp[0];
@@ -524,14 +521,14 @@ impl MixMachine {
         // Obtain everything.
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
         let field = instr.field.to_range_inclusive();
-        let memory_cell = &mut self.mem[addr];
+        let mem_cell = &mut self.mem[addr];
         // Zero the memory cell.
         for i in field {
             if i == 0 {
                 // Deal with signs.
-                memory_cell[0] = 1;
+                mem_cell[0] = 1;
             } else {
-                memory_cell[i] = 0;
+                mem_cell[i] = 0;
             }
         }
         Ok(())
@@ -567,19 +564,19 @@ impl MixMachine {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
-        let memory_cell = &mut self.mem[addr];
+        let mem_cell = &mut self.mem[addr];
         let reg = match instr.opcode {
             Opcode::StA => &self.r_a,
             Opcode::StX => &self.r_x,
             _ => unreachable!(),
         };
         // Copy bytes shifted right.
-        for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
-            memory_cell[memory_cell_cursor] = reg[reg_cursor];
+        for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
+            mem_cell[mem_cursor] = reg[reg_cursor];
         }
         if sign_copy_needed {
             // Copy sign bit.
-            memory_cell[0] = reg[0];
+            mem_cell[0] = reg[0];
         }
         Ok(())
     }
@@ -589,7 +586,7 @@ impl MixMachine {
         // Obtain everything.
         let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
         let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
-        let memory_cell = &mut self.mem[addr];
+        let mem_cell = &mut self.mem[addr];
         let reg = match instr.opcode {
             Opcode::St1 => &self.r_in[1],
             Opcode::St2 => &self.r_in[2],
@@ -601,12 +598,12 @@ impl MixMachine {
         };
         let padded_reg = [reg[0], 0, 0, 0, reg[1], reg[2]];
         // Copy bytes shifted right.
-        for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
-            memory_cell[memory_cell_cursor] = padded_reg[reg_cursor];
+        for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
+            mem_cell[mem_cursor] = padded_reg[reg_cursor];
         }
         if sign_copy_needed {
             // Copy sign bit.
-            memory_cell[0] = padded_reg[0];
+            mem_cell[0] = padded_reg[0];
         }
         Ok(())
     }
@@ -627,7 +624,7 @@ impl MixMachine {
             let addr = addr as i64;
             let offset = if instr.field == 0 { addr } else { -addr };
             // Convert to i64.
-            let value = reg.to_i64().0;
+            let (value, _) = reg.to_i64();
             // Convert back modified value.
             let (new_word, overflow) = FullWord::from_i64(value + offset);
             reg.set(0..=5, &new_word[0..=5])
@@ -671,7 +668,7 @@ impl MixMachine {
             let addr = addr as i64;
             let offset = if instr.field == 0 { addr } else { -addr };
             // Convert to i64.
-            let value = reg.to_i64().0;
+            let (value, _) = reg.to_i64();
             // Convert back modified value.
             let (new_word, overflow) = HalfWord::from_i64(value + offset);
             reg.set(0..=2, &new_word[0..=2])
@@ -700,15 +697,14 @@ impl MixMachine {
     fn handler_instr_add_sub(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let orig_value = self.r_a.to_i64().0;
+        let (orig_value, _) = self.r_a.to_i64();
         // Are we adding or subtracting?
-        let coefficient = match instr.opcode {
+        let coeff = match instr.opcode {
             Opcode::Add => 1,
             Opcode::Sub => -1,
             _ => unreachable!(),
         };
-        let target_value =
-            target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 * coefficient;
+        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 * coeff;
         // Calculate and pack new value.
         let new_value = orig_value + target_value;
         let (new_word, overflow) = FullWord::from_i64(new_value);
@@ -728,7 +724,7 @@ impl MixMachine {
     fn handler_instr_mul(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let orig_value = self.r_a.to_i64().0;
+        let (orig_value, _) = self.r_a.to_i64();
         let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
         // Copy value into registers.
         let new_val = orig_value as i128 * target_value as i128;
@@ -1024,6 +1020,8 @@ impl MixMachine {
             for _ in 0..offset {
                 // Advance the iterator by `offset` steps,
                 // to simulate shifting.
+                // The iterator is infinite so we don't worry about
+                // panics.
                 orig_bytes_iter.next().unwrap();
             }
             // Write back.
@@ -1060,11 +1058,11 @@ impl MixMachine {
         }
         Ok(())
     }
-    
+
     /// Handler for `JBUS` and `JRED` when IO is disabled.
     #[cfg(not(feature = "io"))]
     fn handler_instr_jbus_jred(&mut self, _: &Instruction) -> Result<(), ErrorCode> {
-        Err(ErrorCode::Unimplemented)
+        Err(ErrorCode::IllegalInstruction)
     }
 
     /// Handler for `IOC`.
@@ -1080,11 +1078,11 @@ impl MixMachine {
         dev.control(command).map_err(|_| ErrorCode::IOError)?;
         Ok(())
     }
-    
+
     /// Handler for `IOC` when IO is disabled.
     #[cfg(not(feature = "io"))]
     fn handler_instr_ioc(&mut self, _: &Instruction) -> Result<(), ErrorCode> {
-        Err(ErrorCode::Unimplemented)
+        Err(ErrorCode::IllegalInstruction)
     }
 
     /// Handler for `IN` and `OUT`.
@@ -1113,7 +1111,7 @@ impl MixMachine {
         // Call appropriate callbacks.
         match instr.opcode {
             Opcode::In => {
-                let slice = &mut self.mem[addr_start as usize .. addr_end as usize];
+                let slice = &mut self.mem[addr_start as usize..addr_end as usize];
                 dev.read(slice).map_err(|_| ErrorCode::IOError)?;
             }
             Opcode::Out => {
@@ -1129,6 +1127,6 @@ impl MixMachine {
     /// Handler for `IN` and `OUT` when IO is disabled.
     #[cfg(not(feature = "io"))]
     fn handler_instr_in_out(&mut self, _: &Instruction) -> Result<(), ErrorCode> {
-        Err(ErrorCode::Unimplemented)
+        Err(ErrorCode::IllegalInstruction)
     }
 }

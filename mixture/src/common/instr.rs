@@ -19,7 +19,7 @@ pub struct Instruction {
     pub index: u8,
 
     /// The operation code, `C`.
-    /// 
+    ///
     /// See also [`Opcode`].
     pub opcode: Opcode,
 }

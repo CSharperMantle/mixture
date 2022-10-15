@@ -1,13 +1,13 @@
 /// Represent a type that may be a placeholder.
-/// 
+///
 /// # Generic Parameters
 /// * `O` - The concrete type.
 /// * `P` - The type of placeholder.
-/// 
+///
 /// # Example
 /// ```rust
 /// use mixture::parse::*;
-/// 
+///
 /// let x = Maybe::<i32, i32>::Concrete(1);
 /// assert_eq!(x.unwrap(), 1);
 /// ```
@@ -21,14 +21,14 @@ pub enum Maybe<O, P> {
 
 impl<TObj, TId> Maybe<TObj, TId> {
     /// Return `true` if the maybe value is [`Maybe::Concrete`].
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use mixture::parse::*;
-    /// 
+    ///
     /// let x = Maybe::<i32, i32>::Concrete(1);
     /// assert_eq!(x.is_concrete(), true);
-    /// 
+    ///
     /// let y = Maybe::<i32, i32>::Placeholder(1);
     /// assert_eq!(y.is_concrete(), false);
     /// ```
@@ -40,14 +40,14 @@ impl<TObj, TId> Maybe<TObj, TId> {
     }
 
     /// Return `true` if the maybe value is [`Maybe::Placeholder`].
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use mixture::parse::*;
-    /// 
+    ///
     /// let x = Maybe::<i32, i32>::Concrete(1);
     /// assert_eq!(x.is_placeholder(), false);
-    /// 
+    ///
     /// let y = Maybe::<i32, i32>::Placeholder(1);
     /// assert_eq!(y.is_placeholder(), true);
     /// ```
@@ -59,26 +59,26 @@ impl<TObj, TId> Maybe<TObj, TId> {
     }
 
     /// Return the contained [`Maybe::Concrete`] value. Consumes the `self` value.
-    /// 
+    ///
     /// # Panics
     /// Panics if the `self` value is an [`Maybe::Placeholder`].
-    /// 
+    ///
     /// # Returns
     /// * `TObj` - The contained concrete value.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// Example 1
     /// ```rust
     /// use mixture::parse::*;
-    /// 
+    ///
     /// let x = Maybe::<i32, i32>::Concrete(1);
     /// assert_eq!(x.unwrap(), 1);
     /// ```
     /// Example 2
     /// ```rust,should_panic
     /// use mixture::parse::*;
-    /// 
+    ///
     /// let x = Maybe::<i32, i32>::Placeholder(1);
     /// assert_eq!(x.unwrap(), 1);  // panics
     /// ```
@@ -91,18 +91,18 @@ impl<TObj, TId> Maybe<TObj, TId> {
 
     /// Try to return the contained [`Maybe::Concrete`] value.
     /// Consumes the `self` value.
-    /// 
+    ///
     /// # Returns
     /// * `Ok(TObj)` - The contained concrete value.
     /// * `Err(())` - The value is a placeholder.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use mixture::parse::*;
-    /// 
+    ///
     /// let x = Maybe::<i32, i32>::Concrete(1);
     /// assert_eq!(x.try_unwrap(), Ok(1));
-    /// 
+    ///
     /// let y = Maybe::<i32, i32>::Placeholder(1);
     /// assert_eq!(y.try_unwrap(), Err(()));  // panics
     /// ```

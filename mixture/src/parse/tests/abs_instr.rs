@@ -1,6 +1,6 @@
+use crate::common::*;
 use crate::parse::abs_instr::*;
 use crate::parse::maybe::*;
-use crate::common::*;
 
 #[test]
 fn test_concretize() {

@@ -4,11 +4,11 @@ use crate::common::*;
 
 /// A device plugged into a [`MixMachine`] to perform IO
 /// operations.
-/// 
+///
 /// This trait is used to build IO operations that may have side
 /// effects. Implement the trait and insert the device to a [`MixMachine`]
 /// instance to apply it.
-/// 
+///
 /// # Example
 /// ```rust
 /// use mixture::sim::IODevice;
@@ -16,7 +16,7 @@ use crate::common::*;
 /// use mixture::common::FullWord;
 ///
 /// pub struct SomeDevice {}
-/// 
+///
 /// impl IODevice for SomeDevice {
 ///     fn read(&mut self, buffer: &mut [FullWord]) -> Result<(), ()> {
 ///         /* ... */
@@ -43,7 +43,7 @@ use crate::common::*;
 ///         unimplemented!()
 ///     }
 /// }
-/// 
+///
 /// let mut mix = MixMachine::new();
 /// mix.reset();
 /// mix.io_devices[0] = Some(Box::new(SomeDevice {}));
@@ -55,10 +55,10 @@ pub trait IODevice {
     /// via [`IODevice::get_block_size`]. This method must write
     /// exactly one block of words on success, otherwise it will
     /// fail.
-    /// 
+    ///
     /// The implementor is asked to check the size of provided `buffer`
     /// to avoid possible out-of-bound access.
-    /// 
+    ///
     /// # Arguments
     /// * `buffer` - The buffer to read into.
     fn read(&mut self, buffer: &mut [FullWord]) -> Result<(), ()>;
@@ -81,7 +81,7 @@ pub trait IODevice {
     fn control(&mut self, command: i16) -> Result<(), ()>;
 
     /// Check if the device is busy.
-    /// 
+    ///
     /// Note that when a device detects any malfunctions, like
     /// paper jams, it will always appear busy.
     fn is_busy(&self) -> Result<bool, ()>;

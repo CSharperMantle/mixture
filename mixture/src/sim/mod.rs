@@ -1,10 +1,10 @@
 //! MIX simulation framework.
 
-mod mix_machine;
 mod mem;
+mod mix_machine;
 
-pub use mix_machine::*;
 pub use mem::*;
+pub use mix_machine::*;
 
 #[cfg(feature = "io")]
 mod io;

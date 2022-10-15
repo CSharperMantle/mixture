@@ -1,5 +1,4 @@
-
-/// The common alphabet used in [`MixMachine`].
+/// The common alphabet used in MIX.
 ///
 /// See D. E. Knuth, *The Art of Computer Programming*, Volume 1, pp 140
 /// for more information.

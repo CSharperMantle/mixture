@@ -1,5 +1,5 @@
-use crate::parse::maybe::Maybe;
 use crate::common::*;
+use crate::parse::maybe::Maybe;
 
 pub struct AbstractInstruction {
     /// The abstract address.

@@ -3,6 +3,7 @@
         "bytecode",
         "Cmpa",
         "Cmpx",
+        "coeff",
         "Deca",
         "Decx",
         "Enna",
