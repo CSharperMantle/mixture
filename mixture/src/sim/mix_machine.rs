@@ -282,13 +282,14 @@ impl MixMachine {
 
     /// Get IO device.
     #[cfg(feature = "io")]
-    fn helper_get_io_device(&self, dev_id: usize) -> Result<&Box<dyn IODevice>, ErrorCode> {
+    fn helper_get_io_device(&self, dev_id: usize) -> Result<&dyn IODevice, ErrorCode> {
         let dev = self
             .io_devices
             .get(dev_id)
             .ok_or(ErrorCode::InvalidField)?
             .as_ref()
-            .ok_or(ErrorCode::UnknownDevice)?;
+            .ok_or(ErrorCode::UnknownDevice)?
+            .as_ref();
         Ok(dev)
     }
 
@@ -490,7 +491,7 @@ impl MixMachine {
             self.r_a
                 .set(1..=5, &result_word[1..=5])
                 .map_err(|_| ErrorCode::MemAccessError)?;
-            return Ok(());
+            Ok(())
         } else if instr.field == 1 {
             // CHAR instruction
             // Obtain original number.
@@ -504,15 +505,15 @@ impl MixMachine {
                 }
                 source /= 10;
             }
-            return Ok(());
+            Ok(())
         } else if instr.field == 2 {
             // HLT instruction
             // Making it just like NOP if we restart the
             // machine later.
             self.halted = true;
-            return Ok(());
+            Ok(())
         } else {
-            return Err(ErrorCode::InvalidField);
+            Err(ErrorCode::InvalidField)
         }
     }
 
@@ -633,7 +634,7 @@ impl MixMachine {
             if overflow {
                 self.overflow = overflow;
             }
-            return Ok(());
+            Ok(())
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
             let new_word = FullWord::from_i64(addr as i64).0;
@@ -643,9 +644,9 @@ impl MixMachine {
             if instr.field == 3 {
                 reg.toggle_sign();
             }
-            return Ok(());
+            Ok(())
         } else {
-            return Err(ErrorCode::InvalidField);
+            Err(ErrorCode::InvalidField)
         }
     }
 
@@ -677,7 +678,7 @@ impl MixMachine {
             if overflow {
                 self.overflow = overflow;
             }
-            return Ok(());
+            Ok(())
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
             let (new_word, _) = HalfWord::from_i64(addr as i64);
@@ -687,9 +688,9 @@ impl MixMachine {
             if instr.field == 3 {
                 reg.toggle_sign();
             }
-            return Ok(());
+            Ok(())
         } else {
-            return Err(ErrorCode::InvalidField);
+            Err(ErrorCode::InvalidField)
         }
     }
 
@@ -797,11 +798,7 @@ impl MixMachine {
             })
             .unwrap_or(0);
         // Calculate new sign.
-        let new_sign_positive = if orig_value.signum() == target_value.signum() {
-            true
-        } else {
-            false
-        };
+        let new_sign_positive = orig_value.signum() == target_value.signum();
         // Copy results into registers.
         let (new_a, overflow_a) = FullWord::from_i64(quotient);
         let (new_x, overflow_x) = FullWord::from_i64(remainder);
@@ -836,16 +833,15 @@ impl MixMachine {
         };
         let reg_value = reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
         // Calculate and set flags.
-        self.indicator_comp = if reg_value.abs() == 0 && target_value.abs() == 0 {
-            // +0 and -0 are equal.
-            ComparisonIndicatorValue::Equal
-        } else if reg_value == target_value {
-            ComparisonIndicatorValue::Equal
-        } else if reg_value > target_value {
-            ComparisonIndicatorValue::Greater
-        } else {
-            ComparisonIndicatorValue::Lesser
-        };
+        self.indicator_comp =
+            if (reg_value == target_value) || (reg_value.abs() == 0 && target_value.abs() == 0) {
+                // +0 and -0 are equal.
+                ComparisonIndicatorValue::Equal
+            } else if reg_value > target_value {
+                ComparisonIndicatorValue::Greater
+            } else {
+                ComparisonIndicatorValue::Lesser
+            };
         Ok(())
     }
 
@@ -866,16 +862,15 @@ impl MixMachine {
         let padded_reg = FullWord::from_bytes([reg[0], 0, 0, 0, reg[1], reg[2]]);
         let reg_value = padded_reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
         // Calculate and set flags.
-        self.indicator_comp = if reg_value.abs() == 0 && target_value.abs() == 0 {
-            // +0 and -0 are equal.
-            ComparisonIndicatorValue::Equal
-        } else if reg_value == target_value {
-            ComparisonIndicatorValue::Equal
-        } else if reg_value > target_value {
-            ComparisonIndicatorValue::Greater
-        } else {
-            ComparisonIndicatorValue::Lesser
-        };
+        self.indicator_comp =
+            if (reg_value == target_value) || (reg_value.abs() == 0 && target_value.abs() == 0) {
+                // +0 and -0 are equal.
+                ComparisonIndicatorValue::Equal
+            } else if reg_value > target_value {
+                ComparisonIndicatorValue::Greater
+            } else {
+                ComparisonIndicatorValue::Lesser
+            };
         Ok(())
     }
 
@@ -940,8 +935,8 @@ impl MixMachine {
             let orig_value = u64::from_be_bytes(self.r_a.to_i64().0.to_be_bytes());
             // Shift the value in bits (count * 8, count is in bytes).
             let shifted_value = match instr.field {
-                0 => orig_value << count * 8,
-                1 => orig_value >> count * 8,
+                0 => orig_value << (count * 8),
+                1 => orig_value >> (count * 8),
                 _ => unreachable!(),
             };
             // Store back.
@@ -973,8 +968,8 @@ impl MixMachine {
             ]);
             // Shift.
             let shifted_value = match instr.field {
-                2 => orig_value << count * 8,
-                3 => orig_value >> count * 8,
+                2 => orig_value << (count * 8),
+                3 => orig_value >> (count * 8),
                 _ => unreachable!(),
             };
             // Store back.
@@ -1128,5 +1123,11 @@ impl MixMachine {
     #[cfg(not(feature = "io"))]
     fn handler_instr_in_out(&mut self, _: &Instruction) -> Result<(), ErrorCode> {
         Err(ErrorCode::IllegalInstruction)
+    }
+}
+
+impl Default for MixMachine {
+    fn default() -> Self {
+        Self::new()
     }
 }

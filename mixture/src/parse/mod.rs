@@ -1,10 +1,8 @@
 //! MIX binary interface.
 
-mod abs_instr;
-mod maybe;
+mod symbol;
 
-pub use abs_instr::*;
-pub use maybe::*;
+pub use symbol::*;
 
 #[cfg(test)]
 mod tests;

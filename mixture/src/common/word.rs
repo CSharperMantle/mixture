@@ -279,7 +279,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
         // Get sliced data.
         let data = &self.data[field];
         // If the range is empty, fast-fail.
-        if data.len() == 0 {
+        if data.is_empty() {
             return (0, false);
         }
         // Find sign.
@@ -376,7 +376,7 @@ impl TryFrom<Instruction> for Word<6, false> {
     fn try_from(source: Instruction) -> Result<Self, Self::Error> {
         let mut word: Word<6, false> = Word::new();
         word[0] = if source.addr < 0 { 1u8 } else { 0u8 };
-        word.set(1..=2, &(source.addr.abs() as u16).to_be_bytes())?;
+        word.set(1..=2, &source.addr.unsigned_abs().to_be_bytes())?;
         word[3] = source.index;
         word[4] = source.field;
         word[5] = source.opcode as u8;

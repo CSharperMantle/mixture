@@ -1,2 +1,2 @@
-mod abs_instr;
-mod maybe;
+#![allow(clippy::all)]
+

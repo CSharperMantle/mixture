@@ -17,7 +17,11 @@
 //!
 
 #![no_std]
+
+#![deny(clippy::all)]
+#![warn(clippy::cargo)]
 #![allow(unused_imports)]
+#![allow(clippy::result_unit_err)]
 
 #[cfg(any(feature = "std", test))]
 extern crate std;

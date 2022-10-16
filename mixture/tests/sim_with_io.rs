@@ -1,4 +1,5 @@
 #![cfg(feature = "io")]
+#![allow(clippy::all)]
 
 use mixture::common::*;
 use mixture::sim::*;
