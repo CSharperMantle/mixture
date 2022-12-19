@@ -1,5 +1,6 @@
 #![cfg(feature = "io")]
 #![allow(clippy::all)]
+#![allow(clippy::unwrap_used)]
 
 use mixture::common::*;
 use mixture::sim::*;

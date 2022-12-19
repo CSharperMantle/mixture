@@ -16,6 +16,7 @@ path = "src/lib.rs"
 crate-type = [ "rlib", "cdylib", "staticlib" ]
 
 [features]
-default = [ "std", "io" ]
+default = [ "std", "io", "parse" ]
 std = []
 io = [ "std" ]
+parse = [ "std" ]

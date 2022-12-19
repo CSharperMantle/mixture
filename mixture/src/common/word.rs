@@ -4,7 +4,7 @@ use core::ops::IndexMut;
 use core::ops::Range;
 use core::ops::RangeInclusive;
 
-use crate::common::instr::*;
+use super::instr::Instruction;
 
 /// A general word in MIX with `N` bytes in it.
 ///
@@ -375,7 +375,7 @@ impl TryFrom<Instruction> for Word<6, false> {
     /// ```
     fn try_from(source: Instruction) -> Result<Self, Self::Error> {
         let mut word: Word<6, false> = Word::new();
-        word[0] = if source.addr < 0 { 1u8 } else { 0u8 };
+        word[0] = u8::from(source.addr < 0);
         word.set(1..=2, &source.addr.unsigned_abs().to_be_bytes())?;
         word[3] = source.index;
         word[4] = source.field;

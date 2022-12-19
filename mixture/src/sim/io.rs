@@ -1,6 +1,4 @@
-use core::convert::TryFrom;
-
-use crate::common::*;
+use crate::common::FullWord;
 
 /// A device plugged into a [`MixMachine`] to perform IO
 /// operations.

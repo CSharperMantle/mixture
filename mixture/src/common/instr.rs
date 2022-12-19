@@ -1,7 +1,7 @@
 use core::convert::TryFrom;
 use core::ops::RangeInclusive;
 
-use crate::common::word::*;
+use super::word::FullWord;
 
 /// An instruction in [`MixMachine`].
 ///

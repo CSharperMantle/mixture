@@ -1017,7 +1017,7 @@ impl MixMachine {
                 // to simulate shifting.
                 // The iterator is infinite so we don't worry about
                 // panics.
-                orig_bytes_iter.next().unwrap();
+                orig_bytes_iter.next().expect("Should not reach this");
             }
             // Write back.
             for (reg_i, &digit) in (0..10).zip(orig_bytes_iter) {

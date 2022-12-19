@@ -2,7 +2,7 @@ use core::ops::Index;
 use core::ops::IndexMut;
 use core::ops::Range;
 
-use crate::common::*;
+use crate::common::FullWord;
 
 /// The memory area of a [`crate::sim::mix_machine::MixMachine`]
 /// with [`Mem::SIZE`] cells.
@@ -27,7 +27,7 @@ impl Mem {
     /// ```
     pub const fn new() -> Self {
         Mem {
-            data: [Word::<6, false>::new(); 4000],
+            data: [FullWord::new(); 4000],
         }
     }
 

@@ -19,8 +19,7 @@
 #![no_std]
 
 #![deny(clippy::all)]
-#![warn(clippy::cargo)]
-#![allow(unused_imports)]
+#![deny(clippy::unwrap_used)]
 #![allow(clippy::result_unit_err)]
 
 #[cfg(any(feature = "std", test))]
@@ -30,5 +29,7 @@ extern crate std;
 extern crate core;
 
 pub mod common;
-pub mod parse;
 pub mod sim;
+
+#[cfg(feature = "parse")]
+pub mod parse;
