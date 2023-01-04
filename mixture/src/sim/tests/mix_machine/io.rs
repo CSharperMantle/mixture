@@ -144,22 +144,22 @@ fn test_jbus_jred() {
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 100);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 101);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 102);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 0);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 0x67]);
+    assert_eq!(mix.r_j[..], [0, 0, 0x67]);
 }
 
 struct LoggedControlIODevice {
@@ -217,14 +217,14 @@ struct InOutIODevice {}
 impl IODevice for InOutIODevice {
     fn read(&mut self, buffer: &mut [FullWord]) -> Result<(), ()> {
         let mut w = FullWord::new();
-        w.set(0..=5, &[0, 9, 8, 7, 6, 5])?;
+        w.set_all(&[0, 9, 8, 7, 6, 5])?;
         buffer[0] = w;
         Ok(())
     }
 
     fn write(&mut self, data: &[FullWord]) -> Result<(), usize> {
         assert_eq!(data.len(), self.get_block_size());
-        assert_eq!(data[0][0..=5], [0, 1, 2, 3, 4, 5]);
+        assert_eq!(data[0][..], [0, 1, 2, 3, 4, 5]);
         Ok(())
     }
 
@@ -256,13 +256,13 @@ fn test_in_out() {
     mix.mem[1] = Instruction::new(2000, 0, 0, Opcode::Out)
         .try_into()
         .unwrap();
-    mix.mem[2000].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2000].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[1000][0..=5], [0, 9, 8, 7, 6, 5]);
+    assert_eq!(mix.mem[1000][..], [0, 9, 8, 7, 6, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);

@@ -2,6 +2,7 @@ use core::convert::TryFrom;
 use core::ops::Index;
 use core::ops::IndexMut;
 use core::ops::Range;
+use core::ops::RangeFull;
 use core::ops::RangeInclusive;
 
 use super::instr::Instruction;
@@ -29,14 +30,14 @@ use super::instr::Instruction;
 ///
 /// let mut word = Word::<6, false>::new();
 ///
-/// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+/// word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
 /// word.set(1..=2, &[6, 7]).unwrap();
-/// assert_eq!(word[0..=5], [0, 6, 7, 3, 4, 5]);
+/// assert_eq!(word[..], [0, 6, 7, 3, 4, 5]);
 ///
 /// let mut word_copy = word;
 /// word_copy.set(0..=0, &[1]);
-/// assert_eq!(word[0..=5], [0, 6, 7, 3, 4, 5]);
-/// assert_eq!(word_copy[0..=5], [1, 6, 7, 3, 4, 5]);
+/// assert_eq!(word[..], [0, 6, 7, 3, 4, 5]);
+/// assert_eq!(word_copy[..], [1, 6, 7, 3, 4, 5]);
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Word<const N: usize, const P: bool> {
@@ -71,7 +72,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// use mixture::common::*;
     ///
     /// let word = Word::<6, false>::from_bytes([0, 1, 2, 3, 4, 5]);
-    /// assert_eq!(word[0..=5], [0, 1, 2, 3, 4, 5]);
+    /// assert_eq!(word[..], [0, 1, 2, 3, 4, 5]);
     /// ```
     pub const fn from_bytes(bytes: [u8; N]) -> Self {
         let mut word = Word { data: bytes };
@@ -103,7 +104,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// let (word, overflow) = Word::<3, false>::from_i64(v);
     /// assert_eq!(overflow, true);
-    /// assert_eq!(word[0..=2], [1, 0x07, 0x08]);
+    /// assert_eq!(word[..], [1, 0x07, 0x08]);
     /// ```
     pub fn from_i64(value: i64) -> (Self, bool) {
         let mut word = Self::new();
@@ -125,16 +126,16 @@ impl<const N: usize, const P: bool> Word<N, P> {
         (word, bytes_dirty.iter().any(|&dirty| dirty))
     }
 
-    /// Set the content of the word.
+    /// Set the content of the word at the given range.
     ///
     /// # Arguments
     /// * `range` - The range of bytes to set.
-    /// * `value` - The value to set the register to.
+    /// * `value` - The value to set.
     ///
     /// # Returns
-    /// * [`Ok(())`] - If `start` is less than 0.
-    /// * [`Err(())`] - If `range` is empty or given `value` is
-    /// not the same length as `range`.
+    /// * [`Ok(())`] - The operation is successful.
+    /// * [`Err(())`] - The `range` is empty or larger than the word, or `value`
+    /// is not the same length as `range`.
     ///
     /// # Example
     /// ```rust
@@ -142,7 +143,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// let mut word = Word::<6, false>::new();
     ///
-    /// assert_eq!(word.set(0..=5, &[0, 1, 2, 3, 4, 5]), Ok(()));
+    /// assert_eq!(word.set(0..=4, &[0, 1, 2, 3, 4]), Ok(()));
     /// ```
     pub fn set(&mut self, range: RangeInclusive<usize>, value: &[u8]) -> Result<(), ()> {
         if range.is_empty() {
@@ -166,6 +167,39 @@ impl<const N: usize, const P: bool> Word<N, P> {
 
         Ok(())
     }
+    
+    /// Set the content of the whole word.
+    /// 
+    /// # Arguments
+    /// * `value` - The value to set.
+    /// 
+    /// # Returns
+    /// * [`Ok(())`] - The operation is successful.
+    /// * [`Err(())`] - The `value` has a length other than [`N`].
+    /// 
+    /// # Example
+    /// ```rust
+    /// use mixture::common::*;
+    ///
+    /// let mut word = Word::<6, false>::new();
+    ///
+    /// assert_eq!(word.set_all(&[0, 1, 2, 3, 4, 5]), Ok(()));
+    /// ```
+    pub fn set_all(&mut self, value: &[u8]) -> Result<(), ()> {
+        if value.len() != N {
+            return Err(());
+        }
+        for (i, &byte) in value.iter().take(N).enumerate() {
+            self.data[i] = byte;
+        }
+        self.data[0] = if P {
+            Self::POS
+        } else {
+            self.data[0]
+        };
+
+        Ok(())
+    }
 
     /// Check if the word is positive.
     ///
@@ -178,7 +212,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// use mixture::common::*;
     ///
     /// let mut word = Word::<6, false>::new();
-    /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    /// word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
     ///
     /// assert_eq!(word.is_positive(), true);
     /// ```
@@ -225,7 +259,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// use mixture::common::*;
     ///
     /// let mut word = Word::<6, false>::new();
-    /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    /// word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
     ///
     /// let (value, overflow) = word.to_i64();
     /// assert_eq!(overflow, false);
@@ -261,7 +295,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// use mixture::common::*;
     ///
     /// let mut word = Word::<6, false>::new();
-    /// word.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    /// word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
     ///
     /// let (value, overflow) = word.to_i64_ranged(1..=1);
     /// assert_eq!(overflow, false);
@@ -333,6 +367,15 @@ impl<const N: usize, const P: bool> Index<RangeInclusive<usize>> for Word<N, P> 
     }
 }
 
+impl<const N: usize, const P: bool> Index<RangeFull> for Word<N, P> {
+    type Output = [u8];
+
+    /// Access the whole word.
+    fn index(&self, index: RangeFull) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
 impl<const N: usize, const P: bool> Index<usize> for Word<N, P> {
     type Output = u8;
 
@@ -371,7 +414,7 @@ impl TryFrom<Instruction> for Word<6, false> {
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     ///
     /// let word: Word<6, false> = instr.try_into().unwrap();
-    /// assert_eq!(word[0..=5], [0, 0x07, 0xD0, 0x02, 0x03, 0x08]);
+    /// assert_eq!(word[..], [0, 0x07, 0xD0, 0x02, 0x03, 0x08]);
     /// ```
     fn try_from(source: Instruction) -> Result<Self, Self::Error> {
         let mut word: Word<6, false> = Word::new();

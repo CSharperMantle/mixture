@@ -270,7 +270,7 @@ impl MixMachine {
     /// Do actual jump.
     fn helper_do_jump(&mut self, location: u16, save_r_j: bool) -> Result<(), ErrorCode> {
         if save_r_j {
-            let pc = (self.pc as u16).to_be_bytes();
+            let pc = self.pc.to_be_bytes();
             self.r_j
                 .set(1..=2, &pc)
                 .map_err(|_| ErrorCode::MemAccessError)?;
@@ -327,7 +327,7 @@ impl MixMachine {
             _ => unreachable!(),
         };
         // Zero reg before copying. Handle 'understood' positive sign too.
-        reg.set(0..=5, &[FullWord::POS, 0, 0, 0, 0, 0])
+        reg.set_all(&[FullWord::POS, 0, 0, 0, 0, 0])
             .map_err(|_| ErrorCode::MemAccessError)?;
         // Copy bytes shifted right.
         for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
@@ -351,7 +351,7 @@ impl MixMachine {
             _ => unreachable!(),
         };
         // Zero reg before copying. Handle 'understood' negative sign.
-        reg.set(0..=5, &[0; 6])
+        reg.set_all(&[0; 6])
             .map_err(|_| ErrorCode::MemAccessError)?;
         // Copy bytes shifted right.
         for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
@@ -546,13 +546,13 @@ impl MixMachine {
         for i in 0..num_words {
             let orig_mem = self.mem[from_addr + i as u16];
             self.mem[to_addr + i as u16]
-                .set(0..=5, &orig_mem[0..=5])
+                .set_all(&orig_mem[..])
                 .map_err(|_| ErrorCode::MemAccessError)?;
         }
         let new_r_i1_val = self.r_in[1].to_i64().0 + num_words as i64;
         let (new_r_i1, overflow) = HalfWord::from_i64(new_r_i1_val);
         self.r_in[1]
-            .set(0..=2, &new_r_i1[0..=2])
+            .set(0..=2, &new_r_i1[..])
             .map_err(|_| ErrorCode::MemAccessError)?;
         if overflow {
             self.overflow = overflow;
@@ -628,7 +628,7 @@ impl MixMachine {
             let (value, _) = reg.to_i64();
             // Convert back modified value.
             let (new_word, overflow) = FullWord::from_i64(value + offset);
-            reg.set(0..=5, &new_word[0..=5])
+            reg.set_all(&new_word[..])
                 .map_err(|_| ErrorCode::MemAccessError)?;
             // Should we overflow?
             if overflow {
@@ -639,7 +639,7 @@ impl MixMachine {
             // ENTx and ENNx
             let new_word = FullWord::from_i64(addr as i64).0;
             // Copy new word into reg.
-            reg.set(0..=5, &new_word[0..=5])
+            reg.set_all(&new_word[..])
                 .map_err(|_| ErrorCode::MemAccessError)?;
             if instr.field == 3 {
                 reg.toggle_sign();
@@ -672,7 +672,7 @@ impl MixMachine {
             let (value, _) = reg.to_i64();
             // Convert back modified value.
             let (new_word, overflow) = HalfWord::from_i64(value + offset);
-            reg.set(0..=2, &new_word[0..=2])
+            reg.set(0..=2, &new_word[..])
                 .map_err(|_| ErrorCode::MemAccessError)?;
             // Should we overflow?
             if overflow {
@@ -683,7 +683,7 @@ impl MixMachine {
             // ENTx and ENNx
             let (new_word, _) = HalfWord::from_i64(addr as i64);
             // Copy new word into reg.
-            reg.set(0..=2, &new_word[0..=2])
+            reg.set(0..=2, &new_word[..])
                 .map_err(|_| ErrorCode::MemAccessError)?;
             if instr.field == 3 {
                 reg.toggle_sign();
@@ -711,7 +711,7 @@ impl MixMachine {
         let (new_word, overflow) = FullWord::from_i64(new_value);
         // Set new value.
         self.r_a
-            .set(0..=5, &new_word[0..=5])
+            .set_all(&new_word[..])
             .map_err(|_| ErrorCode::MemAccessError)?;
         // Should we overflow?
         if overflow {

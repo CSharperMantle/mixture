@@ -23,7 +23,7 @@ impl Mem {
     /// use mixture::sim::*;
     ///
     /// let mem = Mem::new();
-    /// assert_eq!(mem[0][0..=5], [0, 0, 0, 0, 0, 0]);
+    /// assert_eq!(mem[0][..], [0, 0, 0, 0, 0, 0]);
     /// ```
     pub const fn new() -> Self {
         Mem {

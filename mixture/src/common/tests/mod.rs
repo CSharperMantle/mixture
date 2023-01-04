@@ -3,4 +3,4 @@
 
 mod alphabet;
 mod instr;
-mod mem;
+mod word;

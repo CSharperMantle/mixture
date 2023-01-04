@@ -40,39 +40,39 @@ fn test_load_6b() {
     mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::LdA)
         .try_into()
         .unwrap();
-    mix.mem[2000].set(0..=5, &[1, 0, 80, 3, 5, 4]).unwrap();
+    mix.mem[2000].set_all(&[1, 0, 80, 3, 5, 4]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 80, 3, 5, 4]);
+    assert_eq!(mix.r_a[..], [1, 0, 80, 3, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 80, 3, 5, 4]);
+    assert_eq!(mix.r_a[..], [0, 0, 80, 3, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 3, 5, 4]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 3, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 0, 0, 80, 3]);
+    assert_eq!(mix.r_a[..], [1, 0, 0, 0, 80, 3]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0, 0, 5]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 0, 0, 0, 0]);
+    assert_eq!(mix.r_a[..], [1, 0, 0, 0, 0, 0]);
 }
 
 #[test]
@@ -98,39 +98,39 @@ fn test_load_neg_6b() {
     mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::LdAN)
         .try_into()
         .unwrap();
-    mix.mem[2000].set(0..=5, &[0, 0, 80, 3, 5, 4]).unwrap();
+    mix.mem[2000].set_all(&[0, 0, 80, 3, 5, 4]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 80, 3, 5, 4]);
+    assert_eq!(mix.r_a[..], [1, 0, 80, 3, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 80, 3, 5, 4]);
+    assert_eq!(mix.r_a[..], [0, 0, 80, 3, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 3, 5, 4]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 3, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 0, 0, 80, 3]);
+    assert_eq!(mix.r_a[..], [1, 0, 0, 0, 80, 3]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0, 0, 5]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 0, 0, 0, 0]);
+    assert_eq!(mix.r_a[..], [1, 0, 0, 0, 0, 0]);
 }
 
 #[test]
@@ -156,7 +156,7 @@ fn test_indexed_load_6b() {
     mix.mem[5] = Instruction::new(3000, 0, 2, Opcode::LdA)
         .try_into()
         .unwrap();
-    mix.mem[2000].set(0..=5, &[1, 0, 80, 3, 5, 4]).unwrap();
+    mix.mem[2000].set_all(&[1, 0, 80, 3, 5, 4]).unwrap();
     mix.r_in[1].set(0..=2, &[0, 0x03, 0xE8]).unwrap();
     mix.r_in[2].set(0..=2, &[1, 0x03, 0xE8]).unwrap();
 
@@ -165,32 +165,32 @@ fn test_indexed_load_6b() {
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 80, 3, 5, 4]);
+    assert_eq!(mix.r_a[..], [1, 0, 80, 3, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 80, 3, 5, 4]);
+    assert_eq!(mix.r_a[..], [0, 0, 80, 3, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 3, 5, 4]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 3, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 0, 0, 80, 3]);
+    assert_eq!(mix.r_a[..], [1, 0, 0, 0, 80, 3]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0, 0, 5]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 0, 0, 0, 0]);
+    assert_eq!(mix.r_a[..], [1, 0, 0, 0, 0, 0]);
 }
 
 #[test]
@@ -216,39 +216,39 @@ fn test_load_3b() {
     mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::Ld1)
         .try_into()
         .unwrap();
-    mix.mem[2000].set(0..=5, &[0, 0, 80, 3, 5, 4]).unwrap();
+    mix.mem[2000].set_all(&[0, 0, 80, 3, 5, 4]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 5, 4]);
+    assert_eq!(mix.r_in[1][..], [0, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [1, 5, 4]);
+    assert_eq!(mix.r_in[1][..], [1, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [1, 5, 4]);
+    assert_eq!(mix.r_in[1][..], [1, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 80, 3]);
+    assert_eq!(mix.r_in[1][..], [0, 80, 3]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [1, 0, 5]);
+    assert_eq!(mix.r_in[1][..], [1, 0, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 0, 0]);
+    assert_eq!(mix.r_in[1][..], [0, 0, 0]);
 }
 
 #[test]
@@ -274,39 +274,39 @@ fn test_load_neg_3b() {
     mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::Ld1N)
         .try_into()
         .unwrap();
-    mix.mem[2000].set(0..=5, &[0, 0, 80, 3, 5, 4]).unwrap();
+    mix.mem[2000].set_all(&[0, 0, 80, 3, 5, 4]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [1, 5, 4]);
+    assert_eq!(mix.r_in[1][..], [1, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 5, 4]);
+    assert_eq!(mix.r_in[1][..], [0, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 5, 4]);
+    assert_eq!(mix.r_in[1][..], [0, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [1, 80, 3]);
+    assert_eq!(mix.r_in[1][..], [1, 80, 3]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 0, 5]);
+    assert_eq!(mix.r_in[1][..], [0, 0, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][0..=2], [1, 0, 0]);
+    assert_eq!(mix.r_in[1][..], [1, 0, 0]);
 }
 
 #[test]
@@ -327,17 +327,17 @@ fn test_jmp() {
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 1000);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 1001);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 0);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 }
 
 #[test]
@@ -355,20 +355,20 @@ fn test_special() {
         .try_into()
         .unwrap();
 
-    mix.r_a.set(0..=5, &[0, 0, 0, 31, 32, 39]).unwrap();
-    mix.r_x.set(0..=5, &[1, 37, 57, 47, 30, 30]).unwrap();
+    mix.r_a.set_all(&[0, 0, 0, 31, 32, 39]).unwrap();
+    mix.r_x.set_all(&[1, 37, 57, 47, 30, 30]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0xC6, 0x06, 0x24]);
-    assert_eq!(mix.r_x[0..=5], [1, 37, 57, 47, 30, 30]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0xC6, 0x06, 0x24]);
+    assert_eq!(mix.r_x[..], [1, 37, 57, 47, 30, 30]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 30, 30, 31, 32, 39]);
-    assert_eq!(mix.r_x[0..=5], [1, 37, 37, 37, 30, 30]);
+    assert_eq!(mix.r_a[..], [0, 30, 30, 31, 32, 39]);
+    assert_eq!(mix.r_x[..], [1, 37, 37, 37, 30, 30]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, true);
@@ -389,20 +389,20 @@ fn test_special_2() {
         .try_into()
         .unwrap();
 
-    mix.r_a.set(0..=5, &[0, 39, 39, 39, 39, 39]).unwrap();
-    mix.r_x.set(0..=5, &[1, 39, 39, 39, 39, 39]).unwrap();
+    mix.r_a.set_all(&[0, 39, 39, 39, 39, 39]).unwrap();
+    mix.r_x.set_all(&[1, 39, 39, 39, 39, 39]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0x02, 0x54, 0x0B, 0xE3, 0xFF]);
-    assert_eq!(mix.r_x[0..=5], [1, 39, 39, 39, 39, 39]);
+    assert_eq!(mix.r_a[..], [0, 0x02, 0x54, 0x0B, 0xE3, 0xFF]);
+    assert_eq!(mix.r_x[..], [1, 39, 39, 39, 39, 39]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 39, 39, 39, 39, 39]);
-    assert_eq!(mix.r_x[0..=5], [1, 39, 39, 39, 39, 39]);
+    assert_eq!(mix.r_a[..], [0, 39, 39, 39, 39, 39]);
+    assert_eq!(mix.r_x[..], [1, 39, 39, 39, 39, 39]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, true);
@@ -423,23 +423,23 @@ fn test_store_zero() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[1001].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[1002].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[1000].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[1001].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[1002].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[1000][0..=5], [1, 0, 0, 0, 0, 0]);
+    assert_eq!(mix.mem[1000][..], [1, 0, 0, 0, 0, 0]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[1001][0..=5], [0, 0, 0, 0, 0, 0]);
+    assert_eq!(mix.mem[1001][..], [0, 0, 0, 0, 0, 0]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[1002][0..=5], [0, 1, 2, 3, 4, 0]);
+    assert_eq!(mix.mem[1002][..], [0, 1, 2, 3, 4, 0]);
 }
 
 #[test]
@@ -452,18 +452,18 @@ fn test_move() {
         .unwrap();
 
     mix.r_in[1].set(1..=2, &[0x03, 0xE7]).unwrap();
-    mix.mem[1000].set(0..=5, &[1, 1, 1, 1, 1, 1]).unwrap();
-    mix.mem[1001].set(0..=5, &[1, 2, 2, 2, 2, 2]).unwrap();
-    mix.mem[1002].set(0..=5, &[1, 3, 3, 3, 3, 3]).unwrap();
+    mix.mem[1000].set_all(&[1, 1, 1, 1, 1, 1]).unwrap();
+    mix.mem[1001].set_all(&[1, 2, 2, 2, 2, 2]).unwrap();
+    mix.mem[1002].set_all(&[1, 3, 3, 3, 3, 3]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[999][0..=5], [1, 1, 1, 1, 1, 1]);
-    assert_eq!(mix.mem[1000][0..=5], [1, 2, 2, 2, 2, 2]);
-    assert_eq!(mix.mem[1001][0..=5], [1, 3, 3, 3, 3, 3]);
-    assert_eq!(mix.mem[1002][0..=5], [1, 3, 3, 3, 3, 3]);
+    assert_eq!(mix.mem[999][..], [1, 1, 1, 1, 1, 1]);
+    assert_eq!(mix.mem[1000][..], [1, 2, 2, 2, 2, 2]);
+    assert_eq!(mix.mem[1001][..], [1, 3, 3, 3, 3, 3]);
+    assert_eq!(mix.mem[1002][..], [1, 3, 3, 3, 3, 3]);
 }
 
 #[test]
@@ -490,39 +490,39 @@ fn test_store_6b() {
         .try_into()
         .unwrap();
 
-    mix.r_a.set(0..=5, &[1, 6, 7, 8, 9, 0]).unwrap();
-    mix.mem[2000].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2001].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2002].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2003].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2004].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2005].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.r_a.set_all(&[1, 6, 7, 8, 9, 0]).unwrap();
+    mix.mem[2000].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2001].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2002].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2003].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2004].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2005].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2000][0..=5], [1, 6, 7, 8, 9, 0]);
+    assert_eq!(mix.mem[2000][..], [1, 6, 7, 8, 9, 0]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2001][0..=5], [0, 6, 7, 8, 9, 0]);
+    assert_eq!(mix.mem[2001][..], [0, 6, 7, 8, 9, 0]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2002][0..=5], [0, 1, 2, 3, 4, 0]);
+    assert_eq!(mix.mem[2002][..], [0, 1, 2, 3, 4, 0]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2003][0..=5], [0, 1, 0, 3, 4, 5]);
+    assert_eq!(mix.mem[2003][..], [0, 1, 0, 3, 4, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2004][0..=5], [0, 1, 9, 0, 4, 5]);
+    assert_eq!(mix.mem[2004][..], [0, 1, 9, 0, 4, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2005][0..=5], [1, 0, 2, 3, 4, 5]);
+    assert_eq!(mix.mem[2005][..], [1, 0, 2, 3, 4, 5]);
 }
 
 #[test]
@@ -550,38 +550,38 @@ fn test_store_3b() {
         .unwrap();
 
     mix.r_in[1].set(0..=2, &[1, 6, 7]).unwrap();
-    mix.mem[2000].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2001].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2002].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2003].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2004].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2005].set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2000].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2001].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2002].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2003].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2004].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2005].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2000][0..=5], [1, 0, 0, 0, 6, 7]);
+    assert_eq!(mix.mem[2000][..], [1, 0, 0, 0, 6, 7]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2001][0..=5], [0, 0, 0, 0, 6, 7]);
+    assert_eq!(mix.mem[2001][..], [0, 0, 0, 0, 6, 7]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2002][0..=5], [0, 1, 2, 3, 4, 7]);
+    assert_eq!(mix.mem[2002][..], [0, 1, 2, 3, 4, 7]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2003][0..=5], [0, 1, 7, 3, 4, 5]);
+    assert_eq!(mix.mem[2003][..], [0, 1, 7, 3, 4, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2004][0..=5], [0, 1, 6, 7, 4, 5]);
+    assert_eq!(mix.mem[2004][..], [0, 1, 6, 7, 4, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[2005][0..=5], [1, 7, 2, 3, 4, 5]);
+    assert_eq!(mix.mem[2005][..], [1, 7, 2, 3, 4, 5]);
 }
 
 #[test]
@@ -611,38 +611,38 @@ fn test_modify_6b() {
         .try_into()
         .unwrap();
 
-    mix.r_a.set(0..=5, &[0, 6, 7, 8, 9, 0]).unwrap();
+    mix.r_a.set_all(&[0, 6, 7, 8, 9, 0]).unwrap();
     mix.r_in[1].set(0..=2, &[0, 0, 5]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 6, 7, 8, 9, 1]);
+    assert_eq!(mix.r_a[..], [0, 6, 7, 8, 9, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 6, 7, 8, 9, 3]);
+    assert_eq!(mix.r_a[..], [0, 6, 7, 8, 9, 3]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 6, 7, 8, 9, 1]);
+    assert_eq!(mix.r_a[..], [0, 6, 7, 8, 9, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 6, 7, 8, 9, 7]);
+    assert_eq!(mix.r_a[..], [0, 6, 7, 8, 9, 7]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 6, 7, 8, 9, 1]);
+    assert_eq!(mix.r_a[..], [0, 6, 7, 8, 9, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0, 0x04, 0xD2]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0x04, 0xD2]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 0, 0, 0x10, 0xE1]);
+    assert_eq!(mix.r_a[..], [1, 0, 0, 0, 0x10, 0xE1]);
 }
 
 #[test]
@@ -675,27 +675,27 @@ fn test_modify_3b() {
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 9, 6]);
+    assert_eq!(mix.r_in[1][..], [0, 9, 6]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 9, 8]);
+    assert_eq!(mix.r_in[1][..], [0, 9, 8]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 9, 6]);
+    assert_eq!(mix.r_in[1][..], [0, 9, 6]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 0x04, 0xD2]);
+    assert_eq!(mix.r_in[1][..], [0, 0x04, 0xD2]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_in[1][0..=2], [1, 0x10, 0xE1]);
+    assert_eq!(mix.r_in[1][..], [1, 0x10, 0xE1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_in[1][0..=2], [0, 0x10, 0xE1]);
+    assert_eq!(mix.r_in[1][..], [0, 0x10, 0xE1]);
 }
 
 #[test]
@@ -710,18 +710,18 @@ fn test_add_sub() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set(0..=5, &[0, 0, 0x64, 5, 0, 0x32]).unwrap();
-    mix.r_a.set(0..=5, &[0, 0x04, 0xD2, 1, 0, 0x96]).unwrap();
+    mix.mem[1000].set_all(&[0, 0, 0x64, 5, 0, 0x32]).unwrap();
+    mix.r_a.set_all(&[0, 0x04, 0xD2, 1, 0, 0x96]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0x05, 0x36, 6, 0, 0xC8]);
+    assert_eq!(mix.r_a[..], [0, 0x05, 0x36, 6, 0, 0xC8]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0x04, 0xD2, 1, 0, 0x96]);
+    assert_eq!(mix.r_a[..], [0, 0x04, 0xD2, 1, 0, 0x96]);
 
     mix.reset();
 
@@ -733,9 +733,9 @@ fn test_add_sub() {
         .unwrap();
 
     mix.mem[1000]
-        .set(0..=5, &[1, 0x07, 0xD0, 0, 0x96, 0])
+        .set_all(&[1, 0x07, 0xD0, 0, 0x96, 0])
         .unwrap();
-    mix.r_a.set(0..=5, &[1, 0x04, 0xD2, 0, 0, 9]).unwrap();
+    mix.r_a.set_all(&[1, 0x04, 0xD2, 0, 0, 9]).unwrap();
 
     mix.restart();
 
@@ -753,15 +753,15 @@ fn test_mul() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set(0..=5, &[0, 2, 0, 0, 0, 0]).unwrap();
-    mix.r_a.set(0..=5, &[1, 0, 0, 0, 0, 0x70]).unwrap();
+    mix.mem[1000].set_all(&[0, 2, 0, 0, 0, 0]).unwrap();
+    mix.r_a.set_all(&[1, 0, 0, 0, 0, 0x70]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [1, 0, 0, 0, 0, 0]);
-    assert_eq!(mix.r_x[0..=5], [1, 0, 0, 0, 0, 0xE0]);
+    assert_eq!(mix.r_a[..], [1, 0, 0, 0, 0, 0]);
+    assert_eq!(mix.r_x[..], [1, 0, 0, 0, 0, 0xE0]);
 
     mix.reset();
 
@@ -769,15 +769,15 @@ fn test_mul() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set(0..=5, &[0, 1, 1, 1, 1, 1]).unwrap();
-    mix.r_a.set(0..=5, &[0, 1, 1, 1, 1, 1]).unwrap();
+    mix.mem[1000].set_all(&[0, 1, 1, 1, 1, 1]).unwrap();
+    mix.r_a.set_all(&[0, 1, 1, 1, 1, 1]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 1, 2, 3, 4]);
-    assert_eq!(mix.r_x[0..=5], [0, 5, 4, 3, 2, 1]);
+    assert_eq!(mix.r_a[..], [0, 0, 1, 2, 3, 4]);
+    assert_eq!(mix.r_x[..], [0, 5, 4, 3, 2, 1]);
 }
 
 #[test]
@@ -789,16 +789,16 @@ fn test_div() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set(0..=5, &[0, 0, 0, 0, 0, 3]).unwrap();
-    mix.r_a.set(0..=5, &[0, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_x.set(0..=5, &[1, 0, 0, 0, 0, 0x11]).unwrap();
+    mix.mem[1000].set_all(&[0, 0, 0, 0, 0, 3]).unwrap();
+    mix.r_a.set_all(&[0, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_x.set_all(&[1, 0, 0, 0, 0, 0x11]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0, 0, 5]);
-    assert_eq!(mix.r_x[0..=5], [0, 0, 0, 0, 0, 2]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0, 5]);
+    assert_eq!(mix.r_x[..], [0, 0, 0, 0, 0, 2]);
 
     mix.reset();
 
@@ -806,9 +806,9 @@ fn test_div() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set(0..=5, &[1, 0, 0, 0, 2, 0]).unwrap();
-    mix.r_a.set(0..=5, &[1, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_x.set(0..=5, &[0, 0x04, 0xD3, 0, 3, 1]).unwrap();
+    mix.mem[1000].set_all(&[1, 0, 0, 0, 2, 0]).unwrap();
+    mix.r_a.set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_x.set_all(&[0, 0x04, 0xD3, 0, 3, 1]).unwrap();
 
     mix.restart();
 
@@ -837,12 +837,12 @@ fn test_cmp_6b() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set(0..=5, &[0, 0, 0, 0, 0, 2]).unwrap();
-    mix.mem[1001].set(0..=5, &[1, 0, 0, 0, 0, 2]).unwrap();
-    mix.mem[1002].set(0..=5, &[0, 0, 0, 0, 0, 1]).unwrap();
-    mix.mem[1003].set(0..=5, &[1, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_a.set(0..=5, &[0, 0, 0, 0, 0, 1]).unwrap();
-    mix.r_x.set(0..=5, &[0, 0, 0, 0, 0, 0]).unwrap();
+    mix.mem[1000].set_all(&[0, 0, 0, 0, 0, 2]).unwrap();
+    mix.mem[1001].set_all(&[1, 0, 0, 0, 0, 2]).unwrap();
+    mix.mem[1002].set_all(&[0, 0, 0, 0, 0, 1]).unwrap();
+    mix.mem[1003].set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_a.set_all(&[0, 0, 0, 0, 0, 1]).unwrap();
+    mix.r_x.set_all(&[0, 0, 0, 0, 0, 0]).unwrap();
 
     mix.restart();
 
@@ -881,10 +881,10 @@ fn test_cmp_3b() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set(0..=5, &[0, 0, 0, 0, 0, 2]).unwrap();
-    mix.mem[1001].set(0..=5, &[1, 0, 0, 0, 0, 2]).unwrap();
-    mix.mem[1002].set(0..=5, &[0, 0, 0, 0, 0, 1]).unwrap();
-    mix.mem[1003].set(0..=5, &[1, 0, 0, 0, 0, 0]).unwrap();
+    mix.mem[1000].set_all(&[0, 0, 0, 0, 0, 2]).unwrap();
+    mix.mem[1001].set_all(&[1, 0, 0, 0, 0, 2]).unwrap();
+    mix.mem[1002].set_all(&[0, 0, 0, 0, 0, 1]).unwrap();
+    mix.mem[1003].set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
     mix.r_in[1].set(0..=2, &[0, 0, 1]).unwrap();
     mix.r_in[2].set(0..=2, &[0, 0, 0]).unwrap();
 
@@ -915,25 +915,25 @@ fn test_jmp_reg_6b() {
     mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::JA).try_into().unwrap();
     mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::JX).try_into().unwrap();
     mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::JX).try_into().unwrap();
-    mix.r_a.set(0..=5, &[1, 0, 0, 0, 0, 1]).unwrap();
-    mix.r_x.set(0..=5, &[0, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_a.set_all(&[1, 0, 0, 0, 0, 1]).unwrap();
+    mix.r_x.set_all(&[0, 0, 0, 0, 0, 0]).unwrap();
 
     mix.restart();
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 1000);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 1001);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 0);
-    assert_eq!(mix.r_j[0..=2], [0, 0x03, 0xEA]);
+    assert_eq!(mix.r_j[..], [0, 0x03, 0xEA]);
 }
 
 #[test]
@@ -952,17 +952,17 @@ fn test_jmp_reg_3b() {
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 1000);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 1001);
-    assert_eq!(mix.r_j[0..=2], [0, 0, 1]);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.pc, 0);
-    assert_eq!(mix.r_j[0..=2], [0, 0x03, 0xEA]);
+    assert_eq!(mix.r_j[..], [0, 0x03, 0xEA]);
 }
 
 #[test]
@@ -977,32 +977,32 @@ fn test_shift() {
     mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift)
         .try_into()
         .unwrap();
-    mix.r_a.set(0..=5, &[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.r_x.set(0..=5, &[1, 6, 7, 8, 9, 10]).unwrap();
+    mix.r_a.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.r_x.set_all(&[1, 6, 7, 8, 9, 10]).unwrap();
 
     mix.restart();
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 1, 2, 3, 4]);
-    assert_eq!(mix.r_x[0..=5], [1, 5, 6, 7, 8, 9]);
+    assert_eq!(mix.r_a[..], [0, 0, 1, 2, 3, 4]);
+    assert_eq!(mix.r_x[..], [1, 5, 6, 7, 8, 9]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 2, 3, 4, 0, 0]);
-    assert_eq!(mix.r_x[0..=5], [1, 5, 6, 7, 8, 9]);
+    assert_eq!(mix.r_a[..], [0, 2, 3, 4, 0, 0]);
+    assert_eq!(mix.r_x[..], [1, 5, 6, 7, 8, 9]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 6, 7, 8, 9, 2]);
-    assert_eq!(mix.r_x[0..=5], [1, 3, 4, 0, 0, 5]);
+    assert_eq!(mix.r_a[..], [0, 6, 7, 8, 9, 2]);
+    assert_eq!(mix.r_x[..], [1, 3, 4, 0, 0, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 6, 7, 8]);
-    assert_eq!(mix.r_x[0..=5], [1, 3, 4, 0, 0, 5]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 6, 7, 8]);
+    assert_eq!(mix.r_x[..], [1, 3, 4, 0, 0, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[0..=5], [0, 0, 6, 7, 8, 3]);
-    assert_eq!(mix.r_x[0..=5], [1, 4, 0, 0, 5, 0]);
+    assert_eq!(mix.r_a[..], [0, 0, 6, 7, 8, 3]);
+    assert_eq!(mix.r_x[..], [1, 4, 0, 0, 5, 0]);
 }

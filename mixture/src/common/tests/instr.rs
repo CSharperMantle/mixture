@@ -15,7 +15,7 @@ fn test_clone() {
 #[test]
 fn test_from_word() {
     let mut word = Word::<6, false>::new();
-    word.set(0..=5, &[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
+    word.set_all(&[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
 
     let instr = Instruction::try_from(word).unwrap();
     assert_eq!(instr.opcode, Opcode::LdA);
@@ -29,7 +29,7 @@ fn test_into_word() {
     let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
 
     let word: FullWord = instr.try_into().unwrap();
-    assert_eq!(word[0..=5], [0, 0x07, 0xD0, 0x02, 0x03, 0x08]);
+    assert_eq!(word[..], [0, 0x07, 0xD0, 0x02, 0x03, 0x08]);
 }
 
 #[test]

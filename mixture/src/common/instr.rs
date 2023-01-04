@@ -70,7 +70,7 @@ impl TryFrom<FullWord> for Instruction {
     /// use mixture::common::*;
     ///
     /// let mut word = FullWord::new();
-    /// word.set(0..=5, &[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
+    /// word.set_all(&[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
     ///
     /// let instr = Instruction::try_from(word).unwrap();
     /// assert_eq!(instr.opcode, Opcode::LdA);

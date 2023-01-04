@@ -49,7 +49,7 @@ fn test_euclid() {
     }
 
     // Correct answer is rA = 34.
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0, 0, 0x22]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0, 0x22]);
 }
 
 #[test]
@@ -117,9 +117,9 @@ fn test_ones() {
         mix.step().unwrap();
     }
 
-    assert_eq!(mix.r_a[0..=5], [1, 30, 30, 30, 30, 30]);
-    assert_eq!(mix.r_x[0..=5], [1, 31, 30, 30, 30, 30]);
-    assert_eq!(mix.r_in[1][0..=2], [0, 0, 3]);
+    assert_eq!(mix.r_a[..], [1, 30, 30, 30, 30, 30]);
+    assert_eq!(mix.r_x[..], [1, 31, 30, 30, 30, 30]);
+    assert_eq!(mix.r_in[1][..], [0, 0, 3]);
     assert_eq!(mix.indicator_comp, ComparisonIndicatorValue::Equal);
     assert_eq!(mix.overflow, true);
 }
@@ -190,5 +190,5 @@ fn test_exp_13() {
         mix.step().unwrap();
     }
 
-    assert_eq!(mix.r_a[0..=5], [0, 0, 0, 0x18, 0x53, 0xD3]);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0x18, 0x53, 0xD3]);
 }

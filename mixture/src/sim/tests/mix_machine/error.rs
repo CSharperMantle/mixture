@@ -7,7 +7,7 @@ fn test_illegal_instruction() {
     mix.reset();
 
     mix.mem[0]
-        .set(0..=5, &[0, 255, 255, 255, 255, 255])
+        .set_all(&[0, 255, 255, 255, 255, 255])
         .unwrap();
 
     mix.restart();
