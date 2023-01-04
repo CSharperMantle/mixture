@@ -18,27 +18,27 @@ use crate::common::FullWord;
 /// impl IODevice for SomeDevice {
 ///     fn read(&mut self, buffer: &mut [FullWord]) -> Result<(), ()> {
 ///         /* ... */
-///         unimplemented!()
+///         todo!()
 ///     }
 ///     fn write(&mut self, data: &[FullWord]) -> Result<(), usize> {
 ///         /* ... */
-///         unimplemented!()
+///         todo!()
 ///     }
 ///     fn control(&mut self, command: i16) -> Result<(), ()> {
 ///         /* ... */
-///         unimplemented!()
+///         todo!()
 ///     }
 ///     fn is_busy(&self) -> Result<bool, ()> {
 ///         /* ... */
-///         unimplemented!()
+///         todo!()
 ///     }
 ///     fn is_ready(&self) -> Result<bool, ()> {
 ///         /* ... */
-///         unimplemented!()
+///         todo!()
 ///     }
 ///     fn get_block_size(&self) -> usize {
 ///         /* ... */
-///         unimplemented!()
+///         todo!()
 ///     }
 /// }
 ///

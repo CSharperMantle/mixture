@@ -134,7 +134,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Returns
     /// * [`Ok(())`] - The operation is successful.
-    /// * [`Err(())`] - The `range` is empty or larger than the word, or `value`
+    /// * [`Err(())`] - `range` is empty, larger than word, or `value`
     /// is not the same length as `range`.
     ///
     /// # Example
@@ -146,37 +146,27 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// assert_eq!(word.set(0..=4, &[0, 1, 2, 3, 4]), Ok(()));
     /// ```
     pub fn set(&mut self, range: RangeInclusive<usize>, value: &[u8]) -> Result<(), ()> {
-        if range.is_empty() {
-            return Err(());
-        }
         let start = *range.start();
         let end = *range.end();
-        if end >= N || value.len() != end - start + 1 {
+        if range.is_empty() || end >= N || value.len() != end - start + 1 {
             return Err(());
         }
-
-        for i in start..=end {
-            // If we are always positive and we are setting sign,
-            // then make it `Self::POS`.
-            self.data[i] = if P && i == 0 {
-                Self::POS
-            } else {
-                value[i - start]
-            };
+        for (i, &byte) in range.zip(value) {
+            self.data[i] = if P && i == 0 { Self::POS } else { byte };
         }
 
         Ok(())
     }
-    
+
     /// Set the content of the whole word.
-    /// 
+    ///
     /// # Arguments
     /// * `value` - The value to set.
-    /// 
+    ///
     /// # Returns
     /// * [`Ok(())`] - The operation is successful.
     /// * [`Err(())`] - The `value` has a length other than [`N`].
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use mixture::common::*;
@@ -190,13 +180,8 @@ impl<const N: usize, const P: bool> Word<N, P> {
             return Err(());
         }
         for (i, &byte) in value.iter().take(N).enumerate() {
-            self.data[i] = byte;
+            self.data[i] = if P && i == 0 { Self::POS } else { byte };
         }
-        self.data[0] = if P {
-            Self::POS
-        } else {
-            self.data[0]
-        };
 
         Ok(())
     }
