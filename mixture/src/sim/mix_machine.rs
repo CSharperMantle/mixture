@@ -121,14 +121,14 @@ impl MixMachine {
     ///
     /// This method resets the machine to its initial state,
     /// clearing the registers.
-    ///
     pub fn reset(&mut self) {
-        self.pc = 0;
-        self.overflow = false;
         self.r_a = Default::default();
         self.r_x = Default::default();
         self.r_in = Default::default();
         self.r_j = Default::default();
+        self.pc = 0;
+        self.overflow = false;
+        self.indicator_comp = Default::default();
     }
 
     /// Restart the machine.
@@ -309,8 +309,6 @@ impl MixMachine {
     }
 
     /// Handler for `NOP`.
-    ///
-    /// This function does nothing.
     fn handler_instr_nop(&mut self, _: &Instruction) -> Result<(), ErrorCode> {
         // Do nothing.
         Ok(())

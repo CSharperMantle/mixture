@@ -54,9 +54,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// Create a new word with default values.
     pub const fn new() -> Self {
         let mut w: Word<N, P> = Word { data: [0; N] };
-        if P {
-            w.data[0] = Self::POS;
-        }
+        w.data[0] = if P { Self::POS } else { w.data[0] };
         w
     }
 
@@ -75,11 +73,9 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// assert_eq!(word[..], [0, 1, 2, 3, 4, 5]);
     /// ```
     pub const fn from_bytes(bytes: [u8; N]) -> Self {
-        let mut word = Word { data: bytes };
-        if P {
-            word.data[0] = Self::POS;
-        }
-        word
+        let mut w = Word { data: bytes };
+        w.data[0] = if P { Self::POS } else { w.data[0] };
+        w
     }
 
     /// Create a new word from an `i64`.
