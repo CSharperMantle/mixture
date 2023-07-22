@@ -1,4 +1,4 @@
-use crate::common::FullWord;
+use crate::sim::FullWord;
 
 /// A device plugged into a [`MixMachine`] to perform IO
 /// operations.
@@ -11,7 +11,7 @@ use crate::common::FullWord;
 /// ```rust
 /// use mixture::sim::IODevice;
 /// use mixture::sim::MixMachine;
-/// use mixture::common::FullWord;
+/// use mixture::sim::FullWord;
 ///
 /// pub struct SomeDevice {}
 ///

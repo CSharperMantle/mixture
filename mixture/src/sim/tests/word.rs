@@ -1,4 +1,4 @@
-use crate::common::word::*;
+use crate::sim::word::*;
 
 #[test]
 fn test_clone() {

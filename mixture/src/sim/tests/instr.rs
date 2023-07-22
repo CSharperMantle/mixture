@@ -1,5 +1,5 @@
-use crate::common::instr::*;
-use crate::common::word::*;
+use crate::sim::instr::*;
+use crate::sim::word::*;
 
 #[test]
 fn test_clone() {

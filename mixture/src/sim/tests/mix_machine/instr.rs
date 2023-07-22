@@ -1,5 +1,4 @@
-use crate::common::*;
-use crate::sim::mix_machine::*;
+use crate::sim::*;
 
 #[test]
 fn test_nop() {
@@ -732,9 +731,7 @@ fn test_add_sub() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000]
-        .set_all(&[1, 0x07, 0xD0, 0, 0x96, 0])
-        .unwrap();
+    mix.mem[1000].set_all(&[1, 0x07, 0xD0, 0, 0x96, 0]).unwrap();
     mix.r_a.set_all(&[1, 0x04, 0xD2, 0, 0, 9]).unwrap();
 
     mix.restart();

@@ -35,7 +35,7 @@ impl Instruction {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     /// assert_eq!(instr.addr, 2000);
@@ -67,7 +67,7 @@ impl TryFrom<FullWord> for Instruction {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = FullWord::new();
     /// word.set_all(&[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
@@ -518,7 +518,7 @@ impl ToRangeInclusive<usize> for u8 {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// assert_eq!(1.to_range_inclusive(), 0..=1);
     /// assert_eq!(13.to_range_inclusive(), 1..=5);
@@ -532,7 +532,7 @@ impl ToRangeInclusive<usize> for u8 {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// assert_eq!(1.to_range_inclusive_signless(), (1..=1, true));
     /// assert_eq!(13.to_range_inclusive_signless(), (1..=5, false));

@@ -1,14 +1,11 @@
-use crate::common::*;
-use crate::sim::mix_machine::*;
+use crate::sim::*;
 
 #[test]
 fn test_illegal_instruction() {
     let mut mix = MixMachine::new();
     mix.reset();
 
-    mix.mem[0]
-        .set_all(&[0, 255, 255, 255, 255, 255])
-        .unwrap();
+    mix.mem[0].set_all(&[0, 255, 255, 255, 255, 255]).unwrap();
 
     mix.restart();
 

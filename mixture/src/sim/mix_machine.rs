@@ -1,7 +1,6 @@
 #[cfg(any(feature = "std", test))]
 use std::prelude::v1::*;
 
-use crate::common::*;
 use crate::sim::*;
 
 /// Error states for [`MixMachine`].

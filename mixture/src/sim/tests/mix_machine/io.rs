@@ -1,8 +1,6 @@
 use std::prelude::v1::*;
 
-use crate::common::*;
-use crate::sim::io::*;
-use crate::sim::mix_machine::*;
+use crate::sim::*;
 
 #[test]
 fn test_unknown_device() {

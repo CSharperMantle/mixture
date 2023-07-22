@@ -2,7 +2,7 @@ use core::ops::Index;
 use core::ops::IndexMut;
 use core::ops::Range;
 
-use crate::common::FullWord;
+use crate::sim::FullWord;
 
 /// The memory area of a [`crate::sim::mix_machine::MixMachine`]
 /// with [`Mem::SIZE`] cells.

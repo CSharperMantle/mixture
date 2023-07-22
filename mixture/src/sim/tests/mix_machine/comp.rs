@@ -1,5 +1,4 @@
-use crate::common::*;
-use crate::sim::mix_machine::*;
+use crate::sim::*;
 
 #[test]
 fn test_euclid() {

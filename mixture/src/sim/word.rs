@@ -26,7 +26,7 @@ use super::instr::Instruction;
 ///
 /// # Example
 /// ```rust
-/// use mixture::common::*;
+/// use mixture::sim::*;
 ///
 /// let mut word = Word::<6, false>::new();
 ///
@@ -67,7 +67,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let word = Word::<6, false>::from_bytes([0, 1, 2, 3, 4, 5]);
     /// assert_eq!(word[..], [0, 1, 2, 3, 4, 5]);
@@ -94,7 +94,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let v = -0x0102030405060708;
     ///
@@ -135,7 +135,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     ///
@@ -165,7 +165,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     ///
@@ -190,7 +190,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
@@ -208,7 +208,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word[0] = 0;
@@ -237,7 +237,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
@@ -273,7 +273,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
     ///
     /// let mut word = Word::<6, false>::new();
     /// word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
@@ -389,8 +389,8 @@ impl TryFrom<Instruction> for Word<6, false> {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::common::*;
-    /// use mixture::common::*;
+    /// use mixture::sim::*;
+    /// use mixture::sim::*;
     ///
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     ///

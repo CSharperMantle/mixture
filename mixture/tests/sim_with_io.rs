@@ -2,7 +2,6 @@
 #![allow(clippy::all)]
 #![allow(clippy::unwrap_used)]
 
-use mixture::common::*;
 use mixture::sim::*;
 
 static mut PRIMES_OUTPUT: String = String::new();
