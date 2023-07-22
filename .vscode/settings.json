@@ -35,5 +35,8 @@
         "Slax",
         "Srax",
         "unhalts"
+    ],
+    "rust-analyzer.linkedProjects": [
+        ".\\mixture\\Cargo.toml"
     ]
 }

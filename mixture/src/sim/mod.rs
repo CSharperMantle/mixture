@@ -1,5 +1,7 @@
 //! MIX simulation framework.
 
+use cfg_block::cfg_block;
+
 mod alphabet;
 mod instr;
 mod mem;
@@ -12,11 +14,12 @@ pub use mem::*;
 pub use mix_machine::*;
 pub use word::*;
 
-#[cfg(feature = "io")]
-mod io;
-
-#[cfg(feature = "io")]
-pub use io::*;
+cfg_block! {
+    #[cfg(feature = "io")] {
+        mod io;
+        pub use io::*;
+    }
+}
 
 #[cfg(test)]
 mod tests;
