@@ -3,7 +3,7 @@ use core::ops::RangeInclusive;
 
 use super::word::FullWord;
 
-/// An instruction in [`MixMachine`].
+/// An instruction in [`MixVM`].
 ///
 /// Instructions are represented in [`FullWord`]s,
 /// thus it can be converted from such type after validation.
@@ -91,7 +91,7 @@ impl TryFrom<FullWord> for Instruction {
     }
 }
 
-/// Possible operations in [`MixMachine`].
+/// Possible operations in [`MixVM`].
 #[derive(Clone, Copy, PartialEq, Eq, Debug, num_enum::TryFromPrimitive)]
 #[repr(u8)]
 pub enum Opcode {

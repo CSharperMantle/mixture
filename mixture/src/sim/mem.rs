@@ -4,7 +4,7 @@ use core::ops::Range;
 
 use crate::sim::FullWord;
 
-/// The memory area of a [`crate::sim::mix_machine::MixMachine`]
+/// The memory area of a [`crate::sim::mix_machine::MixVM`]
 /// with [`Mem::SIZE`] cells.
 #[derive(Debug, Clone)]
 pub struct Mem {

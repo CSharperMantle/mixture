@@ -3,7 +3,7 @@ use std::prelude::v1::*;
 
 use crate::sim::*;
 
-/// Error states for [`MixMachine`].
+/// Error states for [`MixVM`].
 #[derive(PartialEq, Eq, Debug)]
 pub enum ErrorCode {
     /// A general error is issued with no details available.
@@ -34,7 +34,7 @@ pub enum ErrorCode {
     Halted,
 }
 
-/// Values of the comparison indicator in [`MixMachine`].
+/// Values of the comparison indicator in [`MixVM`].
 #[derive(PartialEq, Eq, Debug)]
 pub enum ComparisonIndicatorValue {
     Equal,
@@ -55,7 +55,7 @@ impl Default for ComparisonIndicatorValue {
 /// ```rust
 /// use mixture::sim::*;
 ///
-/// let mut machine = MixMachine::new();
+/// let mut machine = MixVM::new();
 /// machine.reset();
 /// machine.restart();
 ///
@@ -63,7 +63,7 @@ impl Default for ComparisonIndicatorValue {
 ///
 /// machine.step().unwrap();
 /// ```
-pub struct MixMachine {
+pub struct MixVM {
     /// The register `rA`.
     pub r_a: FullWord,
 
@@ -97,10 +97,10 @@ pub struct MixMachine {
     pub io_devices: [Option<Box<dyn io::IODevice>>; 21],
 }
 
-impl MixMachine {
+impl MixVM {
     /// Create a new MIX machine.
     pub fn new() -> Self {
-        MixMachine {
+        MixVM {
             r_a: Default::default(),
             r_x: Default::default(),
             r_in: Default::default(),
@@ -1123,7 +1123,7 @@ impl MixMachine {
     }
 }
 
-impl Default for MixMachine {
+impl Default for MixVM {
     fn default() -> Self {
         Self::new()
     }

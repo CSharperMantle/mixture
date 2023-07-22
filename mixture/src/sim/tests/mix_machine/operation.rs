@@ -1,8 +1,8 @@
-use crate::sim::mix_machine::*;
+use crate::sim::mix_vm::*;
 
 #[test]
 fn test_reset_restart() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
 
     mix.halted = true;
     mix.pc = 123;

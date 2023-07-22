@@ -2,7 +2,7 @@ use crate::sim::*;
 
 #[test]
 fn test_euclid() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     // * Test sequence source: D. E. Knuth,
@@ -53,7 +53,7 @@ fn test_euclid() {
 
 #[test]
 fn test_ones() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     // * Test sequence source: D. E. Knuth,
@@ -125,7 +125,7 @@ fn test_ones() {
 
 #[test]
 fn test_exp_13() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     // * Test sequence source: D. E. Knuth,

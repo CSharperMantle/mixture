@@ -4,7 +4,7 @@ use crate::sim::*;
 
 #[test]
 fn test_unknown_device() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).try_into().unwrap();
@@ -48,7 +48,7 @@ impl IODevice for ErrorIODevice {
 fn test_io_device_error() {
     let dev_err = ErrorIODevice {};
 
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.io_devices[0] = Some(Box::new(dev_err));
@@ -120,7 +120,7 @@ impl IODevice for ReadyIODevice {
 
 #[test]
 fn test_jbus_jred() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.io_devices[0] = Some(Box::new(ReadyIODevice {}));
@@ -193,7 +193,7 @@ impl IODevice for LoggedControlIODevice {
 
 #[test]
 fn test_ioc() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.io_devices[0] = Some(Box::new(LoggedControlIODevice {
@@ -245,7 +245,7 @@ impl IODevice for InOutIODevice {
 
 #[test]
 fn test_in_out() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.io_devices[0] = Some(Box::new(InOutIODevice {}));

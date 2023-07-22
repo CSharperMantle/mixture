@@ -116,7 +116,7 @@ impl IODevice for LineCollectorIODevice {
 
 #[test]
 fn primes() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.io_devices[18] = Some(Box::new(LineCollectorIODevice {}));

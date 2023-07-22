@@ -2,7 +2,7 @@ use crate::sim::*;
 
 #[test]
 fn test_nop() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Nop).try_into().unwrap();
@@ -16,7 +16,7 @@ fn test_nop() {
 
 #[test]
 fn test_load_6b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     // For test instruction sequence, see D. E. Knuth,
@@ -76,7 +76,7 @@ fn test_load_6b() {
 
 #[test]
 fn test_load_neg_6b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::LdAN)
@@ -134,7 +134,7 @@ fn test_load_neg_6b() {
 
 #[test]
 fn test_indexed_load_6b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 5, 1, Opcode::LdA)
@@ -194,7 +194,7 @@ fn test_indexed_load_6b() {
 
 #[test]
 fn test_load_3b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::Ld1)
@@ -252,7 +252,7 @@ fn test_load_3b() {
 
 #[test]
 fn test_load_neg_3b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::Ld1N)
@@ -310,7 +310,7 @@ fn test_load_neg_3b() {
 
 #[test]
 fn test_jmp() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::Jmp)
@@ -341,7 +341,7 @@ fn test_jmp() {
 
 #[test]
 fn test_special() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Special)
@@ -375,7 +375,7 @@ fn test_special() {
 
 #[test]
 fn test_special_2() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Special)
@@ -409,7 +409,7 @@ fn test_special_2() {
 
 #[test]
 fn test_store_zero() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::StZ)
@@ -443,7 +443,7 @@ fn test_store_zero() {
 
 #[test]
 fn test_move() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 3, 0, Opcode::Move)
@@ -467,7 +467,7 @@ fn test_move() {
 
 #[test]
 fn test_store_6b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::StA)
@@ -526,7 +526,7 @@ fn test_store_6b() {
 
 #[test]
 fn test_store_3b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::St1)
@@ -585,7 +585,7 @@ fn test_store_3b() {
 
 #[test]
 fn test_modify_6b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1, 0, 0, Opcode::ModifyA)
@@ -646,7 +646,7 @@ fn test_modify_6b() {
 
 #[test]
 fn test_modify_3b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1, 0, 0, Opcode::Modify1)
@@ -699,7 +699,7 @@ fn test_modify_3b() {
 
 #[test]
 fn test_add_sub() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Add)
@@ -743,7 +743,7 @@ fn test_add_sub() {
 
 #[test]
 fn test_mul() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 9, 0, Opcode::Mul)
@@ -779,7 +779,7 @@ fn test_mul() {
 
 #[test]
 fn test_div() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div)
@@ -818,7 +818,7 @@ fn test_div() {
 
 #[test]
 fn test_cmp_6b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::CmpA)
@@ -862,7 +862,7 @@ fn test_cmp_6b() {
 
 #[test]
 fn test_cmp_3b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Cmp1)
@@ -906,7 +906,7 @@ fn test_cmp_3b() {
 
 #[test]
 fn test_jmp_reg_6b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::JA).try_into().unwrap();
@@ -935,7 +935,7 @@ fn test_jmp_reg_6b() {
 
 #[test]
 fn test_jmp_reg_3b() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::J1).try_into().unwrap();
@@ -964,7 +964,7 @@ fn test_jmp_reg_3b() {
 
 #[test]
 fn test_shift() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(1, 3, 0, Opcode::Shift).try_into().unwrap();

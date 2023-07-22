@@ -2,7 +2,7 @@ use crate::sim::*;
 
 #[test]
 fn test_illegal_instruction() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0].set_all(&[0, 255, 255, 255, 255, 255]).unwrap();
@@ -16,7 +16,7 @@ fn test_illegal_instruction() {
 
 #[test]
 fn test_halted() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     let err = mix.step().expect_err("Expect error");
@@ -26,7 +26,7 @@ fn test_halted() {
 
 #[test]
 fn test_invalid_addr() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(-1, 0, 0, Opcode::Shift)
@@ -42,7 +42,7 @@ fn test_invalid_addr() {
 
 #[test]
 fn test_invalid_field() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(0, 255, 0, Opcode::Shift)
@@ -58,7 +58,7 @@ fn test_invalid_field() {
 
 #[test]
 fn test_invalid_index() {
-    let mut mix = MixMachine::new();
+    let mut mix = MixVM::new();
     mix.reset();
 
     mix.mem[0] = Instruction::new(0, 5, 255, Opcode::LdA).try_into().unwrap();

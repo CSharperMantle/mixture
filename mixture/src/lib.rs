@@ -4,7 +4,7 @@
 //! binary interface for MIX computers used extensively in *The Art of Computer
 //! Programming* series written by D. E. Knuth, currently featuring:
 //!
-//! * Easy-to-inspect single-step MIX simulation via [`sim::MixMachine`]
+//! * Easy-to-inspect single-step MIX simulation via [`sim::MixVM`]
 //! * I/O device simulation via [`sim::IODevice`] (enabled by `io` feature)
 //! * `#[no_std]` compatibility
 //!

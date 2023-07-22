@@ -1,16 +1,16 @@
 use crate::sim::FullWord;
 
-/// A device plugged into a [`MixMachine`] to perform IO
+/// A device plugged into a [`MixVM`] to perform IO
 /// operations.
 ///
 /// This trait is used to build IO operations that may have side
-/// effects. Implement the trait and insert the device to a [`MixMachine`]
+/// effects. Implement the trait and insert the device to a [`MixVM`]
 /// instance to apply it.
 ///
 /// # Example
 /// ```rust
 /// use mixture::sim::IODevice;
-/// use mixture::sim::MixMachine;
+/// use mixture::sim::MixVM;
 /// use mixture::sim::FullWord;
 ///
 /// pub struct SomeDevice {}
@@ -42,7 +42,7 @@ use crate::sim::FullWord;
 ///     }
 /// }
 ///
-/// let mut mix = MixMachine::new();
+/// let mut mix = MixVM::new();
 /// mix.reset();
 /// mix.io_devices[0] = Some(Box::new(SomeDevice {}));
 /// ```
