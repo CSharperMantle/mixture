@@ -2,9 +2,11 @@
 #![allow(clippy::all)]
 #![allow(clippy::unwrap_used)]
 
+use std::sync::RwLock;
+
 use mixture::sim::*;
 
-static mut PRIMES_OUTPUT: String = String::new();
+static PRIMES_OUTPUT: RwLock<String> = RwLock::new(String::new());
 const PRIMES_OUTPUT_EXPECTED: &'static str = r#"FIRST|FIVE|HUNDRED|PRIMES|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |||||0000|0233|0547|0877|1229|1597|1993|2371|2749|3187||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |||||0003|0239|0557|0881|1231|1601|1997|2377|2753|3191||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -67,6 +69,7 @@ impl IODevice for LineCollectorIODevice {
 
     fn write(&mut self, data: &[FullWord]) -> Result<(), usize> {
         assert_eq!(data.len(), self.get_block_size());
+        let mut writer = PRIMES_OUTPUT.write().unwrap();
         let mut count_written: usize = 0;
         // For each word...
         for word in data {
@@ -77,20 +80,15 @@ impl IODevice for LineCollectorIODevice {
                     .map_err(|_| count_written)?
                     .try_into()
                     .map_err(|_| count_written)?;
-                unsafe {
-                    if ch != ' ' {
-                        PRIMES_OUTPUT += format!("{}", ch).as_str();
-                    } else {
-                        PRIMES_OUTPUT += "|";
-                    }
+                if ch != ' ' {
+                    *writer += format!("{}", ch).as_str();
+                } else {
+                    *writer += "|";
                 }
                 count_written += 1;
             }
         }
-        unsafe {
-            // End a block of data.
-            PRIMES_OUTPUT += "\n";
-        }
+        *writer += "\n";
         Ok(())
     }
 
@@ -208,7 +206,7 @@ fn primes() {
     while !mix.halted {
         mix.step().unwrap();
     }
-    unsafe {
-        assert_eq!(PRIMES_OUTPUT, PRIMES_OUTPUT_EXPECTED);
-    }
+
+    let reader = PRIMES_OUTPUT.read().unwrap();
+    assert_eq!(*reader, PRIMES_OUTPUT_EXPECTED);
 }
