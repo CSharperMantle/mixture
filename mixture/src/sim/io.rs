@@ -46,11 +46,13 @@ use crate::sim::FullWord;
 /// mix.reset();
 /// mix.io_devices[0] = Some(Box::new(SomeDevice {}));
 /// ```
+/// 
+/// [`MixVM`]: crate::sim::MixVM
 pub trait IODevice {
     /// Read a block of [`FullWord`]s from the device into the buffer.
     ///
     /// The amount of words in a block is defined by the device
-    /// via [`IODevice::get_block_size`]. This method must write
+    /// via [`IODevice::get_block_size()`]. This method must write
     /// exactly one block of words on success, otherwise it will
     /// fail.
     ///

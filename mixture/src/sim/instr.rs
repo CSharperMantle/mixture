@@ -7,6 +7,8 @@ use super::word::FullWord;
 ///
 /// Instructions are represented in [`FullWord`]s,
 /// thus it can be converted from such type after validation.
+/// 
+/// [`MixVM`]: crate::sim::MixVM
 #[derive(Clone, Copy)]
 pub struct Instruction {
     /// The signed address, `A`, read big-endian.
@@ -54,7 +56,7 @@ impl Instruction {
 }
 
 impl TryFrom<FullWord> for Instruction {
-    type Error = &'static str;
+    type Error = ();
 
     /// Convert a [`FullWord`] to an [`Instruction`].
     ///
@@ -63,7 +65,7 @@ impl TryFrom<FullWord> for Instruction {
     ///
     /// # Returns
     /// * [`Ok(Instruction)`] - The conversion was successful.
-    /// * [`Err(&'static str)`] - The conversion failed.
+    /// * [`Err(())`] - The conversion failed.
     ///
     /// # Example
     /// ```rust
@@ -81,7 +83,7 @@ impl TryFrom<FullWord> for Instruction {
     fn try_from(source: FullWord) -> Result<Self, Self::Error> {
         let sign = if source.is_positive() { 1 } else { -1 };
         let addr = sign * i16::from_be_bytes([source[1], source[2]]);
-        let opcode = Opcode::try_from(source[5..=5][0]).map_err(|_| "Invalid opcode")?;
+        let opcode = Opcode::try_from(source[5..=5][0]).map_err(|_| ())?;
         Ok(Instruction {
             opcode,
             field: source[4..=4][0],
@@ -91,7 +93,14 @@ impl TryFrom<FullWord> for Instruction {
     }
 }
 
-/// Possible operations in [`MixVM`].
+/// Operation codes in [`MixVM`].
+/// 
+/// In MIX literature, an opcode is represented in the form
+/// of `OP(F)`, where `OP` is the mnemonic and `F` is the `F`
+/// field associated with this instruction. One opcode could map
+/// to multiple operations, using `F` to distinguish among.
+/// 
+/// [`MixVM`]: crate::sim::MixVM
 #[derive(Clone, Copy, PartialEq, Eq, Debug, num_enum::TryFromPrimitive)]
 #[repr(u8)]
 pub enum Opcode {
@@ -497,21 +506,22 @@ pub enum Opcode {
     CmpX = 63,
 }
 
-/// Used when converting a type to a `RangeInclusive<T>`.
+/// Used when converting a type to a [`RangeInclusive<T>`].
 pub trait ToRangeInclusive<T> {
     /// Convert some value to [`RangeInclusive<T>`].
     fn to_range_inclusive(self) -> RangeInclusive<T>;
 
-    /// Convert some value to a [`RangeInclusive<usize>`], but
-    /// moving sign byte from range if necessary.
+    /// Convert some value to a [`RangeInclusive<T>`], but
+    /// removing sign byte from range if necessary.
     fn to_range_inclusive_signless(self) -> (RangeInclusive<T>, bool);
 }
 
+/// Implements conversion from byte-packed `F` value to
+/// [`RangeInclusive<usize>`].
+/// 
+/// `F <- 8 * L + R`
 impl ToRangeInclusive<usize> for u8 {
-    /// Convert [`u8`] to a [`RangeInclusive<usize>`]
-    /// representing a `F` value.
-    ///
-    /// `F <- 8 * L + R`.
+    /// Convert [`u8`] to [`RangeInclusive<usize>`].
     ///
     /// # Returns
     /// * [`RangeInclusive<usize>`]
@@ -527,9 +537,18 @@ impl ToRangeInclusive<usize> for u8 {
         ((self / 8) as usize)..=((self % 8) as usize)
     }
 
-    /// Convert `u8` to a [`RangeInclusive<usize>`], but moving
-    /// out 0th byte from range if necessary.
-    ///
+    /// Convert [`u8`] to [`RangeInclusive<usize>`], but
+    /// removing sign byte from range if necessary.
+    /// 
+    /// In this sense, consider the byte-packed range `1`, which
+    /// represents `0..=1`. Since byte 0 is the sign byte, this
+    /// method returns `(1..=1, true)` to indicate a sign byte
+    /// has been discarded.
+    /// 
+    /// # Returns
+    /// * [`RangeInclusive<usize>`]
+    /// * [`bool`]: `true` if the sign bit is taken into consideration.
+    /// 
     /// # Example
     /// ```rust
     /// use mixture::sim::*;

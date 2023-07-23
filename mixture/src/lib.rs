@@ -1,10 +1,10 @@
-//! Simulation library for MIX computers described by Donald E. Knuth.
+//! MIX infrastructure
 //!
-//! Mixture provides a robust simulation environment and
-//! binary interface for MIX computers used extensively in *The Art of Computer
-//! Programming* series written by D. E. Knuth, currently featuring:
+//! Mixture provides a robust simulation environment for MIX computers
+//! used extensively in *The Art of Computer Programming* series written
+//! by D. E. Knuth. This crate features:
 //!
-//! * Easy-to-inspect single-step MIX simulation via [`sim::MixVM`]
+//! * MIX simulation via [`sim::MixVM`]
 //! * I/O device simulation via [`sim::IODevice`] (enabled by `io` feature)
 //! * `#[no_std]` compatibility
 //!

@@ -4,8 +4,9 @@ use core::ops::Range;
 
 use crate::sim::FullWord;
 
-/// The memory area of a [`crate::sim::mix_machine::MixVM`]
-/// with [`Mem::SIZE`] cells.
+/// The memory area of a [`MixVM`] comprised of [`FullWord`]s.
+/// 
+/// [`MixVM`]: crate::sim::MixVM
 #[derive(Debug, Clone)]
 pub struct Mem {
     /// The memory area.
@@ -15,6 +16,8 @@ pub struct Mem {
 impl Mem {
     /// Create a new memory area with all-zero words.
     ///
+    /// Equivalent to [`Mem::default()`].
+    /// 
     /// # Returns
     /// * [`Mem`] - The new memory area.
     ///
@@ -70,7 +73,7 @@ impl IndexMut<Range<usize>> for Mem {
 impl Default for Mem {
     /// Create a clean memory area.
     ///
-    /// Equivalent to [`Mem::new`].
+    /// Equivalent to [`Mem::new()`].
     fn default() -> Self {
         Self::new()
     }

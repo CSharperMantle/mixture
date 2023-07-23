@@ -7,7 +7,7 @@ use core::ops::RangeInclusive;
 
 use super::instr::Instruction;
 
-/// A general word in MIX with `N` bytes in it.
+/// A generic word in [`MixVM`] with `N` bytes in it.
 ///
 /// Word are the basic unit of memory in MIX. A normal word
 /// contains 5 bytes and a sign byte. Note, however, that a
@@ -39,6 +39,8 @@ use super::instr::Instruction;
 /// assert_eq!(word[..], [0, 6, 7, 3, 4, 5]);
 /// assert_eq!(word_copy[..], [1, 6, 7, 3, 4, 5]);
 /// ```
+/// 
+/// [`MixVM`]: crate::sim::MixVM
 #[derive(Clone, Copy, Debug)]
 pub struct Word<const N: usize, const P: bool> {
     data: [u8; N],
@@ -52,6 +54,8 @@ impl<const N: usize, const P: bool> Word<N, P> {
     pub const POS: u8 = 0;
 
     /// Create a new word with default values.
+    /// 
+    /// Equivalent to [`Word<N, P>::default()`].
     pub const fn new() -> Self {
         let mut w: Word<N, P> = Word { data: [0; N] };
         w.data[0] = if P { Self::POS } else { w.data[0] };
@@ -161,7 +165,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Returns
     /// * [`Ok(())`] - The operation is successful.
-    /// * [`Err(())`] - The `value` has a length other than [`N`].
+    /// * [`Err(())`] - The `value` has a length other than `N`.
     ///
     /// # Example
     /// ```rust
@@ -233,7 +237,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Returns
     /// * [`i64`] - The converted value.
-    /// * [`bool`] - `true` if the word is too large, `false` otherwise.
+    /// * [`bool`] - `true` if the word overflows.
     ///
     /// # Example
     /// ```rust
@@ -269,7 +273,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Returns
     /// * [`i64`] - The converted value.
-    /// * [`bool`] - `true` if the word is too large, `false` otherwise.
+    /// * [`bool`] - `true` if the word overflows.
     ///
     /// # Example
     /// ```rust
@@ -322,7 +326,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
 impl<const N: usize, const P: bool> Default for Word<N, P> {
     /// Create a new word with default value.
     ///
-    /// Equivalent to [`Word<N, P>::new`].
+    /// Equivalent to [`Word<N, P>::new()`].
     fn default() -> Self {
         Self::new()
     }
@@ -378,14 +382,14 @@ impl<const N: usize, const P: bool> IndexMut<usize> for Word<N, P> {
 impl TryFrom<Instruction> for Word<6, false> {
     type Error = ();
 
-    /// Convert an `Instruction` to a `Word<6, false>`.
+    /// Convert an [`Instruction`] to a [`Word<6, false>`].
     ///
     /// # Arguments
     /// * `source` - The instruction to convert.
     ///
     /// # Returns
     /// * [`Ok(Word<6, false>)`] - If the instruction is successful.
-    /// * [`Err(&'static str)`] - If the instruction is invalid.
+    /// * [`Err(())`] - If the instruction is invalid.
     ///
     /// # Example
     /// ```rust

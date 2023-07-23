@@ -119,7 +119,7 @@ fn test_ones() {
     assert_eq!(mix.r_a[..], [1, 30, 30, 30, 30, 30]);
     assert_eq!(mix.r_x[..], [1, 31, 30, 30, 30, 30]);
     assert_eq!(mix.r_in[1][..], [0, 0, 3]);
-    assert_eq!(mix.indicator_comp, ComparisonIndicatorValue::Equal);
+    assert_eq!(mix.indicator_comp, CompIndicator::Equal);
     assert_eq!(mix.overflow, true);
 }
 
