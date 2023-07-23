@@ -4,7 +4,7 @@ use std::prelude::v1::*;
 use crate::sim::*;
 
 /// Error states for [`MixVM`].
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ErrorCode {
     /// A generic error is issued with no details available.
     Generic,
@@ -35,7 +35,7 @@ pub enum ErrorCode {
 }
 
 /// Values of the comparison indicator in [`MixVM`].
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum CompIndicator {
     Equal,
     Lesser,

@@ -16,7 +16,6 @@ name = "mixture"
 path = "src/lib.rs"
 
 [features]
-default = [ "std", "io", "fpmath" ]
+default = [ "std", "io" ]
 std = []
 io = [ "std" ]
-fpmath = []
