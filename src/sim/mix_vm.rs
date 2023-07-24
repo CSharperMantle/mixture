@@ -35,7 +35,7 @@ pub enum ErrorCode {
 }
 
 /// Values of the comparison indicator in [`MixVM`].
-/// 
+///
 /// Reflects the result of [`CMPA`][Opcode::CmpA] and
 /// [`CMPX`][Opcode::CmpX] instructions.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -871,7 +871,9 @@ impl MixVM {
             Opcode::JX => &self.r_x,
             _ => unreachable!(),
         };
-        let reg_value_sign = reg.to_i64().0.signum();
+        let reg_value = reg.to_i64().0;
+        let reg_value_sign = reg_value.signum();
+        let is_odd = reg_value & 1 != 0;
         let should_jump = match instr.field {
             0 => reg_value_sign == -1,
             1 => reg_value_sign == 0,
@@ -879,6 +881,20 @@ impl MixVM {
             3 => reg_value_sign != -1,
             4 => reg_value_sign != 0,
             5 => reg_value_sign != 1,
+            6 => {
+                if cfg!(feature = "x-binary") {
+                    !is_odd
+                } else {
+                    return Err(ErrorCode::InvalidField);
+                }
+            }
+            7 => {
+                if cfg!(feature = "x-binary") {
+                    is_odd
+                } else {
+                    return Err(ErrorCode::InvalidField);
+                }
+            }
             _ => return Err(ErrorCode::InvalidField),
         };
         if should_jump {
@@ -932,8 +948,10 @@ impl MixVM {
             self.r_a
                 .set(1..=5, &shifted_value.to_be_bytes()[3..=7])
                 .map_err(|_| ErrorCode::BadMemAccess)?;
-        } else if instr.field == 2 || instr.field == 3 {
-            // SLAX and SRAX.
+        } else if (instr.field == 2 || instr.field == 3)
+            || (cfg!(feature = "x-binary") && (instr.field == 6 || instr.field == 7))
+        {
+            // SLAX, SRAX, SLB and SRB.
             // Spread original register to bytes.
             let orig_a_bytes = &self.r_a[1..=5];
             let orig_x_bytes = &self.r_x[1..=5];
@@ -959,6 +977,8 @@ impl MixVM {
             let shifted_value = match instr.field {
                 2 => orig_value << (count * 8),
                 3 => orig_value >> (count * 8),
+                6 => orig_value << count,
+                7 => orig_value >> count,
                 _ => unreachable!(),
             };
             // Store back.

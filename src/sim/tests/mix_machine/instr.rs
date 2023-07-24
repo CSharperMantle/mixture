@@ -1003,3 +1003,59 @@ fn test_shift() {
     assert_eq!(mix.r_a[..], [0, 0, 6, 7, 8, 3]);
     assert_eq!(mix.r_x[..], [1, 4, 0, 0, 5, 0]);
 }
+
+#[test]
+#[cfg(feature = "x-binary")]
+fn test_binary_jmp_reg_6b() {
+    let mut mix = MixVM::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1000, 6, 0, Opcode::JA).try_into().unwrap();
+    mix.mem[1000] = Instruction::new(2000, 6, 0, Opcode::JX).try_into().unwrap();
+    mix.mem[1001] = Instruction::new(0, 7, 0, Opcode::JX).try_into().unwrap();
+    mix.r_a.set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_x.set_all(&[0, 0, 0, 0, 0, 1]).unwrap();
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 1000);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 1001);
+    assert_eq!(mix.r_j[..], [0, 0, 1]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.pc, 0);
+    assert_eq!(mix.r_j[..], [0, 0x03, 0xEA]);
+}
+
+#[test]
+#[cfg(feature = "x-binary")]
+fn test_binary_shift() {
+    let mut mix = MixVM::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1, 6, 0, Opcode::Shift).try_into().unwrap();
+    mix.mem[1] = Instruction::new(2, 7, 0, Opcode::Shift).try_into().unwrap();
+    mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift)
+        .try_into()
+        .unwrap();
+    mix.r_a.set_all(&[0, 0, 0, 0, 0, 0b00000110]).unwrap();
+    mix.r_x.set_all(&[1, 0, 0, 0, 0, 0b00000001]).unwrap();
+
+    mix.restart();
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0, 0b00001100]);
+    assert_eq!(mix.r_x[..], [1, 0, 0, 0, 0, 0b00000010]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0, 0b00000011]);
+    assert_eq!(mix.r_x[..], [1, 0, 0, 0, 0, 0b00000000]);
+}

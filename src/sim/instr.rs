@@ -142,6 +142,8 @@ pub enum Opcode {
     /// * `SRAX(3)` - Shift right `rAX`.
     /// * `SLC(4)` - Shift circularly left `rAX`.
     /// * `SRC(5)` - Shift circularly right `rAX`.
+    /// * `SLB(6)` (`x-binary`) - Shift left `rAX` binary.
+    /// * `SRB(7)` (`x-binary`) - Shift right `rAX` binary.
     Shift = 6,
 
     /// * `MOVE(1)` - Move `F` words from `M` to `rI1`.
@@ -313,7 +315,12 @@ pub enum Opcode {
     ///
     /// `rA : 0; jump`
     ///
-    /// See also `Jmp`.
+    /// * `JAE(6)` (`x-binary`) - Jump `rA` even
+    /// * `JAO(7)` (`x-binary`) - Jump `rA` odd
+    /// 
+    /// `rA & 1 : 0; jump`
+    /// 
+    /// See also [`Opcode::Jmp`].
     JA = 40,
 
     /// * `J1N(0)`
@@ -325,7 +332,7 @@ pub enum Opcode {
     ///
     /// `rI1 : 0; jump`
     ///
-    /// See `Jmp`.
+    /// See also [`Opcode::Jmp`].
     J1 = 41,
 
     /// * `J2N(0)`
@@ -337,7 +344,7 @@ pub enum Opcode {
     ///
     /// `rI2 : 0; jump`
     ///
-    /// See `Jmp`.
+    /// See also [`Opcode::Jmp`].
     J2 = 42,
 
     /// * `J3N(0)`
@@ -349,7 +356,7 @@ pub enum Opcode {
     ///
     /// `rI3 : 0; jump`
     ///
-    /// See `Jmp`.
+    /// See also [`Opcode::Jmp`].
     J3 = 43,
 
     /// * `J4N(0)`
@@ -361,7 +368,7 @@ pub enum Opcode {
     ///
     /// `rI4 : 0; jump`
     ///
-    /// See `Jmp`.
+    /// See also [`Opcode::Jmp`].
     J4 = 44,
 
     /// * `J5N(0)`
@@ -373,7 +380,7 @@ pub enum Opcode {
     ///
     /// `rI5 : 0; jump`
     ///
-    /// See `Jmp`.
+    /// See also [`Opcode::Jmp`].
     J5 = 45,
 
     /// * `J6N(0)`
@@ -385,7 +392,7 @@ pub enum Opcode {
     ///
     /// `rI6 : 0; jump`
     ///
-    /// See `Jmp`.
+    /// See also [`Opcode::Jmp`].
     J6 = 46,
 
     /// * `JXN(0)`
@@ -397,7 +404,12 @@ pub enum Opcode {
     ///
     /// `rX : 0; jump`
     ///
-    /// See `Jmp`.
+    /// * `JXE(6)` (`x-binary`) - Jump `rX` even
+    /// * `JXO(7)` (`x-binary`) - Jump `rX` odd
+    /// 
+    /// `rA & 1 : 0; jump`
+    ///
+    /// See also [`Opcode::Jmp`].
     JX = 47,
 
     /// * `INCA(0)` - Increase `rA` by 1.

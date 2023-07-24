@@ -38,5 +38,6 @@
     ],
     "rust-analyzer.diagnostics.disabled": [
         "non_upper_case_globals"
-    ]
+    ],
+    "rust-analyzer.showUnlinkedFileNotification": false,
 }

@@ -23,43 +23,6 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'mixes'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=mixes",
-                    "--package=mixture"
-                ],
-                "filter": {
-                    "name": "mixes",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'mixes'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=mixes",
-                    "--package=mixture"
-                ],
-                "filter": {
-                    "name": "mixes",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
         }
     ]
 }

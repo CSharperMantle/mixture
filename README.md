@@ -184,9 +184,20 @@ For a detailed explanation of instruction semantics and effects, please refer to
 
 #### `x-ieee754`: IEEE 754-compatible floating-point arithmetic
 
-WIP
+WIP.
 
 #### `x-binary`: Binary operations (TAOCP Section 4.5.2)
 
-WIP
+* `SLB`: Shift left `rAX` binary. `C = 6`; `F = 6`.
+  The contents of `rA` and `rX` are shifted left `M` binary places.
+  The signs of `rA` and `rX` are not affected.)
+* `SRB`: Shift right `rAX` binary. `C = 6`; `F = 7`.
+  The contents of `rA` and `rX` are shifted right `M` binary places.
 
+* `JAE`: Jump `rA` even. `C = 40`; `F = 6`.
+* `JAO`: Jump `rA` odd. `C = 40`; `F = 7`.
+* `JXE`: Jump `rX` even. `C = 47`; `F = 6`.
+* `JXO`: Jump `rX` odd. `C = 47`; `F = 7`.
+
+> **Specific to `mixture`:** See [`sim::Opcode::Shift`], [`sim::Opcode::JA`] and
+> [`sim::Opcode::JX`] for details.
