@@ -21,6 +21,109 @@ Crate highlights:
 
 All features are enabled by default.
 
+## Example
+
+This example is a simple program that writes a hello message to `stdout`. It demonstrates basic
+workflow of creating, initializing, adding I/O device to, and running a MIX virtual machine
+with `mixture`.
+
+```rust
+use mixture::sim::{ErrorCode, FullWord, IODevice, Instruction, MixVM, Opcode};
+
+// Define common constants
+const ADDR_TEXT_HELLO: i16 = 2000;
+const DEV_PRINTER: u8 = 18;
+
+// Define a line printer I/O device; this is not necessary: results can be read
+// from VM memory directly, but using an I/O device is more illustrative.
+struct LinePrinter {}
+
+impl LinePrinter {
+    const BLOCK_SIZE: usize = 3;
+}
+
+impl IODevice for LinePrinter {
+    fn read(&mut self, _: &mut [FullWord]) -> Result<(), ()> {
+        // Our device is a printer, so it never reads.
+        Err(())
+    }
+
+    fn write(&mut self, data: &[FullWord]) -> Result<(), usize> {
+        if data.len() != Self::BLOCK_SIZE {
+            // Show that we have not printed anything before we bail out.
+            return Err(0);
+        }
+        for i in 0..Self::BLOCK_SIZE {
+            let bytes = &data[i][1..=5]; // Ignore sign byte.
+            for &b in bytes {
+                print!("{}", char::from_u32(b as u32).unwrap_or('?'));
+            }
+        }
+        Ok(())
+    }
+
+    fn control(&mut self, _: i16) -> Result<(), ()> {
+        // Our device has no special commands defined.
+        Ok(())
+    }
+
+    fn is_busy(&self) -> Result<bool, ()> {
+        Ok(false)
+    }
+
+    fn is_ready(&self) -> Result<bool, ()> {
+        Ok(true)
+    }
+
+    fn get_block_size(&self) -> usize {
+        Self::BLOCK_SIZE
+    }
+}
+
+fn main() {
+    // Create a VM
+    let mut mix = MixVM::new();
+    mix.reset();
+
+    // Fill in some instructions
+    // 0  OUT  ADDR_TEXT_HELLO(DEV_PRINTER)
+    // 1  HLT  0
+    mix.mem[0] = Instruction::new(ADDR_TEXT_HELLO, DEV_PRINTER, 0, Opcode::Out)
+        .try_into()
+        .unwrap();
+    mix.mem[1] = Instruction::new(0, 2, 0, Opcode::Special)
+        .try_into()
+        .unwrap();
+
+    // Fill in constants
+    mix.mem[ADDR_TEXT_HELLO as u16] =
+        FullWord::from_bytes([FullWord::POS, b'H', b'E', b'L', b'L', b'O']);
+    mix.mem[ADDR_TEXT_HELLO as u16 + 1] =
+        FullWord::from_bytes([FullWord::POS, b' ', b'W', b'O', b'R', b'L']);
+    mix.mem[ADDR_TEXT_HELLO as u16 + 2] =
+        FullWord::from_bytes([FullWord::POS, b'D', b'!', b' ', b'\r', b'\n']);
+
+    // Attach device
+    mix.io_devices[DEV_PRINTER as usize] = Some(Box::new(LinePrinter {}));
+
+    // Start the VM
+    mix.restart();
+
+    // Run main loop
+    let error_code = loop {
+        let result = mix.step();
+        match result {
+            Ok(()) => continue,
+            Err(c) => break c,
+        }
+    };
+
+    // Check if the VM has shut down gracefully.
+    // Now you should see "HELLO WORLD! " with line break in stdout.
+    assert_eq!(error_code, ErrorCode::Halted);
+}
+```
+
 ## The MIX ISA
 
 > MIX is the world's first polyunsaturated computer. Like most machines, it has

@@ -56,7 +56,7 @@ pub trait IODevice {
     /// exactly one block of words on success, otherwise it will
     /// fail.
     ///
-    /// The implementor is asked to check the size of provided `buffer`
+    /// The trait implementor needs to check the size of provided `buffer`
     /// to avoid possible out-of-bound access.
     ///
     /// # Arguments
