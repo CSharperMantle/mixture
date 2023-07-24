@@ -39,7 +39,7 @@ use super::instr::Instruction;
 /// assert_eq!(word[..], [0, 6, 7, 3, 4, 5]);
 /// assert_eq!(word_copy[..], [1, 6, 7, 3, 4, 5]);
 /// ```
-/// 
+///
 /// [`MixVM`]: crate::sim::MixVM
 #[derive(Clone, Copy, Debug)]
 pub struct Word<const N: usize, const P: bool> {
@@ -54,7 +54,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     pub const POS: u8 = 0;
 
     /// Create a new word with default values.
-    /// 
+    ///
     /// Equivalent to [`Word<N, P>::default()`].
     pub const fn new() -> Self {
         let mut w: Word<N, P> = Word { data: [0; N] };
@@ -205,7 +205,30 @@ impl<const N: usize, const P: bool> Word<N, P> {
         self.data[0] == Self::POS
     }
 
-    /// Toggle the sign of the word.
+    /// Get sign adjustment coefficient for the word.
+    ///
+    /// # Returns
+    /// * `1` - If the word is positive.
+    /// * `-1` - If the word is negative.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mixture::sim::*;
+    ///
+    /// let mut word = Word::<6, false>::new();
+    /// word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    ///
+    /// assert_eq!(word.get_sign(), 1);
+    /// ```
+    pub const fn get_sign(&self) -> i8 {
+        if self.is_positive() {
+            1
+        } else {
+            -1
+        }
+    }
+
+    /// Flip the sign of the word.
     ///
     /// This method has no effect if the word is always positive,
     /// i.e. `P == true`.
@@ -217,12 +240,12 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// let mut word = Word::<6, false>::new();
     /// word[0] = 0;
     ///
-    /// word.toggle_sign();
+    /// word.flip_sign();
     /// assert_eq!(word[0], 1);
-    /// word.toggle_sign();
+    /// word.flip_sign();
     /// assert_eq!(word[0], 0);
     /// ```
-    pub fn toggle_sign(&mut self) {
+    pub fn flip_sign(&mut self) {
         self.data[0] = if !P && self.is_positive() {
             Self::NEG
         } else {
@@ -251,7 +274,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// assert_eq!(value, 0x0102030405);
     /// ```
     pub fn to_i64(&self) -> (i64, bool) {
-        let sign = if self.is_positive() { 1 } else { -1 };
+        let sign = self.get_sign() as i64;
         let mut bytes: [u8; 8] = [0; 8];
         // Bytes marked 'dirty' have not been copied yet.
         let mut data_bytes_dirty = self.data.map(|byte| byte != 0);
@@ -302,11 +325,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
             return (0, false);
         }
         // Find sign.
-        let sign = if !sign_included || self.is_positive() {
-            1
-        } else {
-            -1
-        };
+        let sign = if !sign_included { 1 } else { self.get_sign() } as i64;
         let mut result_bytes: [u8; 8] = [0; 8];
         // Get count of bytes that is needed to copy.
         let data_bytes_nonzero_count = data.iter().filter(|&&b| b != 0).count();

@@ -169,14 +169,14 @@ fn test_toggle_sign() {
     let mut word = Word::<6, false>::new();
     word[0] = 0;
 
-    word.toggle_sign();
+    word.flip_sign();
     assert_eq!(word[0], 1);
-    word.toggle_sign();
+    word.flip_sign();
     assert_eq!(word[0], 0);
 
     let mut word_positive = Word::<6, true>::new();
-    word_positive.toggle_sign();
+    word_positive.flip_sign();
     assert_eq!(word_positive[0], 0);
-    word_positive.toggle_sign();
+    word_positive.flip_sign();
     assert_eq!(word_positive[0], 0);
 }

@@ -74,7 +74,7 @@ impl IODevice for LineCollectorIODevice {
         // For each word...
         for word in data {
             // Each byte in a word...
-            for &byte in word[1..=5].iter() {
+            for &byte in &word[1..=5] {
                 // Convert to char.
                 let ch: char = Alphabet::try_from(byte)
                     .map_err(|_| count_written)?

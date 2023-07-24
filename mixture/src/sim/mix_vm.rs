@@ -253,7 +253,7 @@ impl MixVM {
             return Err(ErrorCode::InvalidIndex);
         }
         let reg = self.r_in[index as usize];
-        let (reg_val, _) = reg.to_i64();
+        let reg_val = reg.to_i64().0;
         (reg_val + addr as i64)
             .try_into()
             .map_err(|_| ErrorCode::InvalidAddress)
@@ -262,7 +262,7 @@ impl MixVM {
     /// Get indexed address. May panic or return negative value.
     fn helper_get_eff_addr_unchecked(&self, addr: i16, index: u8) -> i16 {
         let reg = self.r_in[index as usize];
-        let (reg_val, _) = reg.to_i64();
+        let reg_val = reg.to_i64().0;
         reg_val as i16 + addr
     }
 
@@ -355,11 +355,8 @@ impl MixVM {
         }
         // Copy negated sign byte if needed.
         if sign_copy_needed {
-            reg[0] = if mem_cell.is_positive() {
-                FullWord::NEG
-            } else {
-                FullWord::POS
-            };
+            reg[0] = mem_cell[0];
+            reg.flip_sign();
         }
         Ok(())
     }
@@ -429,11 +426,8 @@ impl MixVM {
         }
         // Copy negated sign byte if needed.
         if sign_copy_needed {
-            temp[0] = if memory_cell.is_positive() {
-                FullWord::NEG
-            } else {
-                FullWord::POS
-            };
+            temp[0] = memory_cell[0];
+            temp.flip_sign();
         }
         // Fill back the reg.
         reg[0] = temp[0];
@@ -477,12 +471,12 @@ impl MixVM {
             let mut result: i64 = 0;
             // For each byte, we extract its 1st position,
             // and push it to `result`.
-            for &byte in a_content.iter().chain(x_content.iter()) {
+            for &byte in a_content.iter().chain(x_content) {
                 let digit = byte % 10;
                 result = result * 10 + digit as i64;
             }
             // Rebuild a word of 4 bytes.
-            let (result_word, _) = FullWord::from_i64(result);
+            let result_word = FullWord::from_i64(result).0;
             // We do not modify the sign byte.
             self.r_a
                 .set(1..=5, &result_word[1..=5])
@@ -620,8 +614,7 @@ impl MixVM {
             // Add or subtract one.
             let addr = addr as i64;
             let offset = if instr.field == 0 { addr } else { -addr };
-            // Convert to i64.
-            let (value, _) = reg.to_i64();
+            let value = reg.to_i64().0;
             // Convert back modified value.
             let (new_word, overflow) = FullWord::from_i64(value + offset);
             reg.set_all(&new_word[..])
@@ -637,7 +630,7 @@ impl MixVM {
             reg.set_all(&new_word[..])
                 .map_err(|_| ErrorCode::BadMemAccess)?;
             if instr.field == 3 {
-                reg.toggle_sign();
+                reg.flip_sign();
             }
             Ok(())
         } else {
@@ -663,8 +656,7 @@ impl MixVM {
             // Add or subtract one.
             let addr = addr as i64;
             let offset = if instr.field == 0 { addr } else { -addr };
-            // Convert to i64.
-            let (value, _) = reg.to_i64();
+            let value = reg.to_i64().0;
             // Convert back modified value.
             let (new_word, overflow) = HalfWord::from_i64(value + offset);
             reg.set(0..=2, &new_word[..])
@@ -675,12 +667,12 @@ impl MixVM {
             Ok(())
         } else if instr.field == 2 || instr.field == 3 {
             // ENTx and ENNx
-            let (new_word, _) = HalfWord::from_i64(addr as i64);
+            let new_word = HalfWord::from_i64(addr as i64).0;
             // Copy new word into reg.
             reg.set(0..=2, &new_word[..])
                 .map_err(|_| ErrorCode::BadMemAccess)?;
             if instr.field == 3 {
-                reg.toggle_sign();
+                reg.flip_sign();
             }
             Ok(())
         } else {
@@ -693,7 +685,7 @@ impl MixVM {
     fn handle_instr_add_sub(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let (orig_value, _) = self.r_a.to_i64();
+        let orig_value = self.r_a.to_i64().0;
         // Are we adding or subtracting?
         let coeff = match instr.opcode {
             Opcode::Add => 1,
@@ -719,7 +711,7 @@ impl MixVM {
     fn handle_instr_mul(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let (orig_value, _) = self.r_a.to_i64();
+        let orig_value = self.r_a.to_i64().0;
         let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
         // Copy value into registers.
         let new_val = orig_value as i128 * target_value as i128;
@@ -772,7 +764,7 @@ impl MixVM {
             self.r_x[3],
             self.r_x[4],
             self.r_x[5],
-        ]) * if self.r_a.is_positive() { 1 } else { -1 };
+        ]) * self.r_a.get_sign() as i128;
         // Calculate results.
         let quotient: i64 = (orig_value / target_value)
             .abs()
@@ -1007,7 +999,7 @@ impl MixVM {
                 // to simulate shifting.
                 // The iterator is infinite so we don't worry about
                 // panics.
-                orig_bytes_iter.next().expect("Should not reach this");
+                orig_bytes_iter.next().expect("cyclic iterator exhausted");
             }
             // Write back.
             for (reg_i, &digit) in (0..10).zip(orig_bytes_iter) {

@@ -7,7 +7,7 @@ use super::word::FullWord;
 ///
 /// Instructions are represented in [`FullWord`]s,
 /// thus it can be converted from such type after validation.
-/// 
+///
 /// [`MixVM`]: crate::sim::MixVM
 #[derive(Clone, Copy)]
 pub struct Instruction {
@@ -81,7 +81,7 @@ impl TryFrom<FullWord> for Instruction {
     /// assert_eq!(instr.addr, 2000);
     /// ```
     fn try_from(source: FullWord) -> Result<Self, Self::Error> {
-        let sign = if source.is_positive() { 1 } else { -1 };
+        let sign = source.get_sign() as i16;
         let addr = sign * i16::from_be_bytes([source[1], source[2]]);
         let opcode = Opcode::try_from(source[5..=5][0]).map_err(|_| ())?;
         Ok(Instruction {
@@ -94,12 +94,12 @@ impl TryFrom<FullWord> for Instruction {
 }
 
 /// Operation codes in [`MixVM`].
-/// 
+///
 /// In MIX literature, an opcode is represented in the form
 /// of `OP(F)`, where `OP` is the mnemonic and `F` is the `F`
 /// field associated with this instruction. One opcode could map
 /// to multiple operations, using `F` to distinguish among.
-/// 
+///
 /// [`MixVM`]: crate::sim::MixVM
 #[derive(Clone, Copy, PartialEq, Eq, Debug, num_enum::TryFromPrimitive)]
 #[repr(u8)]
@@ -518,7 +518,7 @@ pub trait ToRangeInclusive<T> {
 
 /// Implements conversion from byte-packed `F` value to
 /// [`RangeInclusive<usize>`].
-/// 
+///
 /// `F <- 8 * L + R`
 impl ToRangeInclusive<usize> for u8 {
     /// Convert [`u8`] to [`RangeInclusive<usize>`].
@@ -539,16 +539,16 @@ impl ToRangeInclusive<usize> for u8 {
 
     /// Convert [`u8`] to [`RangeInclusive<usize>`], but
     /// removing sign byte from range if necessary.
-    /// 
+    ///
     /// In this sense, consider the byte-packed range `1`, which
     /// represents `0..=1`. Since byte 0 is the sign byte, this
     /// method returns `(1..=1, true)` to indicate a sign byte
     /// has been discarded.
-    /// 
+    ///
     /// # Returns
     /// * [`RangeInclusive<usize>`]
     /// * [`bool`]: `true` if the sign bit is taken into consideration.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use mixture::sim::*;
