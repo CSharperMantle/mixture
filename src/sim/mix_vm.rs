@@ -30,15 +30,23 @@ pub enum ErrorCode {
     /// An error is issued by an IO device.
     IOError,
 
-    /// The machine is halted. It must be [`MixVM::restart()`]ed before running.
+    /// The machine is not running and must be [`MixVM::restart()`]ed.
     Halted,
 }
 
 /// Values of the comparison indicator in [`MixVM`].
+/// 
+/// Reflects the result of [`CMPA`][Opcode::CmpA] and
+/// [`CMPX`][Opcode::CmpX] instructions.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum CompIndicator {
+    /// The two operands are equal.
     Equal,
-    Lesser,
+
+    /// The former operand is less than the latter.
+    Less,
+
+    /// The former operand is greater than the latter.
     Greater,
 }
 
@@ -81,7 +89,7 @@ pub struct MixVM {
     pub overflow: bool,
 
     /// The comparison indicator.
-    pub indicator_comp: CompIndicator,
+    pub comp: CompIndicator,
 
     /// The memory.
     pub mem: Mem,
@@ -106,7 +114,7 @@ impl MixVM {
             r_in: Default::default(),
             r_j: Default::default(),
             overflow: false,
-            indicator_comp: Default::default(),
+            comp: Default::default(),
             mem: Mem::new(),
             pc: 0,
             halted: true,
@@ -127,7 +135,7 @@ impl MixVM {
         self.r_j = Default::default();
         self.pc = 0;
         self.overflow = false;
-        self.indicator_comp = Default::default();
+        self.comp = Default::default();
     }
 
     /// Restart the machine.
@@ -444,12 +452,12 @@ impl MixVM {
             0 | 1 => true,
             2 => self.overflow,
             3 => !self.overflow,
-            4 => self.indicator_comp == CompIndicator::Lesser,
-            5 => self.indicator_comp == CompIndicator::Equal,
-            6 => self.indicator_comp == CompIndicator::Greater,
-            7 => self.indicator_comp != CompIndicator::Lesser,
-            8 => self.indicator_comp != CompIndicator::Equal,
-            9 => self.indicator_comp != CompIndicator::Greater,
+            4 => self.comp == CompIndicator::Less,
+            5 => self.comp == CompIndicator::Equal,
+            6 => self.comp == CompIndicator::Greater,
+            7 => self.comp != CompIndicator::Less,
+            8 => self.comp != CompIndicator::Equal,
+            9 => self.comp != CompIndicator::Greater,
             _ => return Err(ErrorCode::InvalidField),
         };
         // Clear overflow flag.
@@ -815,15 +823,14 @@ impl MixVM {
         };
         let reg_value = reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
         // Calculate and set flags.
-        self.indicator_comp =
-            if (reg_value == target_value) || (reg_value.abs() == 0 && target_value.abs() == 0) {
-                // +0 and -0 are equal.
-                CompIndicator::Equal
-            } else if reg_value > target_value {
-                CompIndicator::Greater
-            } else {
-                CompIndicator::Lesser
-            };
+        self.comp = if reg_value == target_value {
+            // +0 and -0 are equal.
+            CompIndicator::Equal
+        } else if reg_value > target_value {
+            CompIndicator::Greater
+        } else {
+            CompIndicator::Less
+        };
         Ok(())
     }
 
@@ -844,14 +851,14 @@ impl MixVM {
         let padded_reg = FullWord::from_bytes([reg[0], 0, 0, 0, reg[1], reg[2]]);
         let reg_value = padded_reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
         // Calculate and set flags.
-        self.indicator_comp =
+        self.comp =
             if (reg_value == target_value) || (reg_value.abs() == 0 && target_value.abs() == 0) {
                 // +0 and -0 are equal.
                 CompIndicator::Equal
             } else if reg_value > target_value {
                 CompIndicator::Greater
             } else {
-                CompIndicator::Lesser
+                CompIndicator::Less
             };
         Ok(())
     }

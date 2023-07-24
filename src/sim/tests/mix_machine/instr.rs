@@ -845,19 +845,19 @@ fn test_cmp_6b() {
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.indicator_comp, CompIndicator::Lesser);
+    assert_eq!(mix.comp, CompIndicator::Less);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.indicator_comp, CompIndicator::Greater);
+    assert_eq!(mix.comp, CompIndicator::Greater);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.indicator_comp, CompIndicator::Equal);
+    assert_eq!(mix.comp, CompIndicator::Equal);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.indicator_comp, CompIndicator::Equal);
+    assert_eq!(mix.comp, CompIndicator::Equal);
 }
 
 #[test]
@@ -889,19 +889,19 @@ fn test_cmp_3b() {
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.indicator_comp, CompIndicator::Lesser);
+    assert_eq!(mix.comp, CompIndicator::Less);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.indicator_comp, CompIndicator::Greater);
+    assert_eq!(mix.comp, CompIndicator::Greater);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.indicator_comp, CompIndicator::Equal);
+    assert_eq!(mix.comp, CompIndicator::Equal);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.indicator_comp, CompIndicator::Equal);
+    assert_eq!(mix.comp, CompIndicator::Equal);
 }
 
 #[test]

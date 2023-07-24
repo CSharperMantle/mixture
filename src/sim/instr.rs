@@ -22,7 +22,7 @@ pub struct Instruction {
 
     /// The operation code, `C`.
     ///
-    /// See also [`Opcode`].
+    /// See [`Opcode`] for a list of supported operations.
     pub opcode: Opcode,
 }
 

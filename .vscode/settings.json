@@ -36,7 +36,7 @@
         "Srax",
         "unhalts"
     ],
-    "rust-analyzer.linkedProjects": [
-        ".\\mixture\\Cargo.toml"
+    "rust-analyzer.diagnostics.disabled": [
+        "non_upper_case_globals"
     ]
 }
