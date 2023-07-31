@@ -29,9 +29,7 @@ fn test_invalid_addr() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(-1, 0, 0, Opcode::Shift)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(-1, 0, 0, Opcode::Shift).into();
 
     mix.restart();
 
@@ -45,9 +43,7 @@ fn test_invalid_field() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(0, 255, 0, Opcode::Shift)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(0, 255, 0, Opcode::Shift).into();
 
     mix.restart();
 
@@ -61,7 +57,7 @@ fn test_invalid_index() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(0, 5, 255, Opcode::LdA).try_into().unwrap();
+    mix.mem[0] = Instruction::new(0, 5, 255, Opcode::LdA).into();
 
     mix.restart();
 

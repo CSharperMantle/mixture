@@ -121,72 +121,36 @@ fn primes() {
 
     // Test sequence: D. E. Knuth, 'The Art of Computer Programming',
     // Volume 1, pp 148.
-    mix.mem[3000] = Instruction::new(0, 18, 0, Opcode::Ioc).try_into().unwrap();
-    mix.mem[3001] = Instruction::new(2051, 5, 0, Opcode::Ld1)
-        .try_into()
-        .unwrap();
-    mix.mem[3002] = Instruction::new(2050, 5, 0, Opcode::Ld2)
-        .try_into()
-        .unwrap();
-    mix.mem[3003] = Instruction::new(1, 0, 0, Opcode::Modify1)
-        .try_into()
-        .unwrap();
-    mix.mem[3004] = Instruction::new(499, 5, 1, Opcode::St2).try_into().unwrap();
-    mix.mem[3005] = Instruction::new(3016, 1, 0, Opcode::J1).try_into().unwrap();
-    mix.mem[3006] = Instruction::new(2, 0, 0, Opcode::Modify2)
-        .try_into()
-        .unwrap();
-    mix.mem[3007] = Instruction::new(2, 2, 0, Opcode::Modify3)
-        .try_into()
-        .unwrap();
-    mix.mem[3008] = Instruction::new(0, 2, 0, Opcode::ModifyA)
-        .try_into()
-        .unwrap();
-    mix.mem[3009] = Instruction::new(0, 2, 2, Opcode::ModifyX)
-        .try_into()
-        .unwrap();
-    mix.mem[3010] = Instruction::new(-1, 5, 3, Opcode::Div).try_into().unwrap();
-    mix.mem[3011] = Instruction::new(3006, 1, 0, Opcode::JX).try_into().unwrap();
-    mix.mem[3012] = Instruction::new(-1, 5, 3, Opcode::CmpA).try_into().unwrap();
-    mix.mem[3013] = Instruction::new(1, 0, 0, Opcode::Modify3)
-        .try_into()
-        .unwrap();
-    mix.mem[3014] = Instruction::new(3008, 6, 0, Opcode::Jmp)
-        .try_into()
-        .unwrap();
-    mix.mem[3015] = Instruction::new(3003, 0, 0, Opcode::Jmp)
-        .try_into()
-        .unwrap();
-    mix.mem[3016] = Instruction::new(1995, 18, 0, Opcode::Out)
-        .try_into()
-        .unwrap();
-    mix.mem[3017] = Instruction::new(2035, 2, 0, Opcode::Modify4)
-        .try_into()
-        .unwrap();
-    mix.mem[3018] = Instruction::new(-50, 2, 0, Opcode::Modify5)
-        .try_into()
-        .unwrap();
-    mix.mem[3019] = Instruction::new(501, 0, 0, Opcode::Modify5)
-        .try_into()
-        .unwrap();
-    mix.mem[3020] = Instruction::new(-1, 5, 5, Opcode::LdA).try_into().unwrap();
-    mix.mem[3021] = Instruction::new(0, 1, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
-    mix.mem[3022] = Instruction::new(0, 12, 4, Opcode::StX).try_into().unwrap();
-    mix.mem[3023] = Instruction::new(1, 1, 0, Opcode::Modify4)
-        .try_into()
-        .unwrap();
-    mix.mem[3024] = Instruction::new(50, 1, 0, Opcode::Modify5)
-        .try_into()
-        .unwrap();
-    mix.mem[3025] = Instruction::new(3020, 2, 0, Opcode::J5).try_into().unwrap();
-    mix.mem[3026] = Instruction::new(0, 18, 4, Opcode::Out).try_into().unwrap();
-    mix.mem[3027] = Instruction::new(24, 5, 4, Opcode::Ld4).try_into().unwrap();
-    mix.mem[3028] = Instruction::new(3019, 0, 0, Opcode::J5).try_into().unwrap();
-    mix.mem[3029] = Instruction::new(0, 2, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
+    mix.mem[3000] = Instruction::new(0, 18, 0, Opcode::Ioc).into();
+    mix.mem[3001] = Instruction::new(2051, 5, 0, Opcode::Ld1).into();
+    mix.mem[3002] = Instruction::new(2050, 5, 0, Opcode::Ld2).into();
+    mix.mem[3003] = Instruction::new(1, 0, 0, Opcode::Modify1).into();
+    mix.mem[3004] = Instruction::new(499, 5, 1, Opcode::St2).into();
+    mix.mem[3005] = Instruction::new(3016, 1, 0, Opcode::J1).into();
+    mix.mem[3006] = Instruction::new(2, 0, 0, Opcode::Modify2).into();
+    mix.mem[3007] = Instruction::new(2, 2, 0, Opcode::Modify3).into();
+    mix.mem[3008] = Instruction::new(0, 2, 0, Opcode::ModifyA).into();
+    mix.mem[3009] = Instruction::new(0, 2, 2, Opcode::ModifyX).into();
+    mix.mem[3010] = Instruction::new(-1, 5, 3, Opcode::Div).into();
+    mix.mem[3011] = Instruction::new(3006, 1, 0, Opcode::JX).into();
+    mix.mem[3012] = Instruction::new(-1, 5, 3, Opcode::CmpA).into();
+    mix.mem[3013] = Instruction::new(1, 0, 0, Opcode::Modify3).into();
+    mix.mem[3014] = Instruction::new(3008, 6, 0, Opcode::Jmp).into();
+    mix.mem[3015] = Instruction::new(3003, 0, 0, Opcode::Jmp).into();
+    mix.mem[3016] = Instruction::new(1995, 18, 0, Opcode::Out).into();
+    mix.mem[3017] = Instruction::new(2035, 2, 0, Opcode::Modify4).into();
+    mix.mem[3018] = Instruction::new(-50, 2, 0, Opcode::Modify5).into();
+    mix.mem[3019] = Instruction::new(501, 0, 0, Opcode::Modify5).into();
+    mix.mem[3020] = Instruction::new(-1, 5, 5, Opcode::LdA).into();
+    mix.mem[3021] = Instruction::new(0, 1, 0, Opcode::Special).into();
+    mix.mem[3022] = Instruction::new(0, 12, 4, Opcode::StX).into();
+    mix.mem[3023] = Instruction::new(1, 1, 0, Opcode::Modify4).into();
+    mix.mem[3024] = Instruction::new(50, 1, 0, Opcode::Modify5).into();
+    mix.mem[3025] = Instruction::new(3020, 2, 0, Opcode::J5).into();
+    mix.mem[3026] = Instruction::new(0, 18, 4, Opcode::Out).into();
+    mix.mem[3027] = Instruction::new(24, 5, 4, Opcode::Ld4).into();
+    mix.mem[3028] = Instruction::new(3019, 0, 0, Opcode::J5).into();
+    mix.mem[3029] = Instruction::new(0, 2, 0, Opcode::Special).into();
 
     mix.mem[0].set_all([0; 6]);
     mix.mem[1995].set_all([0, 6, 9, 19, 22, 23]);

@@ -5,7 +5,7 @@ fn test_nop() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Nop).try_into().unwrap();
+    mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Nop).into();
 
     mix.restart();
 
@@ -21,24 +21,12 @@ fn test_load_6b() {
 
     // For test instruction sequence, see D. E. Knuth,
     // 'The Art of Computer Programming', Volume 1, pp. 129.
-    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(2000, 13, 0, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(2000, 29, 0, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(2000, 3, 0, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[4] = Instruction::new(2000, 36, 0, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::LdA)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::LdA).into();
+    mix.mem[1] = Instruction::new(2000, 13, 0, Opcode::LdA).into();
+    mix.mem[2] = Instruction::new(2000, 29, 0, Opcode::LdA).into();
+    mix.mem[3] = Instruction::new(2000, 3, 0, Opcode::LdA).into();
+    mix.mem[4] = Instruction::new(2000, 36, 0, Opcode::LdA).into();
+    mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::LdA).into();
     mix.mem[2000].set_all([1, 0, 80, 3, 5, 4]);
 
     mix.restart();
@@ -79,24 +67,12 @@ fn test_load_neg_6b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::LdAN)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(2000, 13, 0, Opcode::LdAN)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(2000, 29, 0, Opcode::LdAN)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(2000, 3, 0, Opcode::LdAN)
-        .try_into()
-        .unwrap();
-    mix.mem[4] = Instruction::new(2000, 36, 0, Opcode::LdAN)
-        .try_into()
-        .unwrap();
-    mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::LdAN)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::LdAN).into();
+    mix.mem[1] = Instruction::new(2000, 13, 0, Opcode::LdAN).into();
+    mix.mem[2] = Instruction::new(2000, 29, 0, Opcode::LdAN).into();
+    mix.mem[3] = Instruction::new(2000, 3, 0, Opcode::LdAN).into();
+    mix.mem[4] = Instruction::new(2000, 36, 0, Opcode::LdAN).into();
+    mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::LdAN).into();
     mix.mem[2000].set_all([0, 0, 80, 3, 5, 4]);
 
     mix.restart();
@@ -137,24 +113,12 @@ fn test_indexed_load_6b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 1, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(1000, 13, 1, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(1000, 29, 1, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(3000, 3, 2, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[4] = Instruction::new(3000, 36, 2, Opcode::LdA)
-        .try_into()
-        .unwrap();
-    mix.mem[5] = Instruction::new(3000, 0, 2, Opcode::LdA)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 1, Opcode::LdA).into();
+    mix.mem[1] = Instruction::new(1000, 13, 1, Opcode::LdA).into();
+    mix.mem[2] = Instruction::new(1000, 29, 1, Opcode::LdA).into();
+    mix.mem[3] = Instruction::new(3000, 3, 2, Opcode::LdA).into();
+    mix.mem[4] = Instruction::new(3000, 36, 2, Opcode::LdA).into();
+    mix.mem[5] = Instruction::new(3000, 0, 2, Opcode::LdA).into();
     mix.mem[2000].set_all([1, 0, 80, 3, 5, 4]);
     mix.r_in[1][..].clone_from_slice(&[0, 0x03, 0xE8]);
     mix.r_in[2][..].clone_from_slice(&[1, 0x03, 0xE8]);
@@ -197,24 +161,12 @@ fn test_load_3b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::Ld1)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(2000, 13, 0, Opcode::Ld1)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(2000, 29, 0, Opcode::Ld1)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(2000, 3, 0, Opcode::Ld1)
-        .try_into()
-        .unwrap();
-    mix.mem[4] = Instruction::new(2000, 36, 0, Opcode::Ld1)
-        .try_into()
-        .unwrap();
-    mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::Ld1)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::Ld1).into();
+    mix.mem[1] = Instruction::new(2000, 13, 0, Opcode::Ld1).into();
+    mix.mem[2] = Instruction::new(2000, 29, 0, Opcode::Ld1).into();
+    mix.mem[3] = Instruction::new(2000, 3, 0, Opcode::Ld1).into();
+    mix.mem[4] = Instruction::new(2000, 36, 0, Opcode::Ld1).into();
+    mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::Ld1).into();
     mix.mem[2000].set_all([0, 0, 80, 3, 5, 4]);
 
     mix.restart();
@@ -255,24 +207,12 @@ fn test_load_neg_3b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::Ld1N)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(2000, 13, 0, Opcode::Ld1N)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(2000, 29, 0, Opcode::Ld1N)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(2000, 3, 0, Opcode::Ld1N)
-        .try_into()
-        .unwrap();
-    mix.mem[4] = Instruction::new(2000, 36, 0, Opcode::Ld1N)
-        .try_into()
-        .unwrap();
-    mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::Ld1N)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::Ld1N).into();
+    mix.mem[1] = Instruction::new(2000, 13, 0, Opcode::Ld1N).into();
+    mix.mem[2] = Instruction::new(2000, 29, 0, Opcode::Ld1N).into();
+    mix.mem[3] = Instruction::new(2000, 3, 0, Opcode::Ld1N).into();
+    mix.mem[4] = Instruction::new(2000, 36, 0, Opcode::Ld1N).into();
+    mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::Ld1N).into();
     mix.mem[2000].set_all([0, 0, 80, 3, 5, 4]);
 
     mix.restart();
@@ -313,13 +253,9 @@ fn test_jmp() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::Jmp)
-        .try_into()
-        .unwrap();
-    mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::Jmp)
-        .try_into()
-        .unwrap();
-    mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::Jmp).try_into().unwrap();
+    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::Jmp).into();
+    mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::Jmp).into();
+    mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::Jmp).into();
 
     mix.restart();
 
@@ -344,15 +280,9 @@ fn test_special() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(0, 1, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(0, 2, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Special).into();
+    mix.mem[1] = Instruction::new(0, 1, 0, Opcode::Special).into();
+    mix.mem[2] = Instruction::new(0, 2, 0, Opcode::Special).into();
 
     mix.r_a.set_all([0, 0, 0, 31, 32, 39]);
     mix.r_x.set_all([1, 37, 57, 47, 30, 30]);
@@ -378,15 +308,9 @@ fn test_special_2() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(0, 1, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(0, 2, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(0, 0, 0, Opcode::Special).into();
+    mix.mem[1] = Instruction::new(0, 1, 0, Opcode::Special).into();
+    mix.mem[2] = Instruction::new(0, 2, 0, Opcode::Special).into();
 
     mix.r_a.set_all([0, 39, 39, 39, 39, 39]);
     mix.r_x.set_all([1, 39, 39, 39, 39, 39]);
@@ -412,15 +336,9 @@ fn test_store_zero() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::StZ)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(1001, 13, 0, Opcode::StZ)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(1002, 45, 0, Opcode::StZ)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::StZ).into();
+    mix.mem[1] = Instruction::new(1001, 13, 0, Opcode::StZ).into();
+    mix.mem[2] = Instruction::new(1002, 45, 0, Opcode::StZ).into();
 
     mix.mem[1000].set_all([0, 1, 2, 3, 4, 5]);
     mix.mem[1001].set_all([0, 1, 2, 3, 4, 5]);
@@ -446,9 +364,7 @@ fn test_move() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 3, 0, Opcode::Move)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 3, 0, Opcode::Move).into();
 
     mix.r_in[1][1..=2].clone_from_slice(&[0x03, 0xE7]);
     mix.mem[1000].set_all([1, 1, 1, 1, 1, 1]);
@@ -470,24 +386,12 @@ fn test_store_6b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::StA)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(2001, 13, 0, Opcode::StA)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(2002, 45, 0, Opcode::StA)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(2003, 18, 0, Opcode::StA)
-        .try_into()
-        .unwrap();
-    mix.mem[4] = Instruction::new(2004, 19, 0, Opcode::StA)
-        .try_into()
-        .unwrap();
-    mix.mem[5] = Instruction::new(2005, 1, 0, Opcode::StA)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::StA).into();
+    mix.mem[1] = Instruction::new(2001, 13, 0, Opcode::StA).into();
+    mix.mem[2] = Instruction::new(2002, 45, 0, Opcode::StA).into();
+    mix.mem[3] = Instruction::new(2003, 18, 0, Opcode::StA).into();
+    mix.mem[4] = Instruction::new(2004, 19, 0, Opcode::StA).into();
+    mix.mem[5] = Instruction::new(2005, 1, 0, Opcode::StA).into();
 
     mix.r_a.set_all([1, 6, 7, 8, 9, 0]);
     mix.mem[2000].set_all([0, 1, 2, 3, 4, 5]);
@@ -529,24 +433,12 @@ fn test_store_3b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::St1)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(2001, 13, 0, Opcode::St1)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(2002, 45, 0, Opcode::St1)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(2003, 18, 0, Opcode::St1)
-        .try_into()
-        .unwrap();
-    mix.mem[4] = Instruction::new(2004, 19, 0, Opcode::St1)
-        .try_into()
-        .unwrap();
-    mix.mem[5] = Instruction::new(2005, 1, 0, Opcode::St1)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::St1).into();
+    mix.mem[1] = Instruction::new(2001, 13, 0, Opcode::St1).into();
+    mix.mem[2] = Instruction::new(2002, 45, 0, Opcode::St1).into();
+    mix.mem[3] = Instruction::new(2003, 18, 0, Opcode::St1).into();
+    mix.mem[4] = Instruction::new(2004, 19, 0, Opcode::St1).into();
+    mix.mem[5] = Instruction::new(2005, 1, 0, Opcode::St1).into();
 
     mix.r_in[1].set_all([1, 6, 7]);
     mix.mem[2000].set_all([0, 1, 2, 3, 4, 5]);
@@ -588,27 +480,13 @@ fn test_modify_6b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1, 0, 0, Opcode::ModifyA)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(2, 0, 0, Opcode::ModifyA)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(2, 1, 0, Opcode::ModifyA)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(1, 0, 1, Opcode::ModifyA)
-        .try_into()
-        .unwrap();
-    mix.mem[4] = Instruction::new(1, 1, 1, Opcode::ModifyA)
-        .try_into()
-        .unwrap();
-    mix.mem[5] = Instruction::new(1234, 2, 0, Opcode::ModifyA)
-        .try_into()
-        .unwrap();
-    mix.mem[6] = Instruction::new(4321, 3, 0, Opcode::ModifyA)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1, 0, 0, Opcode::ModifyA).into();
+    mix.mem[1] = Instruction::new(2, 0, 0, Opcode::ModifyA).into();
+    mix.mem[2] = Instruction::new(2, 1, 0, Opcode::ModifyA).into();
+    mix.mem[3] = Instruction::new(1, 0, 1, Opcode::ModifyA).into();
+    mix.mem[4] = Instruction::new(1, 1, 1, Opcode::ModifyA).into();
+    mix.mem[5] = Instruction::new(1234, 2, 0, Opcode::ModifyA).into();
+    mix.mem[6] = Instruction::new(4321, 3, 0, Opcode::ModifyA).into();
 
     mix.r_a.set_all([0, 6, 7, 8, 9, 0]);
     mix.r_in[1].set_all([0, 0, 5]);
@@ -649,24 +527,12 @@ fn test_modify_3b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1, 0, 0, Opcode::Modify1)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(2, 0, 0, Opcode::Modify1)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(2, 1, 0, Opcode::Modify1)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(1234, 2, 0, Opcode::Modify1)
-        .try_into()
-        .unwrap();
-    mix.mem[4] = Instruction::new(4321, 3, 0, Opcode::Modify1)
-        .try_into()
-        .unwrap();
-    mix.mem[5] = Instruction::new(0, 3, 1, Opcode::Modify1)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1, 0, 0, Opcode::Modify1).into();
+    mix.mem[1] = Instruction::new(2, 0, 0, Opcode::Modify1).into();
+    mix.mem[2] = Instruction::new(2, 1, 0, Opcode::Modify1).into();
+    mix.mem[3] = Instruction::new(1234, 2, 0, Opcode::Modify1).into();
+    mix.mem[4] = Instruction::new(4321, 3, 0, Opcode::Modify1).into();
+    mix.mem[5] = Instruction::new(0, 3, 1, Opcode::Modify1).into();
 
     mix.r_in[1].set_all([0, 9, 5]);
 
@@ -702,12 +568,8 @@ fn test_add_sub() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Add)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(1000, 5, 0, Opcode::Sub)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Add).into();
+    mix.mem[1] = Instruction::new(1000, 5, 0, Opcode::Sub).into();
 
     mix.mem[1000].set_all([0, 0, 0x64, 5, 0, 0x32]);
     mix.r_a.set_all([0, 0x04, 0xD2, 1, 0, 0x96]);
@@ -724,12 +586,8 @@ fn test_add_sub() {
 
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Sub)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(1000, 5, 0, Opcode::Add)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Sub).into();
+    mix.mem[1] = Instruction::new(1000, 5, 0, Opcode::Add).into();
 
     mix.mem[1000].set_all([1, 0x07, 0xD0, 0, 0x96, 0]);
     mix.r_a.set_all([1, 0x04, 0xD2, 0, 0, 9]);
@@ -746,9 +604,7 @@ fn test_mul() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 9, 0, Opcode::Mul)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 9, 0, Opcode::Mul).into();
 
     mix.mem[1000].set_all([0, 2, 0, 0, 0, 0]);
     mix.r_a.set_all([1, 0, 0, 0, 0, 0x70]);
@@ -762,9 +618,7 @@ fn test_mul() {
 
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Mul)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Mul).into();
 
     mix.mem[1000].set_all([0, 1, 1, 1, 1, 1]);
     mix.r_a.set_all([0, 1, 1, 1, 1, 1]);
@@ -782,9 +636,7 @@ fn test_div() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div).into();
 
     mix.mem[1000].set_all([0, 0, 0, 0, 0, 3]);
     mix.r_a.set_all([0, 0, 0, 0, 0, 0]);
@@ -799,9 +651,7 @@ fn test_div() {
 
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div).into();
 
     mix.mem[1000].set_all([1, 0, 0, 0, 2, 0]);
     mix.r_a.set_all([1, 0, 0, 0, 0, 0]);
@@ -817,9 +667,7 @@ fn test_div() {
 
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div).into();
 
     mix.mem[1000].set_all([1, 0, 0, 0, 0, 0]);
     mix.r_a.set_all([1, 0, 0, 0, 0, 0]);
@@ -838,18 +686,10 @@ fn test_cmp_6b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::CmpA)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(1001, 5, 0, Opcode::CmpA)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(1002, 5, 0, Opcode::CmpA)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(1003, 5, 0, Opcode::CmpX)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::CmpA).into();
+    mix.mem[1] = Instruction::new(1001, 5, 0, Opcode::CmpA).into();
+    mix.mem[2] = Instruction::new(1002, 5, 0, Opcode::CmpA).into();
+    mix.mem[3] = Instruction::new(1003, 5, 0, Opcode::CmpX).into();
 
     mix.mem[1000].set_all([0, 0, 0, 0, 0, 2]);
     mix.mem[1001].set_all([1, 0, 0, 0, 0, 2]);
@@ -882,18 +722,10 @@ fn test_cmp_3b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Cmp1)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(1001, 5, 0, Opcode::Cmp1)
-        .try_into()
-        .unwrap();
-    mix.mem[2] = Instruction::new(1002, 5, 0, Opcode::Cmp1)
-        .try_into()
-        .unwrap();
-    mix.mem[3] = Instruction::new(1003, 5, 0, Opcode::Cmp2)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Cmp1).into();
+    mix.mem[1] = Instruction::new(1001, 5, 0, Opcode::Cmp1).into();
+    mix.mem[2] = Instruction::new(1002, 5, 0, Opcode::Cmp1).into();
+    mix.mem[3] = Instruction::new(1003, 5, 0, Opcode::Cmp2).into();
 
     mix.mem[1000].set_all([0, 0, 0, 0, 0, 2]);
     mix.mem[1001].set_all([1, 0, 0, 0, 0, 2]);
@@ -926,9 +758,9 @@ fn test_jmp_reg_6b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::JA).try_into().unwrap();
-    mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::JX).try_into().unwrap();
-    mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::JX).try_into().unwrap();
+    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::JA).into();
+    mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::JX).into();
+    mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::JX).into();
     mix.r_a.set_all([1, 0, 0, 0, 0, 1]);
     mix.r_x.set_all([0, 0, 0, 0, 0, 0]);
 
@@ -955,9 +787,9 @@ fn test_jmp_reg_3b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::J1).try_into().unwrap();
-    mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::J2).try_into().unwrap();
-    mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::J2).try_into().unwrap();
+    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::J1).into();
+    mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::J2).into();
+    mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::J2).into();
     mix.r_in[1].set_all([1, 0, 1]);
     mix.r_in[2].set_all([0, 0, 0]);
 
@@ -984,13 +816,11 @@ fn test_shift() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1, 3, 0, Opcode::Shift).try_into().unwrap();
-    mix.mem[1] = Instruction::new(2, 0, 0, Opcode::Shift).try_into().unwrap();
-    mix.mem[2] = Instruction::new(4, 5, 0, Opcode::Shift).try_into().unwrap();
-    mix.mem[3] = Instruction::new(2, 1, 0, Opcode::Shift).try_into().unwrap();
-    mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1, 3, 0, Opcode::Shift).into();
+    mix.mem[1] = Instruction::new(2, 0, 0, Opcode::Shift).into();
+    mix.mem[2] = Instruction::new(4, 5, 0, Opcode::Shift).into();
+    mix.mem[3] = Instruction::new(2, 1, 0, Opcode::Shift).into();
+    mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift).into();
     mix.r_a.set_all([0, 1, 2, 3, 4, 5]);
     mix.r_x.set_all([1, 6, 7, 8, 9, 10]);
 
@@ -1027,9 +857,9 @@ fn test_binary_jmp_reg_6b() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 6, 0, Opcode::JA).try_into().unwrap();
-    mix.mem[1000] = Instruction::new(2000, 6, 0, Opcode::JX).try_into().unwrap();
-    mix.mem[1001] = Instruction::new(0, 7, 0, Opcode::JX).try_into().unwrap();
+    mix.mem[0] = Instruction::new(1000, 6, 0, Opcode::JA).into();
+    mix.mem[1000] = Instruction::new(2000, 6, 0, Opcode::JX).into();
+    mix.mem[1001] = Instruction::new(0, 7, 0, Opcode::JX).into();
     mix.r_a.set_all([1, 0, 0, 0, 0, 0]);
     mix.r_x.set_all([0, 0, 0, 0, 0, 1]);
 
@@ -1057,11 +887,9 @@ fn test_binary_shift() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1, 6, 0, Opcode::Shift).try_into().unwrap();
-    mix.mem[1] = Instruction::new(2, 7, 0, Opcode::Shift).try_into().unwrap();
-    mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1, 6, 0, Opcode::Shift).into();
+    mix.mem[1] = Instruction::new(2, 7, 0, Opcode::Shift).into();
+    mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift).into();
     mix.r_a.set_all([0, 0, 0, 0, 0, 0b00000110]);
     mix.r_x.set_all([1, 0, 0, 0, 0, 0b00000001]);
 

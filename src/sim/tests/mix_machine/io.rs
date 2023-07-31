@@ -7,7 +7,7 @@ fn test_unknown_device() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).try_into().unwrap();
+    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).into();
 
     mix.restart();
 
@@ -53,7 +53,7 @@ fn test_io_device_error() {
 
     mix.io_devices[0] = Some(Box::new(dev_err));
 
-    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).try_into().unwrap();
+    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).into();
 
     mix.restart();
 
@@ -126,16 +126,10 @@ fn test_jbus_jred() {
     mix.io_devices[0] = Some(Box::new(ReadyIODevice {}));
     mix.io_devices[1] = Some(Box::new(BusyIODevice {}));
 
-    mix.mem[0] = Instruction::new(100, 0, 0, Opcode::Jred)
-        .try_into()
-        .unwrap();
-    mix.mem[100] = Instruction::new(200, 1, 0, Opcode::Jred)
-        .try_into()
-        .unwrap();
-    mix.mem[101] = Instruction::new(200, 0, 0, Opcode::Jbus)
-        .try_into()
-        .unwrap();
-    mix.mem[102] = Instruction::new(0, 1, 0, Opcode::Jbus).try_into().unwrap();
+    mix.mem[0] = Instruction::new(100, 0, 0, Opcode::Jred).into();
+    mix.mem[100] = Instruction::new(200, 1, 0, Opcode::Jred).into();
+    mix.mem[101] = Instruction::new(200, 0, 0, Opcode::Jbus).into();
+    mix.mem[102] = Instruction::new(0, 1, 0, Opcode::Jbus).into();
 
     mix.restart();
 
@@ -200,9 +194,7 @@ fn test_ioc() {
         expected_command: -101,
     }));
 
-    mix.mem[0] = Instruction::new(-101, 0, 0, Opcode::Ioc)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(-101, 0, 0, Opcode::Ioc).into();
 
     mix.restart();
 
@@ -250,10 +242,8 @@ fn test_in_out() {
 
     mix.io_devices[0] = Some(Box::new(InOutIODevice {}));
 
-    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).try_into().unwrap();
-    mix.mem[1] = Instruction::new(2000, 0, 0, Opcode::Out)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::In).into();
+    mix.mem[1] = Instruction::new(2000, 0, 0, Opcode::Out).into();
     mix.mem[2000].set_all([0, 1, 2, 3, 4, 5]);
 
     mix.restart();

@@ -272,14 +272,13 @@ impl MixVM {
     }
 
     /// Do actual jump.
-    fn helper_do_jump(&mut self, location: u16, save_r_j: bool) -> Result<(), ErrorCode> {
+    fn helper_do_jump(&mut self, location: u16, save_r_j: bool) {
         if save_r_j {
             let pc = self.pc.to_be_bytes();
             self.r_j[1..=2].clone_from_slice(&pc);
         }
         // Do jump.
         self.pc = location;
-        Ok(())
     }
 
     /// Get IO device.
@@ -459,7 +458,7 @@ impl MixVM {
             self.overflow = false;
         }
         if should_jump {
-            self.helper_do_jump(target_addr, instr.field != 1)?;
+            self.helper_do_jump(target_addr, instr.field != 1);
         }
         Ok(())
     }
@@ -936,7 +935,7 @@ impl MixVM {
             _ => return Err(ErrorCode::InvalidField),
         };
         if should_jump {
-            self.helper_do_jump(target_addr, true)?;
+            self.helper_do_jump(target_addr, true);
         }
         Ok(())
     }
@@ -964,7 +963,7 @@ impl MixVM {
             _ => return Err(ErrorCode::InvalidField),
         };
         if should_jump {
-            self.helper_do_jump(target_addr, true)?;
+            self.helper_do_jump(target_addr, true);
         }
         Ok(())
     }
@@ -1086,7 +1085,7 @@ impl MixVM {
         if should_jump {
             // Do jump.
             let jump_addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
-            self.helper_do_jump(jump_addr, true)?;
+            self.helper_do_jump(jump_addr, true);
         }
         Ok(())
     }

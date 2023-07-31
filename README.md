@@ -88,12 +88,8 @@ fn main() {
     // Fill in some instructions
     // 0  OUT  ADDR_TEXT_HELLO(DEV_PRINTER)
     // 1  HLT  0
-    mix.mem[0] = Instruction::new(ADDR_TEXT_HELLO, DEV_PRINTER, 0, Opcode::Out)
-        .try_into()
-        .unwrap();
-    mix.mem[1] = Instruction::new(0, 2, 0, Opcode::Special)
-        .try_into()
-        .unwrap();
+    mix.mem[0] = Instruction::new(ADDR_TEXT_HELLO, DEV_PRINTER, 0, Opcode::Out).into();
+    mix.mem[1] = Instruction::new(0, 2, 0, Opcode::Special).into();
 
     // Fill in constants
     mix.mem[ADDR_TEXT_HELLO as u16] =
