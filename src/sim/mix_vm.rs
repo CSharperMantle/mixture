@@ -694,15 +694,13 @@ impl MixVM {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let orig_value = self.r_a.to_i64().0;
-        // Are we adding or subtracting?
-        let coeff = match instr.opcode {
-            Opcode::Add => 1,
-            Opcode::Sub => -1,
+        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
+        // Calculate and pack new value.
+        let new_value = match instr.opcode {
+            Opcode::Add => orig_value + target_value,
+            Opcode::Sub => orig_value - target_value,
             _ => unreachable!(),
         };
-        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 * coeff;
-        // Calculate and pack new value.
-        let new_value = orig_value + target_value;
         let (new_word, overflow) = FullWord::from_i64(new_value);
         // Set new value.
         self.r_a
@@ -725,13 +723,12 @@ impl MixVM {
         let new_val = orig_value as i128 * target_value as i128;
         let new_val_bytes = new_val.abs().to_be_bytes();
         let mut new_val_bytes_dirty = new_val_bytes.map(|b| b != 0);
-        for (reg_i, byte_i) in (0..10).rev().zip((0..16).rev()) {
-            let byte = new_val_bytes[byte_i];
-            if reg_i >= 5 {
-                self.r_x[reg_i - 5 + 1] = byte;
-            } else {
-                self.r_a[reg_i + 1] = byte;
-            }
+        for (reg_i, byte_i) in (1..6).rev().zip((0..11).rev()) {
+            self.r_a[reg_i] = new_val_bytes[byte_i];
+            new_val_bytes_dirty[byte_i] = false;
+        }
+        for (reg_i, byte_i) in (1..6).rev().zip((11..16).rev()) {
+            self.r_x[reg_i] = new_val_bytes[byte_i];
             new_val_bytes_dirty[byte_i] = false;
         }
         // Treat sign.
@@ -742,7 +739,7 @@ impl MixVM {
         };
         self.r_a[0] = new_sign;
         self.r_x[0] = new_sign;
-        let overflow = new_val_bytes_dirty.iter().any(|&b| b);
+        let overflow = new_val_bytes_dirty.iter().any(|b| *b);
         if overflow {
             self.overflow = overflow;
         }
@@ -751,8 +748,6 @@ impl MixVM {
 
     /// Handler for `DIV`.
     fn handle_instr_div(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
-        // TODO: Make a generic version of Word::from_int().
-        // Obtain value.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
         let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 as i128;
         let orig_value = i128::from_be_bytes([
@@ -774,27 +769,35 @@ impl MixVM {
             self.r_x[5],
         ]) * self.r_a.get_sign() as i128;
         // Calculate results.
-        let quotient: i64 = (orig_value / target_value)
+        let quotient: i64 = orig_value
+            .checked_div(target_value)
+            .unwrap_or_else(|| {
+                self.overflow = true;
+                0
+            })
             .abs()
             .try_into()
             .map_err(|_| {
                 self.overflow = true;
             })
             .unwrap_or(0);
-        let remainder: i64 = (orig_value % target_value)
+        let remainder: i64 = orig_value
+            .checked_rem(target_value)
+            .unwrap_or_else(|| {
+                self.overflow = true;
+                0
+            })
             .abs()
             .try_into()
             .map_err(|_| {
                 self.overflow = true;
             })
             .unwrap_or(0);
-        // Calculate new sign.
-        let new_sign_positive = orig_value.signum() == target_value.signum();
         // Copy results into registers.
         let (new_a, overflow_a) = FullWord::from_i64(quotient);
         let (new_x, overflow_x) = FullWord::from_i64(remainder);
         self.r_x[0] = self.r_a[0];
-        self.r_a[0] = if new_sign_positive {
+        self.r_a[0] = if orig_value.signum() == target_value.signum() {
             FullWord::POS
         } else {
             FullWord::NEG

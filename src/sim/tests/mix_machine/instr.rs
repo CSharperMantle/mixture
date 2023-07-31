@@ -814,6 +814,23 @@ fn test_div() {
     assert_eq!(mix.r_a[0..=3], [0, 0, 0x02, 0x69]);
     assert_eq!(mix.r_x[0], 1);
     assert_eq!(mix.r_x[5], 1);
+
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(1000, 5, 0, Opcode::Div)
+        .try_into()
+        .unwrap();
+
+    mix.mem[1000].set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_a.set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_x.set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
+
+    mix.restart();
+
+    assert_eq!(mix.overflow, false);
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.overflow, true);
 }
 
 #[test]
