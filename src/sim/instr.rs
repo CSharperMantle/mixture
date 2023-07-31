@@ -109,24 +109,28 @@ pub enum Opcode {
 
     /// * `ADD(0:5)` - Integer addition.
     /// * `FADD(6)` - Float addition.
-    ///
+    /// * `F32ADD(7)` (`x-ieee754`) - IEEE 754 `binary32` addition.
+    /// 
     /// `rA <- rA + V`
     Add = 1,
 
     /// * `SUB(0:5)` - Integer subtraction.
     /// * `FSUB(6)` - Float subtraction.
+    /// * `F32SUB(7)` (`x-ieee754`) - IEEE 754 `binary32` subtraction.
     ///
     /// `rA <- rA - V`
     Sub = 2,
 
     /// * `MUL(0:5)` - Integer multiplication.
     /// * `FMUL(6)` - Float multiplication.
+    /// * `F32MUL(7)` (`x-ieee754`) - IEEE 754 `binary32` multiplication.
     ///
     /// `rAX <- rA * V`
     Mul = 3,
 
     /// * `DIV(0:5)` - Integer division.
     /// * `FDIV(6)` - Float division.
+    /// * `F32DIV(7)` (`x-ieee754`) - IEEE 754 `binary32` division.
     ///
     /// `rA <- rAX / V; rX <- remainder`
     Div = 4,

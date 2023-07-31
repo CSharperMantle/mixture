@@ -689,25 +689,58 @@ impl MixVM {
     }
 
     /// Handler for `ADD` and `SUB`.
-    /// `FADD` and `FSUB` are passed through if enabled.
+    /// `FADD`, `FSUB`, `F32ADD` and `F32SUB` are passed through if enabled.
     fn handle_instr_add_sub(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let orig_value = self.r_a.to_i64().0;
-        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
-        // Calculate and pack new value.
-        let new_value = match instr.opcode {
-            Opcode::Add => orig_value + target_value,
-            Opcode::Sub => orig_value - target_value,
-            _ => unreachable!(),
-        };
-        let (new_word, overflow) = FullWord::from_i64(new_value);
-        // Set new value.
-        self.r_a
-            .set_all(&new_word[..])
-            .map_err(|_| ErrorCode::BadMemAccess)?;
-        if overflow {
-            self.overflow = overflow;
+
+        if cfg!(feature = "x-ieee754") && instr.field == 7 {
+            // F32ADD, F32SUB
+            let target_value =
+                f32::from_be_bytes([target_mem[2], target_mem[3], target_mem[4], target_mem[5]]);
+            let orig_value =
+                f32::from_be_bytes([self.r_a[2], self.r_a[3], self.r_a[4], self.r_a[5]]);
+            let new_value = match instr.opcode {
+                Opcode::Add => orig_value + target_value,
+                Opcode::Sub => orig_value - target_value,
+                _ => unreachable!(),
+            };
+            let new_bytes = new_value.to_be_bytes();
+            let sign = if new_value.is_sign_positive() {
+                FullWord::POS
+            } else {
+                FullWord::NEG
+            };
+            self.r_a
+                .set_all(&[
+                    sign,
+                    0,
+                    new_bytes[0],
+                    new_bytes[1],
+                    new_bytes[2],
+                    new_bytes[3],
+                ])
+                .map_err(|_| ErrorCode::BadMemAccess)?;
+            if !new_value.is_finite() {
+                self.overflow = true;
+            }
+        } else {
+            let orig_value = self.r_a.to_i64().0;
+            let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
+            // Calculate and pack new value.
+            let new_value = match instr.opcode {
+                Opcode::Add => orig_value + target_value,
+                Opcode::Sub => orig_value - target_value,
+                _ => unreachable!(),
+            };
+            let (new_word, overflow) = FullWord::from_i64(new_value);
+            // Set new value.
+            self.r_a
+                .set_all(&new_word[..])
+                .map_err(|_| ErrorCode::BadMemAccess)?;
+            if overflow {
+                self.overflow = overflow;
+            }
         }
 
         Ok(())
@@ -717,31 +750,59 @@ impl MixVM {
     fn handle_instr_mul(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let orig_value = self.r_a.to_i64().0;
-        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
-        // Copy value into registers.
-        let new_val = orig_value as i128 * target_value as i128;
-        let new_val_bytes = new_val.abs().to_be_bytes();
-        let mut new_val_bytes_dirty = new_val_bytes.map(|b| b != 0);
-        for (reg_i, byte_i) in (1..6).rev().zip((0..11).rev()) {
-            self.r_a[reg_i] = new_val_bytes[byte_i];
-            new_val_bytes_dirty[byte_i] = false;
-        }
-        for (reg_i, byte_i) in (1..6).rev().zip((11..16).rev()) {
-            self.r_x[reg_i] = new_val_bytes[byte_i];
-            new_val_bytes_dirty[byte_i] = false;
-        }
-        // Treat sign.
-        let new_sign = if new_val < 0 {
-            FullWord::NEG
+        if cfg!(feature = "x-ieee754") && instr.field == 7 {
+            // F32MUL
+            let target_value =
+                f32::from_be_bytes([target_mem[2], target_mem[3], target_mem[4], target_mem[5]]);
+            let orig_value =
+                f32::from_be_bytes([self.r_a[2], self.r_a[3], self.r_a[4], self.r_a[5]]);
+            let new_value = orig_value * target_value;
+            let new_bytes = new_value.to_be_bytes();
+            let sign = if new_value.is_sign_positive() {
+                FullWord::POS
+            } else {
+                FullWord::NEG
+            };
+            self.r_a
+                .set_all(&[
+                    sign,
+                    0,
+                    new_bytes[0],
+                    new_bytes[1],
+                    new_bytes[2],
+                    new_bytes[3],
+                ])
+                .map_err(|_| ErrorCode::BadMemAccess)?;
+            if !new_value.is_finite() {
+                self.overflow = true;
+            }
         } else {
-            FullWord::POS
-        };
-        self.r_a[0] = new_sign;
-        self.r_x[0] = new_sign;
-        let overflow = new_val_bytes_dirty.iter().any(|b| *b);
-        if overflow {
-            self.overflow = overflow;
+            let orig_value = self.r_a.to_i64().0;
+            let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
+            // Copy value into registers.
+            let new_val = orig_value as i128 * target_value as i128;
+            let new_val_bytes = new_val.abs().to_be_bytes();
+            let mut new_val_bytes_dirty = new_val_bytes.map(|b| b != 0);
+            for (reg_i, byte_i) in (1..6).rev().zip((0..11).rev()) {
+                self.r_a[reg_i] = new_val_bytes[byte_i];
+                new_val_bytes_dirty[byte_i] = false;
+            }
+            for (reg_i, byte_i) in (1..6).rev().zip((11..16).rev()) {
+                self.r_x[reg_i] = new_val_bytes[byte_i];
+                new_val_bytes_dirty[byte_i] = false;
+            }
+            // Treat sign.
+            let new_sign = if new_val < 0 {
+                FullWord::NEG
+            } else {
+                FullWord::POS
+            };
+            self.r_a[0] = new_sign;
+            self.r_x[0] = new_sign;
+            let overflow = new_val_bytes_dirty.iter().any(|b| *b);
+            if overflow {
+                self.overflow = overflow;
+            }
         }
         Ok(())
     }
