@@ -21,9 +21,6 @@ pub enum ErrorCode {
     /// An invalid `I` part is found in current instruction.
     InvalidIndex,
 
-    /// An access to a memory address has failed.
-    BadMemAccess,
-
     /// An access to an unknown IO device is found.
     UnknownDevice,
 
