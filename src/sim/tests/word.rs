@@ -3,12 +3,12 @@ use crate::sim::word::*;
 #[test]
 fn test_clone() {
     let mut word = Word::<6, false>::new();
-    word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    word.set_all([0, 1, 2, 3, 4, 5]);
 
     let mut word2 = word.clone();
     assert_eq!(word[..], word2[..]);
 
-    word2.set_all(&[0, 6, 7, 8, 9, 0]).unwrap();
+    word2.set_all([0, 6, 7, 8, 9, 0]);
     assert_ne!(word[..], word2[..]);
 }
 
@@ -26,11 +26,11 @@ fn test_mutation() {
     let mut word = Word::<6, false>::new();
 
     assert_eq!(word[..], [0; 6]);
-    word.set_all(&[1, 2, 3, 4, 5, 6]).unwrap();
+    word.set_all([1, 2, 3, 4, 5, 6]);
     assert_eq!(word[..], [1, 2, 3, 4, 5, 6]);
-    word.set(0..=2, &[1, 8, 9]).unwrap();
+    word[0..=2].clone_from_slice(&[1, 8, 9]);
     assert_eq!(word[..], [1, 8, 9, 4, 5, 6]);
-    word.set(2..=5, &[1, 2, 3, 4]).unwrap();
+    word[2..=5].clone_from_slice(&[1, 2, 3, 4]);
     assert_eq!(word[..], [1, 8, 1, 2, 3, 4]);
 }
 
@@ -38,37 +38,26 @@ fn test_mutation() {
 fn test_pos_sign_mutation() {
     let mut word = Word::<3, true>::new();
 
-    assert_eq!(word[0..3], [0, 0, 0]);
-    word.set(0..=2, &[1, 2, 3]).unwrap();
-    assert_eq!(word[0..3], [0, 2, 3]);
-    word.set(0..=2, &[0, 0, 0]).unwrap();
-    assert_eq!(word[0..3], [0, 0, 0]);
+    assert_eq!(word[..], [0, 0, 0]);
+    word.set_all([1, 2, 3]);
+    assert_eq!(word[..], [0, 2, 3]);
+    word.set_all([0, 0, 0]);
+    assert_eq!(word[..], [0, 0, 0]);
 }
 
 #[test]
 fn test_interchange() {
     let mut word_1 = Word::<6, false>::new();
     let mut word_2 = Word::<6, false>::new();
-    word_1.set_all(&[1, 2, 3, 4, 5, 6]).unwrap();
-    word_2.set_all(&[1, 8, 9, 10, 11, 12]).unwrap();
+    word_1.set_all([1, 2, 3, 4, 5, 6]);
+    word_2.set_all([1, 8, 9, 10, 11, 12]);
 
-    word_1.set(3..=5, &word_2[3..6]).unwrap();
+    word_1[3..=5].clone_from_slice(&word_2[3..=5]);
     assert_eq!(word_1[..], [1, 2, 3, 10, 11, 12]);
     assert_eq!(word_2[..], [1, 8, 9, 10, 11, 12]);
-    word_2.set(0..=2, &word_1[0..3]).unwrap();
+    word_2[0..=2].clone_from_slice(&word_1[0..=2]);
     assert_eq!(word_1[..], [1, 2, 3, 10, 11, 12]);
     assert_eq!(word_2[..], [1, 2, 3, 10, 11, 12]);
-}
-
-#[test]
-fn test_error_handling() {
-    let mut word = Word::<6, false>::new();
-
-    assert_eq!(word.set(8..=0, &[]), Err(()));
-    assert_eq!(word.set(0..=100, &[]), Err(()));
-    assert_eq!(word.set(0..=2, &[]), Err(()));
-    assert_eq!(word.set(0..=2, &[1, 2, 3, 4, 5, 6, 7]), Err(()));
-    assert_eq!(word.set_all(&[]), Err(()));
 }
 
 #[test]
@@ -99,32 +88,25 @@ fn test_from_i64() {
 #[test]
 fn test_to_i64() {
     let mut word = Word::<6, false>::new();
-    word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    word.set_all([0, 1, 2, 3, 4, 5]);
     let (value, overflow) = word.to_i64();
     assert_eq!(overflow, false);
     assert_eq!(value, 0x0102030405);
 
     let mut word_big = Word::<10, false>::new();
-    word_big
-        .set(0..=9, &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        .unwrap();
+    word_big.set_all([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     let (value, overflow) = word_big.to_i64();
     assert_eq!(overflow, true);
     assert_eq!(value, 0x0203040506070809);
 
     let mut word_neg = Word::<6, false>::new();
-    word_neg.set_all(&[1, 1, 2, 3, 4, 5]).unwrap();
+    word_neg.set_all([1, 1, 2, 3, 4, 5]);
     let (value, overflow) = word_neg.to_i64();
     assert_eq!(overflow, false);
     assert_eq!(value, -0x0102030405);
 
     let mut word_big_neg = Word::<10, false>::new();
-    word_big_neg
-        .set(
-            0..=9,
-            &[1, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
-        )
-        .unwrap();
+    word_big_neg.set_all([1, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
     let (value, overflow) = word_big_neg.to_i64();
     assert_eq!(overflow, true);
     assert_eq!(value, 1);
@@ -133,32 +115,25 @@ fn test_to_i64() {
 #[test]
 fn test_to_i64_ranged() {
     let mut word = Word::<6, false>::new();
-    word.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    word.set_all([0, 1, 2, 3, 4, 5]);
     let (value, overflow) = word.to_i64_ranged(0..=5);
     assert_eq!(overflow, false);
     assert_eq!(value, 0x0102030405);
 
     let mut word_big = Word::<10, false>::new();
-    word_big
-        .set(0..=9, &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        .unwrap();
+    word_big.set_all([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     let (value, overflow) = word_big.to_i64_ranged(0..=9);
     assert_eq!(overflow, true);
     assert_eq!(value, 0x0203040506070809);
 
     let mut word_neg = Word::<6, false>::new();
-    word_neg.set_all(&[1, 1, 2, 3, 4, 5]).unwrap();
+    word_neg.set_all([1, 1, 2, 3, 4, 5]);
     let (value, overflow) = word_neg.to_i64_ranged(1..=5);
     assert_eq!(overflow, false);
     assert_eq!(value, 0x0102030405);
 
     let mut word_big_neg = Word::<10, false>::new();
-    word_big_neg
-        .set(
-            0..=9,
-            &[1, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
-        )
-        .unwrap();
+    word_big_neg.set_all([1, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
     let (value, overflow) = word_big_neg.to_i64_ranged(1..=1);
     assert_eq!(overflow, false);
     assert_eq!(value, 0xFF);

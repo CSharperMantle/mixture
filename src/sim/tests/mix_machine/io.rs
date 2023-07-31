@@ -215,7 +215,7 @@ struct InOutIODevice {}
 impl IODevice for InOutIODevice {
     fn read(&mut self, buffer: &mut [FullWord]) -> Result<(), ()> {
         let mut w = FullWord::new();
-        w.set_all(&[0, 9, 8, 7, 6, 5])?;
+        w.set_all([0, 9, 8, 7, 6, 5]);
         buffer[0] = w;
         Ok(())
     }
@@ -254,7 +254,7 @@ fn test_in_out() {
     mix.mem[1] = Instruction::new(2000, 0, 0, Opcode::Out)
         .try_into()
         .unwrap();
-    mix.mem[2000].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[2000].set_all([0, 1, 2, 3, 4, 5]);
 
     mix.restart();
 

@@ -5,7 +5,7 @@ fn test_illegal_instruction() {
     let mut mix = MixVM::new();
     mix.reset();
 
-    mix.mem[0].set_all(&[0, 255, 255, 255, 255, 255]).unwrap();
+    mix.mem[0].set_all([0, 255, 255, 255, 255, 255]);
 
     mix.restart();
 

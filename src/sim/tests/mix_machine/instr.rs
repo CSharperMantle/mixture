@@ -39,7 +39,7 @@ fn test_load_6b() {
     mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::LdA)
         .try_into()
         .unwrap();
-    mix.mem[2000].set_all(&[1, 0, 80, 3, 5, 4]).unwrap();
+    mix.mem[2000].set_all([1, 0, 80, 3, 5, 4]);
 
     mix.restart();
 
@@ -97,7 +97,7 @@ fn test_load_neg_6b() {
     mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::LdAN)
         .try_into()
         .unwrap();
-    mix.mem[2000].set_all(&[0, 0, 80, 3, 5, 4]).unwrap();
+    mix.mem[2000].set_all([0, 0, 80, 3, 5, 4]);
 
     mix.restart();
 
@@ -155,9 +155,9 @@ fn test_indexed_load_6b() {
     mix.mem[5] = Instruction::new(3000, 0, 2, Opcode::LdA)
         .try_into()
         .unwrap();
-    mix.mem[2000].set_all(&[1, 0, 80, 3, 5, 4]).unwrap();
-    mix.r_in[1].set(0..=2, &[0, 0x03, 0xE8]).unwrap();
-    mix.r_in[2].set(0..=2, &[1, 0x03, 0xE8]).unwrap();
+    mix.mem[2000].set_all([1, 0, 80, 3, 5, 4]);
+    mix.r_in[1][..].clone_from_slice(&[0, 0x03, 0xE8]);
+    mix.r_in[2][..].clone_from_slice(&[1, 0x03, 0xE8]);
 
     mix.restart();
 
@@ -215,7 +215,7 @@ fn test_load_3b() {
     mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::Ld1)
         .try_into()
         .unwrap();
-    mix.mem[2000].set_all(&[0, 0, 80, 3, 5, 4]).unwrap();
+    mix.mem[2000].set_all([0, 0, 80, 3, 5, 4]);
 
     mix.restart();
 
@@ -273,7 +273,7 @@ fn test_load_neg_3b() {
     mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::Ld1N)
         .try_into()
         .unwrap();
-    mix.mem[2000].set_all(&[0, 0, 80, 3, 5, 4]).unwrap();
+    mix.mem[2000].set_all([0, 0, 80, 3, 5, 4]);
 
     mix.restart();
 
@@ -354,8 +354,8 @@ fn test_special() {
         .try_into()
         .unwrap();
 
-    mix.r_a.set_all(&[0, 0, 0, 31, 32, 39]).unwrap();
-    mix.r_x.set_all(&[1, 37, 57, 47, 30, 30]).unwrap();
+    mix.r_a.set_all([0, 0, 0, 31, 32, 39]);
+    mix.r_x.set_all([1, 37, 57, 47, 30, 30]);
 
     mix.restart();
 
@@ -388,8 +388,8 @@ fn test_special_2() {
         .try_into()
         .unwrap();
 
-    mix.r_a.set_all(&[0, 39, 39, 39, 39, 39]).unwrap();
-    mix.r_x.set_all(&[1, 39, 39, 39, 39, 39]).unwrap();
+    mix.r_a.set_all([0, 39, 39, 39, 39, 39]);
+    mix.r_x.set_all([1, 39, 39, 39, 39, 39]);
 
     mix.restart();
 
@@ -422,9 +422,9 @@ fn test_store_zero() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[1001].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[1002].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.mem[1000].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[1001].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[1002].set_all([0, 1, 2, 3, 4, 5]);
 
     mix.restart();
 
@@ -450,10 +450,10 @@ fn test_move() {
         .try_into()
         .unwrap();
 
-    mix.r_in[1].set(1..=2, &[0x03, 0xE7]).unwrap();
-    mix.mem[1000].set_all(&[1, 1, 1, 1, 1, 1]).unwrap();
-    mix.mem[1001].set_all(&[1, 2, 2, 2, 2, 2]).unwrap();
-    mix.mem[1002].set_all(&[1, 3, 3, 3, 3, 3]).unwrap();
+    mix.r_in[1][1..=2].clone_from_slice(&[0x03, 0xE7]);
+    mix.mem[1000].set_all([1, 1, 1, 1, 1, 1]);
+    mix.mem[1001].set_all([1, 2, 2, 2, 2, 2]);
+    mix.mem[1002].set_all([1, 3, 3, 3, 3, 3]);
 
     mix.restart();
 
@@ -489,13 +489,13 @@ fn test_store_6b() {
         .try_into()
         .unwrap();
 
-    mix.r_a.set_all(&[1, 6, 7, 8, 9, 0]).unwrap();
-    mix.mem[2000].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2001].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2002].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2003].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2004].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2005].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.r_a.set_all([1, 6, 7, 8, 9, 0]);
+    mix.mem[2000].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2001].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2002].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2003].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2004].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2005].set_all([0, 1, 2, 3, 4, 5]);
 
     mix.restart();
 
@@ -548,13 +548,13 @@ fn test_store_3b() {
         .try_into()
         .unwrap();
 
-    mix.r_in[1].set(0..=2, &[1, 6, 7]).unwrap();
-    mix.mem[2000].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2001].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2002].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2003].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2004].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.mem[2005].set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
+    mix.r_in[1].set_all([1, 6, 7]);
+    mix.mem[2000].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2001].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2002].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2003].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2004].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2005].set_all([0, 1, 2, 3, 4, 5]);
 
     mix.restart();
 
@@ -610,8 +610,8 @@ fn test_modify_6b() {
         .try_into()
         .unwrap();
 
-    mix.r_a.set_all(&[0, 6, 7, 8, 9, 0]).unwrap();
-    mix.r_in[1].set(0..=2, &[0, 0, 5]).unwrap();
+    mix.r_a.set_all([0, 6, 7, 8, 9, 0]);
+    mix.r_in[1].set_all([0, 0, 5]);
 
     mix.restart();
 
@@ -668,7 +668,7 @@ fn test_modify_3b() {
         .try_into()
         .unwrap();
 
-    mix.r_in[1].set(0..=2, &[0, 9, 5]).unwrap();
+    mix.r_in[1].set_all([0, 9, 5]);
 
     mix.restart();
 
@@ -709,8 +709,8 @@ fn test_add_sub() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[0, 0, 0x64, 5, 0, 0x32]).unwrap();
-    mix.r_a.set_all(&[0, 0x04, 0xD2, 1, 0, 0x96]).unwrap();
+    mix.mem[1000].set_all([0, 0, 0x64, 5, 0, 0x32]);
+    mix.r_a.set_all([0, 0x04, 0xD2, 1, 0, 0x96]);
 
     mix.restart();
 
@@ -731,8 +731,8 @@ fn test_add_sub() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[1, 0x07, 0xD0, 0, 0x96, 0]).unwrap();
-    mix.r_a.set_all(&[1, 0x04, 0xD2, 0, 0, 9]).unwrap();
+    mix.mem[1000].set_all([1, 0x07, 0xD0, 0, 0x96, 0]);
+    mix.r_a.set_all([1, 0x04, 0xD2, 0, 0, 9]);
 
     mix.restart();
 
@@ -750,8 +750,8 @@ fn test_mul() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[0, 2, 0, 0, 0, 0]).unwrap();
-    mix.r_a.set_all(&[1, 0, 0, 0, 0, 0x70]).unwrap();
+    mix.mem[1000].set_all([0, 2, 0, 0, 0, 0]);
+    mix.r_a.set_all([1, 0, 0, 0, 0, 0x70]);
 
     mix.restart();
 
@@ -766,8 +766,8 @@ fn test_mul() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[0, 1, 1, 1, 1, 1]).unwrap();
-    mix.r_a.set_all(&[0, 1, 1, 1, 1, 1]).unwrap();
+    mix.mem[1000].set_all([0, 1, 1, 1, 1, 1]);
+    mix.r_a.set_all([0, 1, 1, 1, 1, 1]);
 
     mix.restart();
 
@@ -786,9 +786,9 @@ fn test_div() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[0, 0, 0, 0, 0, 3]).unwrap();
-    mix.r_a.set_all(&[0, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_x.set_all(&[1, 0, 0, 0, 0, 0x11]).unwrap();
+    mix.mem[1000].set_all([0, 0, 0, 0, 0, 3]);
+    mix.r_a.set_all([0, 0, 0, 0, 0, 0]);
+    mix.r_x.set_all([1, 0, 0, 0, 0, 0x11]);
 
     mix.restart();
 
@@ -803,9 +803,9 @@ fn test_div() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[1, 0, 0, 0, 2, 0]).unwrap();
-    mix.r_a.set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_x.set_all(&[0, 0x04, 0xD3, 0, 3, 1]).unwrap();
+    mix.mem[1000].set_all([1, 0, 0, 0, 2, 0]);
+    mix.r_a.set_all([1, 0, 0, 0, 0, 0]);
+    mix.r_x.set_all([0, 0x04, 0xD3, 0, 3, 1]);
 
     mix.restart();
 
@@ -821,9 +821,9 @@ fn test_div() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_a.set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_x.set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
+    mix.mem[1000].set_all([1, 0, 0, 0, 0, 0]);
+    mix.r_a.set_all([1, 0, 0, 0, 0, 0]);
+    mix.r_x.set_all([1, 0, 0, 0, 0, 0]);
 
     mix.restart();
 
@@ -851,12 +851,12 @@ fn test_cmp_6b() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[0, 0, 0, 0, 0, 2]).unwrap();
-    mix.mem[1001].set_all(&[1, 0, 0, 0, 0, 2]).unwrap();
-    mix.mem[1002].set_all(&[0, 0, 0, 0, 0, 1]).unwrap();
-    mix.mem[1003].set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_a.set_all(&[0, 0, 0, 0, 0, 1]).unwrap();
-    mix.r_x.set_all(&[0, 0, 0, 0, 0, 0]).unwrap();
+    mix.mem[1000].set_all([0, 0, 0, 0, 0, 2]);
+    mix.mem[1001].set_all([1, 0, 0, 0, 0, 2]);
+    mix.mem[1002].set_all([0, 0, 0, 0, 0, 1]);
+    mix.mem[1003].set_all([1, 0, 0, 0, 0, 0]);
+    mix.r_a.set_all([0, 0, 0, 0, 0, 1]);
+    mix.r_x.set_all([0, 0, 0, 0, 0, 0]);
 
     mix.restart();
 
@@ -895,12 +895,12 @@ fn test_cmp_3b() {
         .try_into()
         .unwrap();
 
-    mix.mem[1000].set_all(&[0, 0, 0, 0, 0, 2]).unwrap();
-    mix.mem[1001].set_all(&[1, 0, 0, 0, 0, 2]).unwrap();
-    mix.mem[1002].set_all(&[0, 0, 0, 0, 0, 1]).unwrap();
-    mix.mem[1003].set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_in[1].set(0..=2, &[0, 0, 1]).unwrap();
-    mix.r_in[2].set(0..=2, &[0, 0, 0]).unwrap();
+    mix.mem[1000].set_all([0, 0, 0, 0, 0, 2]);
+    mix.mem[1001].set_all([1, 0, 0, 0, 0, 2]);
+    mix.mem[1002].set_all([0, 0, 0, 0, 0, 1]);
+    mix.mem[1003].set_all([1, 0, 0, 0, 0, 0]);
+    mix.r_in[1].set_all([0, 0, 1]);
+    mix.r_in[2].set_all([0, 0, 0]);
 
     mix.restart();
 
@@ -929,8 +929,8 @@ fn test_jmp_reg_6b() {
     mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::JA).try_into().unwrap();
     mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::JX).try_into().unwrap();
     mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::JX).try_into().unwrap();
-    mix.r_a.set_all(&[1, 0, 0, 0, 0, 1]).unwrap();
-    mix.r_x.set_all(&[0, 0, 0, 0, 0, 0]).unwrap();
+    mix.r_a.set_all([1, 0, 0, 0, 0, 1]);
+    mix.r_x.set_all([0, 0, 0, 0, 0, 0]);
 
     mix.restart();
 
@@ -958,8 +958,8 @@ fn test_jmp_reg_3b() {
     mix.mem[0] = Instruction::new(1000, 0, 0, Opcode::J1).try_into().unwrap();
     mix.mem[1000] = Instruction::new(2000, 2, 0, Opcode::J2).try_into().unwrap();
     mix.mem[1001] = Instruction::new(0, 1, 0, Opcode::J2).try_into().unwrap();
-    mix.r_in[1].set(0..=2, &[1, 0, 1]).unwrap();
-    mix.r_in[2].set(0..=2, &[0, 0, 0]).unwrap();
+    mix.r_in[1].set_all([1, 0, 1]);
+    mix.r_in[2].set_all([0, 0, 0]);
 
     mix.restart();
 
@@ -991,8 +991,8 @@ fn test_shift() {
     mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift)
         .try_into()
         .unwrap();
-    mix.r_a.set_all(&[0, 1, 2, 3, 4, 5]).unwrap();
-    mix.r_x.set_all(&[1, 6, 7, 8, 9, 10]).unwrap();
+    mix.r_a.set_all([0, 1, 2, 3, 4, 5]);
+    mix.r_x.set_all([1, 6, 7, 8, 9, 10]);
 
     mix.restart();
     mix.step().unwrap();
@@ -1030,8 +1030,8 @@ fn test_binary_jmp_reg_6b() {
     mix.mem[0] = Instruction::new(1000, 6, 0, Opcode::JA).try_into().unwrap();
     mix.mem[1000] = Instruction::new(2000, 6, 0, Opcode::JX).try_into().unwrap();
     mix.mem[1001] = Instruction::new(0, 7, 0, Opcode::JX).try_into().unwrap();
-    mix.r_a.set_all(&[1, 0, 0, 0, 0, 0]).unwrap();
-    mix.r_x.set_all(&[0, 0, 0, 0, 0, 1]).unwrap();
+    mix.r_a.set_all([1, 0, 0, 0, 0, 0]);
+    mix.r_x.set_all([0, 0, 0, 0, 0, 1]);
 
     mix.restart();
 
@@ -1062,8 +1062,8 @@ fn test_binary_shift() {
     mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift)
         .try_into()
         .unwrap();
-    mix.r_a.set_all(&[0, 0, 0, 0, 0, 0b00000110]).unwrap();
-    mix.r_x.set_all(&[1, 0, 0, 0, 0, 0b00000001]).unwrap();
+    mix.r_a.set_all([0, 0, 0, 0, 0, 0b00000110]);
+    mix.r_x.set_all([1, 0, 0, 0, 0, 0b00000001]);
 
     mix.restart();
     mix.step().unwrap();

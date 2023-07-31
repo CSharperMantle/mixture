@@ -188,12 +188,12 @@ fn primes() {
         .try_into()
         .unwrap();
 
-    mix.mem[0].set_all(&[0; 6]).unwrap();
-    mix.mem[1995].set_all(&[0, 6, 9, 19, 22, 23]).unwrap();
-    mix.mem[1996].set_all(&[0, 0, 6, 9, 25, 5]).unwrap();
-    mix.mem[1997].set_all(&[0, 0, 8, 24, 15, 4]).unwrap();
-    mix.mem[1998].set_all(&[0, 19, 5, 4, 0, 17]).unwrap();
-    mix.mem[1999].set_all(&[0, 19, 9, 14, 5, 22]).unwrap();
+    mix.mem[0].set_all([0; 6]);
+    mix.mem[1995].set_all([0, 6, 9, 19, 22, 23]);
+    mix.mem[1996].set_all([0, 0, 6, 9, 25, 5]);
+    mix.mem[1997].set_all([0, 0, 8, 24, 15, 4]);
+    mix.mem[1998].set_all([0, 19, 5, 4, 0, 17]);
+    mix.mem[1999].set_all([0, 19, 9, 14, 5, 22]);
     mix.mem[2024] = Word::<6, false>::from_i64(2035).0;
     mix.mem[2049] = Word::<6, false>::from_i64(2010).0;
     mix.mem[2050] = Word::<6, false>::from_i64(3).0;

@@ -72,7 +72,7 @@ impl TryFrom<FullWord> for Instruction {
     /// use mixture::sim::*;
     ///
     /// let mut word = FullWord::new();
-    /// word.set_all(&[0, 0x07, 0xD0, 0x02, 0x03, 0x08]).unwrap();
+    /// word.set_all([0, 0x07, 0xD0, 0x02, 0x03, 0x08]);
     ///
     /// let instr = Instruction::try_from(word).unwrap();
     /// assert_eq!(instr.opcode, Opcode::LdA);
@@ -110,7 +110,7 @@ pub enum Opcode {
     /// * `ADD(0:5)` - Integer addition.
     /// * `FADD(6)` - Float addition.
     /// * `F32ADD(7)` (`x-ieee754`) - IEEE 754 `binary32` addition.
-    /// 
+    ///
     /// `rA <- rA + V`
     Add = 1,
 
@@ -321,9 +321,9 @@ pub enum Opcode {
     ///
     /// * `JAE(6)` (`x-binary`) - Jump `rA` even
     /// * `JAO(7)` (`x-binary`) - Jump `rA` odd
-    /// 
+    ///
     /// `rA & 1 : 0; jump`
-    /// 
+    ///
     /// See also [`Opcode::Jmp`].
     JA = 40,
 
@@ -410,7 +410,7 @@ pub enum Opcode {
     ///
     /// * `JXE(6)` (`x-binary`) - Jump `rX` even
     /// * `JXO(7)` (`x-binary`) - Jump `rX` odd
-    /// 
+    ///
     /// `rA & 1 : 0; jump`
     ///
     /// See also [`Opcode::Jmp`].

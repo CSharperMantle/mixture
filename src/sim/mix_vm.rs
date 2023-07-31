@@ -278,9 +278,7 @@ impl MixVM {
     fn helper_do_jump(&mut self, location: u16, save_r_j: bool) -> Result<(), ErrorCode> {
         if save_r_j {
             let pc = self.pc.to_be_bytes();
-            self.r_j
-                .set(1..=2, &pc)
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            self.r_j[1..=2].clone_from_slice(&pc);
         }
         // Do jump.
         self.pc = location;
@@ -332,8 +330,7 @@ impl MixVM {
             _ => unreachable!(),
         };
         // Zero reg before copying. Handle 'understood' positive sign too.
-        reg.set_all(&[FullWord::POS, 0, 0, 0, 0, 0])
-            .map_err(|_| ErrorCode::BadMemAccess)?;
+        reg.set_all([FullWord::POS, 0, 0, 0, 0, 0]);
         // Copy bytes shifted right.
         for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
             reg[reg_cursor] = mem_cell[mem_cursor];
@@ -356,7 +353,7 @@ impl MixVM {
             _ => unreachable!(),
         };
         // Zero reg before copying. Handle 'understood' negative sign.
-        reg.set_all(&[0; 6]).map_err(|_| ErrorCode::BadMemAccess)?;
+        reg.set_all([0; 6]);
         // Copy bytes shifted right.
         for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
             reg[reg_cursor] = mem_cell[mem_cursor];
@@ -486,9 +483,7 @@ impl MixVM {
             // Rebuild a word of 4 bytes.
             let result_word = FullWord::from_i64(result).0;
             // We do not modify the sign byte.
-            self.r_a
-                .set(1..=5, &result_word[1..=5])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            self.r_a[1..=5].clone_from_slice(&result_word[1..=5]);
             Ok(())
         } else if instr.field == 1 {
             // CHAR instruction
@@ -543,15 +538,11 @@ impl MixVM {
         // Move each word.
         for i in 0..num_words {
             let orig_mem = self.mem[from_addr + i as u16];
-            self.mem[to_addr + i as u16]
-                .set_all(&orig_mem[..])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            self.mem[to_addr + i as u16].clone_from(&orig_mem);
         }
         let new_r_i1_val = self.r_in[1].to_i64().0 + num_words as i64;
         let (new_r_i1, overflow) = HalfWord::from_i64(new_r_i1_val);
-        self.r_in[1]
-            .set(0..=2, &new_r_i1[..])
-            .map_err(|_| ErrorCode::BadMemAccess)?;
+        self.r_in[1][..].clone_from_slice(&new_r_i1[..]);
         if overflow {
             self.overflow = overflow;
         }
@@ -625,8 +616,7 @@ impl MixVM {
             let value = reg.to_i64().0;
             // Convert back modified value.
             let (new_word, overflow) = FullWord::from_i64(value + offset);
-            reg.set_all(&new_word[..])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            reg.clone_from(&new_word);
             if overflow {
                 self.overflow = overflow;
             }
@@ -635,8 +625,7 @@ impl MixVM {
             // ENTx and ENNx
             let new_word = FullWord::from_i64(addr as i64).0;
             // Copy new word into reg.
-            reg.set_all(&new_word[..])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            reg.clone_from(&new_word);
             if instr.field == 3 {
                 reg.flip_sign();
             }
@@ -667,8 +656,7 @@ impl MixVM {
             let value = reg.to_i64().0;
             // Convert back modified value.
             let (new_word, overflow) = HalfWord::from_i64(value + offset);
-            reg.set(0..=2, &new_word[..])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            reg.clone_from(&new_word);
             if overflow {
                 self.overflow = overflow;
             }
@@ -677,8 +665,7 @@ impl MixVM {
             // ENTx and ENNx
             let new_word = HalfWord::from_i64(addr as i64).0;
             // Copy new word into reg.
-            reg.set(0..=2, &new_word[..])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            reg.clone_from(&new_word);
             if instr.field == 3 {
                 reg.flip_sign();
             }
@@ -711,16 +698,14 @@ impl MixVM {
             } else {
                 FullWord::NEG
             };
-            self.r_a
-                .set_all(&[
-                    sign,
-                    0,
-                    new_bytes[0],
-                    new_bytes[1],
-                    new_bytes[2],
-                    new_bytes[3],
-                ])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            self.r_a.set_all([
+                sign,
+                0,
+                new_bytes[0],
+                new_bytes[1],
+                new_bytes[2],
+                new_bytes[3],
+            ]);
             if !new_value.is_finite() {
                 self.overflow = true;
             }
@@ -735,9 +720,7 @@ impl MixVM {
             };
             let (new_word, overflow) = FullWord::from_i64(new_value);
             // Set new value.
-            self.r_a
-                .set_all(&new_word[..])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            self.r_a.clone_from(&new_word);
             if overflow {
                 self.overflow = overflow;
             }
@@ -763,16 +746,14 @@ impl MixVM {
             } else {
                 FullWord::NEG
             };
-            self.r_a
-                .set_all(&[
-                    sign,
-                    0,
-                    new_bytes[0],
-                    new_bytes[1],
-                    new_bytes[2],
-                    new_bytes[3],
-                ])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            self.r_a.set_all([
+                sign,
+                0,
+                new_bytes[0],
+                new_bytes[1],
+                new_bytes[2],
+                new_bytes[3],
+            ]);
             if !new_value.is_finite() {
                 self.overflow = true;
             }
@@ -863,12 +844,8 @@ impl MixVM {
         } else {
             FullWord::NEG
         };
-        self.r_a
-            .set(1..=5, &new_a[1..=5])
-            .map_err(|_| ErrorCode::BadMemAccess)?;
-        self.r_x
-            .set(1..=5, &new_x[1..=5])
-            .map_err(|_| ErrorCode::BadMemAccess)?;
+        self.r_a[1..=5].clone_from_slice(&new_a[1..=5]);
+        self.r_x[1..=5].clone_from_slice(&new_x[1..=5]);
         if overflow_a || overflow_x {
             self.overflow = true;
         }
@@ -1009,9 +986,7 @@ impl MixVM {
                 _ => unreachable!(),
             };
             // Store back.
-            self.r_a
-                .set(1..=5, &shifted_value.to_be_bytes()[3..=7])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            self.r_a[1..=5].clone_from_slice(&shifted_value.to_be_bytes()[3..=7]);
         } else if (instr.field == 2 || instr.field == 3)
             || (cfg!(feature = "x-binary") && (instr.field == 6 || instr.field == 7))
         {
@@ -1047,12 +1022,8 @@ impl MixVM {
             };
             // Store back.
             let shifted_bytes = shifted_value.to_be_bytes();
-            self.r_a
-                .set(1..=5, &shifted_bytes[6..=10])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
-            self.r_x
-                .set(1..=5, &shifted_bytes[11..=15])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            self.r_a[1..=5].clone_from_slice(&shifted_bytes[6..=10]);
+            self.r_x[1..=5].clone_from_slice(&shifted_bytes[11..=15]);
         } else if instr.field == 4 || instr.field == 5 {
             // SLC and SRC.
             // Spread out bytes.
@@ -1069,12 +1040,8 @@ impl MixVM {
                 self.r_x[5],
             ];
             // Zero the registers.
-            self.r_a
-                .set(1..=5, &[0; 5])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
-            self.r_x
-                .set(1..=5, &[0; 5])
-                .map_err(|_| ErrorCode::BadMemAccess)?;
+            self.r_a[1..=5].clone_from_slice(&[0; 5]);
+            self.r_x[1..=5].clone_from_slice(&[0; 5]);
             // Create cyclic iterator.
             let mut orig_bytes_iter = orig_bytes.iter().cycle();
             // Get shift count.
