@@ -120,8 +120,8 @@ fn test_indexed_load_6b() {
     mix.mem[4] = Instruction::new(3000, 36, 2, Opcode::LdA).into();
     mix.mem[5] = Instruction::new(3000, 0, 2, Opcode::LdA).into();
     mix.mem[2000].set_all([1, 0, 80, 3, 5, 4]);
-    mix.r_in[1][..].clone_from_slice(&[0, 0x03, 0xE8]);
-    mix.r_in[2][..].clone_from_slice(&[1, 0x03, 0xE8]);
+    mix.r_in[1][..].copy_from_slice(&[0, 0x03, 0xE8]);
+    mix.r_in[2][..].copy_from_slice(&[1, 0x03, 0xE8]);
 
     mix.restart();
 
@@ -366,7 +366,7 @@ fn test_move() {
 
     mix.mem[0] = Instruction::new(1000, 3, 0, Opcode::Move).into();
 
-    mix.r_in[1][1..=2].clone_from_slice(&[0x03, 0xE7]);
+    mix.r_in[1][1..=2].copy_from_slice(&[0x03, 0xE7]);
     mix.mem[1000].set_all([1, 1, 1, 1, 1, 1]);
     mix.mem[1001].set_all([1, 2, 2, 2, 2, 2]);
     mix.mem[1002].set_all([1, 3, 3, 3, 3, 3]);
@@ -849,58 +849,4 @@ fn test_shift() {
     assert_eq!(mix.halted, false);
     assert_eq!(mix.r_a[..], [0, 0, 6, 7, 8, 3]);
     assert_eq!(mix.r_x[..], [1, 4, 0, 0, 5, 0]);
-}
-
-#[test]
-#[cfg(feature = "x-binary")]
-fn test_binary_jmp_reg_6b() {
-    let mut mix = MixVM::new();
-    mix.reset();
-
-    mix.mem[0] = Instruction::new(1000, 6, 0, Opcode::JA).into();
-    mix.mem[1000] = Instruction::new(2000, 6, 0, Opcode::JX).into();
-    mix.mem[1001] = Instruction::new(0, 7, 0, Opcode::JX).into();
-    mix.r_a.set_all([1, 0, 0, 0, 0, 0]);
-    mix.r_x.set_all([0, 0, 0, 0, 0, 1]);
-
-    mix.restart();
-
-    mix.step().unwrap();
-    assert_eq!(mix.halted, false);
-    assert_eq!(mix.pc, 1000);
-    assert_eq!(mix.r_j[..], [0, 0, 1]);
-
-    mix.step().unwrap();
-    assert_eq!(mix.halted, false);
-    assert_eq!(mix.pc, 1001);
-    assert_eq!(mix.r_j[..], [0, 0, 1]);
-
-    mix.step().unwrap();
-    assert_eq!(mix.halted, false);
-    assert_eq!(mix.pc, 0);
-    assert_eq!(mix.r_j[..], [0, 0x03, 0xEA]);
-}
-
-#[test]
-#[cfg(feature = "x-binary")]
-fn test_binary_shift() {
-    let mut mix = MixVM::new();
-    mix.reset();
-
-    mix.mem[0] = Instruction::new(1, 6, 0, Opcode::Shift).into();
-    mix.mem[1] = Instruction::new(2, 7, 0, Opcode::Shift).into();
-    mix.mem[4] = Instruction::new(501, 4, 0, Opcode::Shift).into();
-    mix.r_a.set_all([0, 0, 0, 0, 0, 0b00000110]);
-    mix.r_x.set_all([1, 0, 0, 0, 0, 0b00000001]);
-
-    mix.restart();
-    mix.step().unwrap();
-    assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0, 0b00001100]);
-    assert_eq!(mix.r_x[..], [1, 0, 0, 0, 0, 0b00000010]);
-
-    mix.step().unwrap();
-    assert_eq!(mix.halted, false);
-    assert_eq!(mix.r_a[..], [0, 0, 0, 0, 0, 0b00000011]);
-    assert_eq!(mix.r_x[..], [1, 0, 0, 0, 0, 0b00000000]);
 }

@@ -30,11 +30,11 @@ use super::instr::Instruction;
 /// let mut word = Word::<6, false>::new();
 ///
 /// word.set_all([0, 1, 2, 3, 4, 5]);
-/// word[1..=2].clone_from_slice(&[6, 7]);
+/// word[1..=2].copy_from_slice(&[6, 7]);
 /// assert_eq!(word[..], [0, 6, 7, 3, 4, 5]);
 ///
 /// let mut word_copy = word;
-/// word_copy[0..=0].clone_from_slice(&[1]);
+/// word_copy[0..=0].copy_from_slice(&[1]);
 /// assert_eq!(word[..], [0, 6, 7, 3, 4, 5]);
 /// assert_eq!(word_copy[..], [1, 6, 7, 3, 4, 5]);
 /// ```
@@ -141,9 +141,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// assert_eq!(word[..], [0, 1, 2, 3, 4, 5]);
     /// ```
     pub fn set_all(&mut self, value: [u8; N]) {
-        for i in 0..N {
-            self.data[i] = value[i];
-        }
+        self.data.copy_from_slice(&value);
         if P {
             self.data[0] = Self::POS;
         }

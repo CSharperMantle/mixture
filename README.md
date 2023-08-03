@@ -279,13 +279,32 @@ For a detailed explanation of instruction semantics and effects, please refer to
 *The Art of Computer Programming (Volume 1, 3rd. ed.)* by D. E. Knuth, or visit
 [Esolang/MIX_(Knuth)](https://esolangs.org/wiki/MIX_(Knuth)).
 
-### Extensions to MIX
+## Extensions to MIX
 
-#### `x-ieee754`: IEEE 754-compatible floating-point arithmetic
+### `x-ieee754`: IEEE 754-compatible floating-point arithmetic
+
+This extension adds support to `binary32` floating-point format as described in
+[IEEE 754-2008](https://standards.ieee.org/ieee/754/4211/) and Rust [`f32`].
+
+> **Specific to `mixture`:** See [`sim::Opcode::Add`], [`sim::Opcode::Sub`],
+> [`sim::Opcode::Mul`], [`sim::Opcode::Div`], [`sim::Opcode::Special`],
+> [`sim::Opcode::CmpA`] and [`sim::Opcode::Jmp`] for details.
+
+> **Specific to `mixture`:** [`JA`](sim::Opcode::JA) and [`JX`](sim::Opcode::JX)
+> look at sign byte to determine whether to jump or not, so jumps on `NaN`s are
+> undefined.
 
 WIP.
 
-#### `x-binary`: Binary operations (TAOCP Section 4.5.2)
+### `x-binary`: Binary operations (TAOCP Section 4.5.2)
+
+This extension adds support to binary operations to registers and words, allowing
+for bit-wise shifts and conditional jumps on final bit of registers (even/odd).
+
+> **Specific to `mixture`:** See [`sim::Opcode::Shift`], [`sim::Opcode::JA`] and
+> [`sim::Opcode::JX`] for details.
+
+#### Shift instructions
 
 * `SLB`: Shift left `rAX` binary. `C = 6`; `F = 6`.
   The contents of `rA` and `rX` are shifted left `M` binary places.
@@ -293,10 +312,9 @@ WIP.
 * `SRB`: Shift right `rAX` binary. `C = 6`; `F = 7`.
   The contents of `rA` and `rX` are shifted right `M` binary places.
 
+#### Jump instructions
+
 * `JAE`: Jump `rA` even. `C = 40`; `F = 6`.
 * `JAO`: Jump `rA` odd. `C = 40`; `F = 7`.
 * `JXE`: Jump `rX` even. `C = 47`; `F = 6`.
 * `JXO`: Jump `rX` odd. `C = 47`; `F = 7`.
-
-> **Specific to `mixture`:** See [`sim::Opcode::Shift`], [`sim::Opcode::JA`] and
-> [`sim::Opcode::JX`] for details.

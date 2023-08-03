@@ -1,6 +1,8 @@
 #[cfg(any(feature = "std", test))]
 use std::prelude::v1::*;
 
+use core::cmp::Ordering;
+
 use crate::sim::*;
 
 /// Error states for [`MixVM`].
@@ -45,6 +47,10 @@ pub enum CompIndicator {
 
     /// The former operand is greater than the latter.
     Greater,
+
+    /// The two floating operands are unordered.
+    #[cfg(feature = "x-ieee754")]
+    Unordered,
 }
 
 impl Default for CompIndicator {
@@ -275,7 +281,7 @@ impl MixVM {
     fn helper_do_jump(&mut self, location: u16, save_r_j: bool) {
         if save_r_j {
             let pc = self.pc.to_be_bytes();
-            self.r_j[1..=2].clone_from_slice(&pc);
+            self.r_j[1..=2].copy_from_slice(&pc);
         }
         // Do jump.
         self.pc = location;
@@ -451,6 +457,20 @@ impl MixVM {
             7 => self.comp != CompIndicator::Less,
             8 => self.comp != CompIndicator::Equal,
             9 => self.comp != CompIndicator::Greater,
+            10 => {
+                if cfg!(feature = "x-ieee754") {
+                    self.comp != CompIndicator::Unordered
+                } else {
+                    return Err(ErrorCode::InvalidField);
+                }
+            }
+            11 => {
+                if cfg!(feature = "x-ieee754") {
+                    self.comp == CompIndicator::Unordered
+                } else {
+                    return Err(ErrorCode::InvalidField);
+                }
+            }
             _ => return Err(ErrorCode::InvalidField),
         };
         // Clear overflow flag.
@@ -479,7 +499,7 @@ impl MixVM {
             // Rebuild a word of 4 bytes.
             let result_word = FullWord::from_i64(result).0;
             // We do not modify the sign byte.
-            self.r_a[1..=5].clone_from_slice(&result_word[1..=5]);
+            self.r_a[1..=5].copy_from_slice(&result_word[1..=5]);
             Ok(())
         } else if instr.field == 1 {
             // CHAR instruction
@@ -500,6 +520,85 @@ impl MixVM {
             // Making it just like NOP if we restart the
             // machine later.
             self.halted = true;
+            Ok(())
+        } else if cfg!(feature = "x-ieee754") && instr.field == 3 {
+            // F32CVTF322I4B
+            let reg = &mut self.r_a;
+            let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
+            if !orig_value.is_finite()
+                || orig_value > i32::MAX as f32
+                || orig_value < i32::MIN as f32
+            {
+                self.overflow = true
+            }
+            let result = orig_value.abs() as u32;
+            reg.set_all([0; 6]);
+            reg[0] = if orig_value.is_sign_positive() {
+                FullWord::POS
+            } else {
+                FullWord::NEG
+            };
+            reg[2..=5].copy_from_slice(&result.to_be_bytes());
+            Ok(())
+        } else if cfg!(feature = "x-ieee754") && instr.field == 4 {
+            // F32CVTF322I2B
+            let reg = &mut self.r_a;
+            let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
+            if !orig_value.is_finite()
+                || orig_value > i16::MAX as f32
+                || orig_value < i16::MIN as f32
+            {
+                self.overflow = true
+            }
+            let result = orig_value.abs() as u16;
+            reg.set_all([0; 6]);
+            reg[0] = if orig_value.is_sign_positive() {
+                FullWord::POS
+            } else {
+                FullWord::NEG
+            };
+            reg[4..=5].copy_from_slice(&result.to_be_bytes());
+            Ok(())
+        } else if cfg!(feature = "x-ieee754") && instr.field == 5 {
+            // F32CVTF322I1B
+            let reg = &mut self.r_a;
+            let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
+            if !orig_value.is_finite() || orig_value > i8::MAX as f32 || orig_value < i8::MIN as f32
+            {
+                self.overflow = true
+            }
+            let result = orig_value.abs() as u8;
+            reg.set_all([0; 6]);
+            reg[0] = if orig_value.is_sign_positive() {
+                FullWord::POS
+            } else {
+                FullWord::NEG
+            };
+            reg[5..=5].copy_from_slice(&result.to_be_bytes());
+            Ok(())
+        } else if cfg!(feature = "x-ieee754") && instr.field == 6 {
+            // F32CVTI4B2F32
+            let reg = &mut self.r_a;
+            let orig_value = u32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
+            let new_value = orig_value as f32;
+            reg.set_all([0; 6]);
+            reg[2..=5].copy_from_slice(&new_value.to_be_bytes());
+            Ok(())
+        } else if cfg!(feature = "x-ieee754") && instr.field == 7 {
+            // F32CVTI2B2F32
+            let reg = &mut self.r_a;
+            let orig_value = u16::from_be_bytes([reg[4], reg[5]]);
+            let new_value = orig_value as f32;
+            reg.set_all([0; 6]);
+            reg[2..=5].copy_from_slice(&new_value.to_be_bytes());
+            Ok(())
+        } else if cfg!(feature = "x-ieee754") && instr.field == 8 {
+            // F32CVTI1B2F32
+            let reg = &mut self.r_a;
+            let orig_value = u8::from_be_bytes([reg[5]]);
+            let new_value = orig_value as f32;
+            reg.set_all([0; 6]);
+            reg[2..=5].copy_from_slice(&new_value.to_be_bytes());
             Ok(())
         } else {
             Err(ErrorCode::InvalidField)
@@ -538,7 +637,7 @@ impl MixVM {
         }
         let new_r_i1_val = self.r_in[1].to_i64().0 + num_words as i64;
         let (new_r_i1, overflow) = HalfWord::from_i64(new_r_i1_val);
-        self.r_in[1][..].clone_from_slice(&new_r_i1[..]);
+        self.r_in[1][..].copy_from_slice(&new_r_i1[..]);
         if overflow {
             self.overflow = overflow;
         }
@@ -672,7 +771,7 @@ impl MixVM {
     }
 
     /// Handler for `ADD` and `SUB`.
-    /// `FADD`, `FSUB`, `F32ADD` and `F32SUB` are passed through if enabled.
+    /// `F32ADD` and `F32SUB` are passed through if enabled.
     fn handle_instr_add_sub(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
@@ -725,7 +824,7 @@ impl MixVM {
         Ok(())
     }
 
-    /// Handler for `MUL`.
+    /// Handler for `MUL` and `F32MUL`.
     fn handle_instr_mul(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain V from memory.
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
@@ -784,90 +883,132 @@ impl MixVM {
         Ok(())
     }
 
-    /// Handler for `DIV`.
+    /// Handler for `DIV` and `F32DIV`.
     fn handle_instr_div(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 as i128;
-        let orig_value = i128::from_be_bytes([
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            self.r_a[1],
-            self.r_a[2],
-            self.r_a[3],
-            self.r_a[4],
-            self.r_a[5],
-            self.r_x[1],
-            self.r_x[2],
-            self.r_x[3],
-            self.r_x[4],
-            self.r_x[5],
-        ]) * self.r_a.get_sign() as i128;
-        // Calculate results.
-        let quotient: i64 = orig_value
-            .checked_div(target_value)
-            .unwrap_or_else(|| {
+        if cfg!(feature = "x-ieee754") && instr.field == 7 {
+            // F32DIV
+            let target_value =
+                f32::from_be_bytes([target_mem[2], target_mem[3], target_mem[4], target_mem[5]]);
+            let orig_value =
+                f32::from_be_bytes([self.r_a[2], self.r_a[3], self.r_a[4], self.r_a[5]]);
+            let new_value = orig_value / target_value;
+            let new_bytes = new_value.to_be_bytes();
+            let sign = if new_value.is_sign_positive() {
+                FullWord::POS
+            } else {
+                FullWord::NEG
+            };
+            self.r_a.set_all([
+                sign,
+                0,
+                new_bytes[0],
+                new_bytes[1],
+                new_bytes[2],
+                new_bytes[3],
+            ]);
+            if !new_value.is_finite() {
                 self.overflow = true;
-                0
-            })
-            .abs()
-            .try_into()
-            .map_err(|_| {
-                self.overflow = true;
-            })
-            .unwrap_or(0);
-        let remainder: i64 = orig_value
-            .checked_rem(target_value)
-            .unwrap_or_else(|| {
-                self.overflow = true;
-                0
-            })
-            .abs()
-            .try_into()
-            .map_err(|_| {
-                self.overflow = true;
-            })
-            .unwrap_or(0);
-        // Copy results into registers.
-        let (new_a, overflow_a) = FullWord::from_i64(quotient);
-        let (new_x, overflow_x) = FullWord::from_i64(remainder);
-        self.r_x[0] = self.r_a[0];
-        self.r_a[0] = if orig_value.signum() == target_value.signum() {
-            FullWord::POS
+            }
         } else {
-            FullWord::NEG
-        };
-        self.r_a[1..=5].clone_from_slice(&new_a[1..=5]);
-        self.r_x[1..=5].clone_from_slice(&new_x[1..=5]);
-        if overflow_a || overflow_x {
-            self.overflow = true;
+            let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0 as i128;
+            let orig_value = i128::from_be_bytes([
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                self.r_a[1],
+                self.r_a[2],
+                self.r_a[3],
+                self.r_a[4],
+                self.r_a[5],
+                self.r_x[1],
+                self.r_x[2],
+                self.r_x[3],
+                self.r_x[4],
+                self.r_x[5],
+            ]) * self.r_a.get_sign() as i128;
+            // Calculate results.
+            let quotient: i64 = orig_value
+                .checked_div(target_value)
+                .unwrap_or_else(|| {
+                    self.overflow = true;
+                    0
+                })
+                .abs()
+                .try_into()
+                .map_err(|_| {
+                    self.overflow = true;
+                })
+                .unwrap_or(0);
+            let remainder: i64 = orig_value
+                .checked_rem(target_value)
+                .unwrap_or_else(|| {
+                    self.overflow = true;
+                    0
+                })
+                .abs()
+                .try_into()
+                .map_err(|_| {
+                    self.overflow = true;
+                })
+                .unwrap_or(0);
+            // Copy results into registers.
+            let (new_a, overflow_a) = FullWord::from_i64(quotient);
+            let (new_x, overflow_x) = FullWord::from_i64(remainder);
+            self.r_x[0] = self.r_a[0];
+            self.r_a[0] = if orig_value.signum() == target_value.signum() {
+                FullWord::POS
+            } else {
+                FullWord::NEG
+            };
+            self.r_a[1..=5].copy_from_slice(&new_a[1..=5]);
+            self.r_x[1..=5].copy_from_slice(&new_x[1..=5]);
+            if overflow_a || overflow_x {
+                self.overflow = true;
+            }
         }
         Ok(())
     }
 
-    /// Handler for `CMPA` and `CMPX`.
+    /// Handler for `CMPA` and `CMPX`, `F32CMPA` and `F32CMPX`.
     fn handle_instr_cmp_6b(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         // Obtain CONTENT(M).
         let target_mem = &self.mem[self.helper_get_eff_addr(instr.addr, instr.index)?];
-        let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
         let reg = match instr.opcode {
             Opcode::CmpA => &self.r_a,
             Opcode::CmpX => &self.r_x,
             _ => unreachable!(),
         };
-        let reg_value = reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
-        // Calculate and set flags.
-        self.comp = if reg_value == target_value {
-            // +0 and -0 are equal.
-            CompIndicator::Equal
-        } else if reg_value > target_value {
-            CompIndicator::Greater
+        if cfg!(feature = "x-ieee754") && instr.field == 7 {
+            // F32CMPA and F32CMPX
+            let target_value =
+                f32::from_be_bytes([target_mem[2], target_mem[3], target_mem[4], target_mem[5]]);
+            let reg_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
+            self.comp = if reg_value.is_nan() || target_value.is_nan() {
+                CompIndicator::Unordered
+            } else {
+                match reg_value.total_cmp(&target_value) {
+                    Ordering::Less => CompIndicator::Less,
+                    Ordering::Equal => CompIndicator::Equal,
+                    Ordering::Greater => CompIndicator::Greater,
+                }
+            };
         } else {
-            CompIndicator::Less
-        };
+            let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
+            let reg_value = reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
+            // Calculate and set flags.
+            self.comp = if reg_value == target_value {
+                // +0 and -0 are equal.
+                CompIndicator::Equal
+            } else if reg_value > target_value {
+                CompIndicator::Greater
+            } else {
+                CompIndicator::Less
+            };
+        }
         Ok(())
     }
 
@@ -982,7 +1123,7 @@ impl MixVM {
                 _ => unreachable!(),
             };
             // Store back.
-            self.r_a[1..=5].clone_from_slice(&shifted_value.to_be_bytes()[3..=7]);
+            self.r_a[1..=5].copy_from_slice(&shifted_value.to_be_bytes()[3..=7]);
         } else if (instr.field == 2 || instr.field == 3)
             || (cfg!(feature = "x-binary") && (instr.field == 6 || instr.field == 7))
         {
@@ -1018,8 +1159,8 @@ impl MixVM {
             };
             // Store back.
             let shifted_bytes = shifted_value.to_be_bytes();
-            self.r_a[1..=5].clone_from_slice(&shifted_bytes[6..=10]);
-            self.r_x[1..=5].clone_from_slice(&shifted_bytes[11..=15]);
+            self.r_a[1..=5].copy_from_slice(&shifted_bytes[6..=10]);
+            self.r_x[1..=5].copy_from_slice(&shifted_bytes[11..=15]);
         } else if instr.field == 4 || instr.field == 5 {
             // SLC and SRC.
             // Spread out bytes.
@@ -1036,8 +1177,8 @@ impl MixVM {
                 self.r_x[5],
             ];
             // Zero the registers.
-            self.r_a[1..=5].clone_from_slice(&[0; 5]);
-            self.r_x[1..=5].clone_from_slice(&[0; 5]);
+            self.r_a[1..=5].copy_from_slice(&[0; 5]);
+            self.r_x[1..=5].copy_from_slice(&[0; 5]);
             // Create cyclic iterator.
             let mut orig_bytes_iter = orig_bytes.iter().cycle();
             // Get shift count.

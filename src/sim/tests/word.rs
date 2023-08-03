@@ -28,9 +28,9 @@ fn test_mutation() {
     assert_eq!(word[..], [0; 6]);
     word.set_all([1, 2, 3, 4, 5, 6]);
     assert_eq!(word[..], [1, 2, 3, 4, 5, 6]);
-    word[0..=2].clone_from_slice(&[1, 8, 9]);
+    word[0..=2].copy_from_slice(&[1, 8, 9]);
     assert_eq!(word[..], [1, 8, 9, 4, 5, 6]);
-    word[2..=5].clone_from_slice(&[1, 2, 3, 4]);
+    word[2..=5].copy_from_slice(&[1, 2, 3, 4]);
     assert_eq!(word[..], [1, 8, 1, 2, 3, 4]);
 }
 
@@ -52,10 +52,10 @@ fn test_interchange() {
     word_1.set_all([1, 2, 3, 4, 5, 6]);
     word_2.set_all([1, 8, 9, 10, 11, 12]);
 
-    word_1[3..=5].clone_from_slice(&word_2[3..=5]);
+    word_1[3..=5].copy_from_slice(&word_2[3..=5]);
     assert_eq!(word_1[..], [1, 2, 3, 10, 11, 12]);
     assert_eq!(word_2[..], [1, 8, 9, 10, 11, 12]);
-    word_2[0..=2].clone_from_slice(&word_1[0..=2]);
+    word_2[0..=2].copy_from_slice(&word_1[0..=2]);
     assert_eq!(word_1[..], [1, 2, 3, 10, 11, 12]);
     assert_eq!(word_2[..], [1, 2, 3, 10, 11, 12]);
 }
