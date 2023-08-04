@@ -627,10 +627,17 @@ pub enum Opcode {
     ModifyX = 55,
 
     /// * `CMPA(0:5)` - Compare `rA` with `V`.
-    /// * `F32CMPA(7)` (`x-ieee754`) - Compare `rA` with `V` as `binary32` values.
     ///
     /// ```text
     /// CI <- rA(F) : V
+    /// ```
+    /// 
+    /// ------
+    /// 
+    /// * `F32CMPA(7)` (`x-ieee754`) - Compare `rA` with `V` as `binary32` values.
+    /// 
+    /// ```text
+    /// CI <- rA : V
     /// ```
     CmpA = 56,
 
@@ -677,10 +684,17 @@ pub enum Opcode {
     Cmp6 = 62,
 
     /// * `CMPX(0:5)` - Compare `rX` with `V`.
-    /// * `F32CMPX(7)` (`x-ieee754`) - Compare `rX` with `V` as `binary32` values.
     ///
     /// ```text
     /// CI <- rX(F) : V
+    /// ```
+    /// 
+    /// ------
+    /// 
+    /// * `F32CMPX(7)` (`x-ieee754`) - Compare `rX` with `V` as `binary32` values.
+    /// 
+    /// ```text
+    /// CI <- rX : V
     /// ```
     CmpX = 63,
 }

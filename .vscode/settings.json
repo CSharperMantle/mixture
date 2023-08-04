@@ -37,6 +37,7 @@
         "signum",
         "Slax",
         "Srax",
+        "TAOCP",
         "unhalts"
     ],
     "rust-analyzer.diagnostics.disabled": [

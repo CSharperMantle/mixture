@@ -281,40 +281,132 @@ For a detailed explanation of instruction semantics and effects, please refer to
 
 ## Extensions to MIX
 
+> **Specific to `mixture`:** This section decribes features exclusive to `mixture`
+> and/or implemented in a non-TAOCP way.
+
 ### `x-ieee754`: IEEE 754-compatible floating-point arithmetic
 
 This extension adds support to `binary32` floating-point format as described in
 [IEEE 754-2008](https://standards.ieee.org/ieee/754/4211/) and Rust [`f32`].
 
-> **Specific to `mixture`:** See [`sim::Opcode::Add`], [`sim::Opcode::Sub`],
-> [`sim::Opcode::Mul`], [`sim::Opcode::Div`], [`sim::Opcode::Special`],
-> [`sim::Opcode::CmpA`] and [`sim::Opcode::Jmp`] for details.
+#### Data layout
 
-> **Specific to `mixture`:** [`JA`](sim::Opcode::JA) and [`JX`](sim::Opcode::JX)
-> look at sign byte to determine whether to jump or not, so jumps on `NaN`s are
-> undefined.
+A `binary32` scalar fully occupies a [`FullWord`](sim::FullWord). When loading `binary32` scalars
+in MIX, the only valid field specification is `(0:5)`. Loading only a part of a
+[`FullWord`](sim::FullWord), or manipulating any byte in a `binary32` scalar with instructions
+not prefixed with `F32` will yield undefined result.
 
-WIP.
+
+|   0   |   1   |   2   |   3   |   4   |   5   |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+|   ±   |   X   |  `f`  |  `f`  |  `f`  |  `f`  |
+
+In reality, only `(2:5)` part of a [`FullWord`](sim::FullWord) is used to store a `binary32` scalar.
+The sign byte is only set while storing computation results; its value is not honored when reading
+computation operands. Thus, such a wrongly-signed word representing the quantity `+1.0f32` will
+never be constructed by `mixture`:
+
+|   0   |   1   |   2    |   3    |   4    |   5    |
+| :---: | :---: | :----: | :----: | :----: | :----: |
+| **-** |   X   | `0x3F` | `0x80` | `0x00` | `0x00` |
+
+but can be created by hand. If such a quantity is used in a calculation, its actual value will be
+`+1.0f32`, rather than `-1.0f32`.
+
+#### Conversion instructions
+
+* `F32CVTF322I4B` ([`sim::Opcode::Special`], `F = 3`): Convert and round IEEE 754 `binary32`
+  to 4-bytes integer.
+* `F32CVTF322I2B` ([`sim::Opcode::Special`], `F = 4`): Convert and round IEEE 754 `binary32`
+  to 2-bytes integer.
+* `F32CVTF322I1B` ([`sim::Opcode::Special`], `F = 5`): Convert and round IEEE 754 `binary32`
+  to 1-byte integer.
+* `F32CVTI4B2F32` ([`sim::Opcode::Special`], `F = 6`): Convert 4-bytes integer to IEEE 754 `binary32`.
+* `F32CVTI2B2F32` ([`sim::Opcode::Special`], `F = 7`): Convert 2-bytes integer to IEEE 754 `binary32`.
+* `F32CVTI1B2F32` ([`sim::Opcode::Special`], `F = 8`): Convert 1-byte integer to IEEE 754 `binary32`.
+
+These instructions convert source scalars stored in `rA` into destination type, and store the
+result in `rA(0:5)`.
+
+For integer-to-`binary32`, the source is fetched from least significant byte and is always
+considered positive. For example, if `rA` contains:
+
+|   0   |   1   |   2   |   3   |   4   |   5   |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+|   -   |  `9`  |  `8`  |  `7`  |  `6`  |  `5`  |
+
+performing `F32CVTI1B2F32` will yield `binary32` representation of `+5` in `rA(0:5)`.
+
+|   0   |   1   |   2    |   3    |   4    |   5    |
+| :---: | :---: | :----: | :----: | :----: | :----: |
+|   +   |   X   | `0x40` | `0xA0` | `0x00` | `0x00` |
+
+##### Special result behavior
+
+When the source scalar is outside the destination type's representable range, the overflow toggle
+be turned on and source will be clamped to destination type.
+
+Converting a NaN to integer will result in overflow toggle being turned on. The result will be zero.
+
+#### Arithmetic instructions
+
+* `F32ADD` ([`sim::Opcode::Add`], `F = 7`): IEEE 754 `binary32` addition.
+* `F32SUB` ([`sim::Opcode::Sub`], `F = 7`): IEEE 754 `binary32` subtraction.
+* `F32MUL` ([`sim::Opcode::Mul`], `F = 7`): IEEE 754 `binary32` multiplication.
+* `F32DIV` ([`sim::Opcode::Div`], `F = 7`): IEEE 754 `binary32` division.
+
+These instrutions takes `rA` as left operand and `V` as right operand. Result is stored in `rA`.
+
+##### Special result behavior
+
+If the calculation result is either NaN or ±Infinity, overflow toggle will be turned on. The result
+will still be stored as-is in `rA`.
+
+#### Comparison instructions
+
+* `F32CMPA` ([`sim::Opcode::CmpA`], `F = 7`): Compare `rA` with `V` as `binary32` values.
+* `F32CMPX` ([`sim::Opcode::CmpX`], `F = 7`): Compare `rX` with `V` as `binary32` values.
+
+Compare `rA` or `rX` against `V` as `binary32` values. Stores result in comparison indicator.
+
+Note that NaNs are unordered against any other values.
+
+##### Special result behavior
+
+Trivial.
+
+#### Jump instructions
+
+The regular [`sim::Opcode::Jmp`] variants also works for `binary32` comparisons.
+
+* `F32JORD` ([`sim::Opcode::Jmp`], `F = 11`): Jump on ordered.
+* `F32JUNORD` ([`sim::Opcode::Jmp`], `F = 12`): Jump on unordered.
+
+Perform jump according to last `binary32` comparison result.
+
+##### Special result behavior
+
+Trivial.
 
 ### `x-binary`: Binary operations (TAOCP Section 4.5.2)
 
 This extension adds support to binary operations to registers and words, allowing
 for bit-wise shifts and conditional jumps on final bit of registers (even/odd).
 
-> **Specific to `mixture`:** See [`sim::Opcode::Shift`], [`sim::Opcode::JA`] and
-> [`sim::Opcode::JX`] for details.
-
 #### Shift instructions
 
-* `SLB`: Shift left `rAX` binary. `C = 6`; `F = 6`.
+* `SLB` ([`sim::Opcode::Shift`], `F = 6`): Shift left `rAX` binary.
   The contents of `rA` and `rX` are shifted left `M` binary places.
   The signs of `rA` and `rX` are not affected.)
-* `SRB`: Shift right `rAX` binary. `C = 6`; `F = 7`.
+* `SRB` ([`sim::Opcode::Shift`], `F = 7`): Shift right `rAX` binary. `C = 6`; `F = 7`.
   The contents of `rA` and `rX` are shifted right `M` binary places.
 
 #### Jump instructions
 
-* `JAE`: Jump `rA` even. `C = 40`; `F = 6`.
-* `JAO`: Jump `rA` odd. `C = 40`; `F = 7`.
-* `JXE`: Jump `rX` even. `C = 47`; `F = 6`.
-* `JXO`: Jump `rX` odd. `C = 47`; `F = 7`.
+* `JAE` ([`sim::Opcode::JA`], `F = 6`): Jump `rA` even. `C = 40`; `F = 6`.
+* `JAO` ([`sim::Opcode::JA`], `F = 7`): Jump `rA` odd. `C = 40`; `F = 7`.
+* `JXE` ([`sim::Opcode::JX`], `F = 6`): Jump `rX` even. `C = 47`; `F = 6`.
+* `JXO` ([`sim::Opcode::JX`], `F = 7`): Jump `rX` odd. `C = 47`; `F = 7`.
+
+These instructions look at the least significant bit in `rA` and `rX`, performing jumps
+according to its oddity.
