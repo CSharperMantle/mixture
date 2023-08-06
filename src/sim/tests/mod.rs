@@ -3,5 +3,5 @@
 
 mod alphabet;
 mod instr;
+mod mem;
 mod mix_machine;
-mod word;

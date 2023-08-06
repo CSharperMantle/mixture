@@ -1,7 +1,7 @@
 use core::convert::TryFrom;
 use core::ops::RangeInclusive;
 
-use super::word::FullWord;
+use super::mem::FullWord;
 
 /// An instruction in [`MixVM`].
 ///
@@ -130,11 +130,11 @@ pub enum Opcode {
     /// ```text
     /// rAX <- rA * V
     /// ```
-    /// 
+    ///
     /// ------
-    /// 
+    ///
     /// * `F32MUL(7)` (`x-ieee754`) - IEEE 754 `binary32` multiplication.
-    /// 
+    ///
     /// ```text
     /// rA <- rA * V
     /// ```
@@ -145,11 +145,11 @@ pub enum Opcode {
     /// ```text
     /// rA <- rAX / V; rX <- rAX % V
     /// ```
-    /// 
+    ///
     /// ------
-    /// 
+    ///
     /// * `F32DIV(7)` (`x-ieee754`) - IEEE 754 `binary32` division.
-    /// 
+    ///
     /// ```text
     /// rA <- rA / V
     /// ```
@@ -393,9 +393,9 @@ pub enum Opcode {
     /// * `JGE(7)` - Jump on greater-or-equal.
     /// * `JNE(8)` - Jump on not equal.
     /// * `JLE(9)` - Jump on less-or-equal.
-    /// 
+    ///
     /// ------
-    /// 
+    ///
     /// * `F32JORD(10)` (`x-ieee754`) - Jump on ordered.
     /// * `F32JUNORD(11)` (`x-ieee754`) - Jump on unordered.
     Jmp = 39,
@@ -419,7 +419,7 @@ pub enum Opcode {
     /// ```text
     /// rA & 1 : 0; jump
     /// ```
-    /// 
+    ///
     /// ------
     ///
     /// See also [`Opcode::Jmp`].
@@ -631,11 +631,11 @@ pub enum Opcode {
     /// ```text
     /// CI <- rA(F) : V
     /// ```
-    /// 
+    ///
     /// ------
-    /// 
+    ///
     /// * `F32CMPA(7)` (`x-ieee754`) - Compare `rA` with `V` as `binary32` values.
-    /// 
+    ///
     /// ```text
     /// CI <- rA : V
     /// ```
@@ -688,11 +688,11 @@ pub enum Opcode {
     /// ```text
     /// CI <- rX(F) : V
     /// ```
-    /// 
+    ///
     /// ------
-    /// 
+    ///
     /// * `F32CMPX(7)` (`x-ieee754`) - Compare `rX` with `V` as `binary32` values.
-    /// 
+    ///
     /// ```text
     /// CI <- rX : V
     /// ```
