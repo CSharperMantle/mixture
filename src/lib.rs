@@ -1,5 +1,4 @@
 #![doc = include_str!("../README.md")]
-
 #![no_std]
 #![deny(clippy::all)]
 #![deny(clippy::unwrap_used)]
@@ -14,13 +13,15 @@ extern crate core;
 use cfg_block::cfg_block;
 
 mod alphabet;
-mod instr;
-mod mem;
-mod mix_vm;
-
 pub use alphabet::*;
+
+mod instr;
 pub use instr::*;
+
+mod mem;
 pub use mem::*;
+
+mod mix_vm;
 pub use mix_vm::*;
 
 cfg_block! {
@@ -29,6 +30,9 @@ cfg_block! {
         pub use io::*;
     }
 }
+
+#[cfg(feature = "parse")]
+pub mod parse;
 
 #[cfg(test)]
 mod tests;

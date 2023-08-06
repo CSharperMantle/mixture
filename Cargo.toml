@@ -16,8 +16,9 @@ name = "mixture"
 path = "src/lib.rs"
 
 [features]
-default = [ "std", "io", "x-ieee754", "x-binary" ]
+default = [ "std", "io", "parse", "x-ieee754", "x-binary" ]
 std = []
 io = [ "std" ]
+parse = [ "std" ]
 x-ieee754 = []
 x-binary = []

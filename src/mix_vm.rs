@@ -1,6 +1,3 @@
-#[cfg(any(feature = "std", test))]
-use std::prelude::v1::*;
-
 use core::cmp::Ordering;
 
 use crate::*;
@@ -105,7 +102,7 @@ pub struct MixVM {
 
     /// IO devices.
     #[cfg(feature = "io")]
-    pub io_devices: [Option<Box<dyn io::IODevice>>; 21],
+    pub io_devices: [Option<std::boxed::Box<dyn io::IODevice>>; 21],
 }
 
 impl MixVM {
@@ -305,7 +302,7 @@ impl MixVM {
     fn helper_get_io_device_mut(
         &mut self,
         dev_id: usize,
-    ) -> Result<&mut Box<dyn io::IODevice>, ErrorCode> {
+    ) -> Result<&mut std::boxed::Box<dyn io::IODevice>, ErrorCode> {
         let dev = self
             .io_devices
             .get_mut(dev_id)
