@@ -8,7 +8,7 @@ use super::mem::FullWord;
 /// Instructions are represented in [`FullWord`]s,
 /// thus it can be converted from such type after validation.
 ///
-/// [`MixVM`]: crate::sim::MixVM
+/// [`MixVM`]: crate::MixVM
 #[derive(Clone, Copy)]
 pub struct Instruction {
     /// The signed address, `A`, read big-endian.
@@ -37,7 +37,7 @@ impl Instruction {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::*;
+    /// use mixture::*;
     ///
     /// let instr = Instruction::new(2000, 0x03, 0x02, Opcode::LdA);
     /// assert_eq!(instr.addr, 2000);
@@ -69,7 +69,7 @@ impl TryFrom<FullWord> for Instruction {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::*;
+    /// use mixture::*;
     ///
     /// let mut word = FullWord::new();
     /// word.set_all([0, 0x07, 0xD0, 0x02, 0x03, 0x08]);
@@ -100,7 +100,7 @@ impl TryFrom<FullWord> for Instruction {
 /// field associated with this instruction. One opcode could map
 /// to multiple operations, using `F` to distinguish among.
 ///
-/// [`MixVM`]: crate::sim::MixVM
+/// [`MixVM`]: crate::MixVM
 #[derive(Clone, Copy, PartialEq, Eq, Debug, num_enum::TryFromPrimitive)]
 #[repr(u8)]
 pub enum Opcode {
@@ -723,7 +723,7 @@ impl ToRangeInclusive<usize> for u8 {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::*;
+    /// use mixture::*;
     ///
     /// assert_eq!(1.to_range_inclusive(), 0..=1);
     /// assert_eq!(13.to_range_inclusive(), 1..=5);
@@ -746,7 +746,7 @@ impl ToRangeInclusive<usize> for u8 {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::*;
+    /// use mixture::*;
     ///
     /// assert_eq!(1.to_range_inclusive_signless(), (1..=1, true));
     /// assert_eq!(13.to_range_inclusive_signless(), (1..=5, false));

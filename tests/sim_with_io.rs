@@ -4,7 +4,7 @@
 
 use std::sync::RwLock;
 
-use mixture::sim::*;
+use mixture::*;
 
 static PRIMES_OUTPUT: RwLock<String> = RwLock::new(String::new());
 const PRIMES_OUTPUT_EXPECTED: &'static str = r#"FIRST|FIVE|HUNDRED|PRIMES|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

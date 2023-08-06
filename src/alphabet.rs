@@ -3,7 +3,7 @@
 /// See D. E. Knuth, *The Art of Computer Programming*, Volume 1, pp 140
 /// for more information.
 ///
-/// [`MixVM`]: crate::sim::MixVM
+/// [`MixVM`]: crate::MixVM
 #[derive(Clone, Copy, PartialEq, Eq, Debug, num_enum::TryFromPrimitive)]
 #[repr(u8)]
 pub enum Alphabet {
@@ -174,7 +174,6 @@ pub enum Alphabet {
 
     /// The character '`‚`'.
     LowSQuote = 55,
-
 }
 
 impl TryFrom<Alphabet> for u8 {
@@ -188,7 +187,7 @@ impl TryFrom<Alphabet> for u8 {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::Alphabet;
+    /// use mixture::Alphabet;
     ///
     /// let a = Alphabet::A;
     /// let a_byte: u8 = a.try_into().unwrap();
@@ -210,7 +209,7 @@ impl TryFrom<Alphabet> for char {
     ///
     /// # Example
     /// ```rust
-    /// use mixture::sim::Alphabet;
+    /// use mixture::Alphabet;
     ///
     /// let a = Alphabet::A;
     /// let a_chr: char = a.try_into().unwrap();

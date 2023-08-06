@@ -3,7 +3,7 @@ use std::prelude::v1::*;
 
 use core::cmp::Ordering;
 
-use crate::sim::*;
+use crate::*;
 
 /// Error states for [`MixVM`].
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -64,7 +64,7 @@ impl Default for CompIndicator {
 ///
 /// # Example
 /// ```rust
-/// use mixture::sim::*;
+/// use mixture::*;
 ///
 /// let mut machine = MixVM::new();
 /// machine.reset();

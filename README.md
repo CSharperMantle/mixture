@@ -8,8 +8,8 @@ by D. E. Knuth.
 
 Crate highlights:
 
-* MIX simulation via [`sim::MixVM`]
-* I/O device simulation via [`sim::IODevice`] (enabled by `io` feature)
+* MIX simulation via [`MixVM`]
+* I/O device simulation via [`IODevice`] (enabled by `io` feature)
 * `#[no_std]` compatibility
 
 ## Crate features
@@ -28,7 +28,7 @@ workflow of creating, initializing, adding I/O device to, and running a MIX virt
 with `mixture`.
 
 ```rust
-use mixture::sim::{ErrorCode, FullWord, IODevice, Instruction, MixVM, Opcode};
+use mixture::{ErrorCode, FullWord, IODevice, Instruction, MixVM, Opcode};
 
 // Define common constants
 const ADDR_TEXT_HELLO: i16 = 2000;
@@ -157,7 +157,7 @@ A *computer word* consists of five bytes and a sign. The sign portion has only t
 possible values, `+` and `-`.
 
 > **Specific to `mixture`:** The sign in `mixture` is also encoded in a byte, whose
-> only valid content is [`sim::Word<N, P>::POS`] and [`sim::Word<N, P>::NEG`]. Other
+> only valid content is [`Word<N, P>::POS`] and [`Word<N, P>::NEG`]. Other
 > values written into the sign byte are considered undefined.
 
 ### Machine states
@@ -176,9 +176,9 @@ There are nine registers in MIX.
 Each register is denoted with a prefix '`r`' added to its name, e.g. '`rA`' for 'register
 `A`'.
 
-> **Specific to `mixture`:** `rA` and `rX` have a type of [`sim::FullWord`]. `rI1-6`
-> have a type of [`sim::HalfWord`]. `rJ` has a type of [`sim::PosHalfWord`]. All three types
-> are aliases for different instantiations of [`sim::Word<N, P>`].
+> **Specific to `mixture`:** `rA` and `rX` have a type of [`FullWord`]. `rI1-6`
+> have a type of [`HalfWord`]. `rJ` has a type of [`PosHalfWord`]. All three types
+> are aliases for different instantiations of [`Word<N, P>`].
 
 MIX has some more states that are not registers, and could only be manipulated through
 specific instructions:
@@ -192,10 +192,10 @@ specific instructions:
 > states.
 >
 > * The overflow toggle is a private field that is not exposed to users.
-> * The comparison indicator could contain values in the enum [`sim::CompIndicator`].
-> * The memory area is a struct named [`sim::Mem`].
+> * The comparison indicator could contain values in the enum [`CompIndicator`].
+> * The memory area is a struct named [`Mem`].
 > * I/O devices are only available while crate feature `io` is enabled, and are described by
->   dynamic trait [`sim::IODevice`].
+>   dynamic trait [`IODevice`].
 
 ### Partial fields of words
 
@@ -217,14 +217,14 @@ are:
 * `(4:4)`, the fourth byte only.
 * `(4:5)`, the two least significant bytes.
 
-> **Specific to `mixture`:** [`Word`][sim::Word<N, P>]s are able to be indexed by both [`usize`]
+> **Specific to `mixture`:** [`Word`][Word<N, P>]s are able to be indexed by both [`usize`]
 > scalars and [`core::ops::RangeInclusive<usize>`] ranges, so as to match the semantics proposed
 > in the book.
 
 The use of field specification varies among instructions. When encoded in an instruction,
 field specification is packed into one-byte scalar equals to `8 * L + R`.
 
-> **Specific to `mixture`:** There is a trait named [`sim::ToRangeInclusive<T>`] to simplify
+> **Specific to `mixture`:** There is a trait named [`ToRangeInclusive<T>`] to simplify
 > this conversion process. It is already implemented for [`u8`] by default. 
 
 ### Instruction format
@@ -236,15 +236,15 @@ Each instruction in MIX could fit in a single word. The encoding of instructions
 |   ±   |  `A`  |  `A`  |  `I`  |  `F`  |  `C`  |
 
 * `C`: the *operation code* specifying what operation is to be performed. For example, `C = 8`
-  specifies the operation [`LDA`][sim::Opcode::LdA], "load the register A".
+  specifies the operation [`LDA`][Opcode::LdA], "load the register A".
 
-> **Specific to `mixture`:** See [`sim::Opcode`] for a complete list of supported opcodes.
+> **Specific to `mixture`:** See [`Opcode`] for a complete list of supported opcodes.
 
 * `F`: the *modification* or *field* of an instruction. It is usually a packed field
   specification said above. For example, if `C = 8` and `F = 11`, the operation would be "load
   the register A with `(1:3)` field." Sometimes `F` is used to specify additional parameters,
   as it is on I/O instructions; in other cases it further refines the operation to carry out,
-  as on [register modification][sim::Opcode::ModifyA] instruction series.
+  as on [register modification][Opcode::ModifyA] instruction series.
 * `I`: the *index* part of an instruction. It must be an integer in the range between 0 and 6
   (both inclusive).
 * `A`: the *address* of the instruction. Note that the sign is part of the address.
@@ -264,7 +264,7 @@ Otherwise, if `I = i` (where `i` is an integer between 1 and 6), the content of 
 `rIi` is added algebraically to `A` to produce `M`, resembling a base-offset addressing mode.
 
 > **Specific to `mixture`:** If `I` is out of valid range, the VM will halt, and
-> [`sim::ErrorCode::InvalidIndex`] is returned as error.
+> [`ErrorCode::InvalidIndex`] is returned as error.
 
 If the produced `M` does not fit in two bytes, the result is undefined.
 
@@ -273,7 +273,7 @@ If the produced `M` does not fit in two bytes, the result is undefined.
 
 ### Operators
 
-For a brief sketch of the operators, see the inline documentation of variants in [`sim::Opcode`].
+For a brief sketch of the operators, see the inline documentation of variants in [`Opcode`].
 
 For a detailed explanation of instruction semantics and effects, please refer to
 *The Art of Computer Programming (Volume 1, 3rd. ed.)* by D. E. Knuth, or visit
@@ -291,9 +291,9 @@ This extension adds support to `binary32` floating-point format as described in
 
 #### Data layout
 
-A `binary32` scalar fully occupies a [`FullWord`](sim::FullWord). When loading `binary32` scalars
+A `binary32` scalar fully occupies a [`FullWord`]. When loading `binary32` scalars
 in MIX, the only valid field specification is `(0:5)`. Loading only a part of a
-[`FullWord`](sim::FullWord), or manipulating any byte in a `binary32` scalar with instructions
+[`FullWord`], or manipulating any byte in a `binary32` scalar with instructions
 not prefixed with `F32` will yield undefined result.
 
 
@@ -301,7 +301,7 @@ not prefixed with `F32` will yield undefined result.
 | :---: | :---: | :---: | :---: | :---: | :---: |
 |   ±   |   X   |  `f`  |  `f`  |  `f`  |  `f`  |
 
-In reality, only `(2:5)` part of a [`FullWord`](sim::FullWord) is used to store a `binary32` scalar.
+In reality, only `(2:5)` part of a [`FullWord`] is used to store a `binary32` scalar.
 The sign byte is only set while storing computation results; its value is not honored when reading
 computation operands. Thus, such a wrongly-signed word representing the quantity `+1.0f32` will
 never be constructed by `mixture`:
@@ -315,15 +315,15 @@ but can be created by hand. If such a quantity is used in a calculation, its act
 
 #### Conversion instructions
 
-* `F32CVTF322I4B` ([`sim::Opcode::Special`], `F = 3`): Convert and round IEEE 754 `binary32`
+* `F32CVTF322I4B` ([`Opcode::Special`], `F = 3`): Convert and round IEEE 754 `binary32`
   to 4-bytes integer.
-* `F32CVTF322I2B` ([`sim::Opcode::Special`], `F = 4`): Convert and round IEEE 754 `binary32`
+* `F32CVTF322I2B` ([`Opcode::Special`], `F = 4`): Convert and round IEEE 754 `binary32`
   to 2-bytes integer.
-* `F32CVTF322I1B` ([`sim::Opcode::Special`], `F = 5`): Convert and round IEEE 754 `binary32`
+* `F32CVTF322I1B` ([`Opcode::Special`], `F = 5`): Convert and round IEEE 754 `binary32`
   to 1-byte integer.
-* `F32CVTI4B2F32` ([`sim::Opcode::Special`], `F = 6`): Convert 4-bytes integer to IEEE 754 `binary32`.
-* `F32CVTI2B2F32` ([`sim::Opcode::Special`], `F = 7`): Convert 2-bytes integer to IEEE 754 `binary32`.
-* `F32CVTI1B2F32` ([`sim::Opcode::Special`], `F = 8`): Convert 1-byte integer to IEEE 754 `binary32`.
+* `F32CVTI4B2F32` ([`Opcode::Special`], `F = 6`): Convert 4-bytes integer to IEEE 754 `binary32`.
+* `F32CVTI2B2F32` ([`Opcode::Special`], `F = 7`): Convert 2-bytes integer to IEEE 754 `binary32`.
+* `F32CVTI1B2F32` ([`Opcode::Special`], `F = 8`): Convert 1-byte integer to IEEE 754 `binary32`.
 
 These instructions convert source scalars stored in `rA` into destination type, and store the
 result in `rA(0:5)`.
@@ -350,10 +350,10 @@ Converting a NaN to integer will result in overflow toggle being turned on. The 
 
 #### Arithmetic instructions
 
-* `F32ADD` ([`sim::Opcode::Add`], `F = 7`): IEEE 754 `binary32` addition.
-* `F32SUB` ([`sim::Opcode::Sub`], `F = 7`): IEEE 754 `binary32` subtraction.
-* `F32MUL` ([`sim::Opcode::Mul`], `F = 7`): IEEE 754 `binary32` multiplication.
-* `F32DIV` ([`sim::Opcode::Div`], `F = 7`): IEEE 754 `binary32` division.
+* `F32ADD` ([`Opcode::Add`], `F = 7`): IEEE 754 `binary32` addition.
+* `F32SUB` ([`Opcode::Sub`], `F = 7`): IEEE 754 `binary32` subtraction.
+* `F32MUL` ([`Opcode::Mul`], `F = 7`): IEEE 754 `binary32` multiplication.
+* `F32DIV` ([`Opcode::Div`], `F = 7`): IEEE 754 `binary32` division.
 
 These instrutions takes `rA` as left operand and `V` as right operand. Result is stored in `rA`.
 
@@ -364,8 +364,8 @@ will still be stored as-is in `rA`.
 
 #### Comparison instructions
 
-* `F32CMPA` ([`sim::Opcode::CmpA`], `F = 7`): Compare `rA` with `V` as `binary32` values.
-* `F32CMPX` ([`sim::Opcode::CmpX`], `F = 7`): Compare `rX` with `V` as `binary32` values.
+* `F32CMPA` ([`Opcode::CmpA`], `F = 7`): Compare `rA` with `V` as `binary32` values.
+* `F32CMPX` ([`Opcode::CmpX`], `F = 7`): Compare `rX` with `V` as `binary32` values.
 
 Compare `rA` or `rX` against `V` as `binary32` values. Stores result in comparison indicator.
 
@@ -377,10 +377,10 @@ Trivial.
 
 #### Jump instructions
 
-The regular [`sim::Opcode::Jmp`] variants also works for `binary32` comparisons.
+The regular [`Opcode::Jmp`] variants also works for `binary32` comparisons.
 
-* `F32JORD` ([`sim::Opcode::Jmp`], `F = 11`): Jump on ordered.
-* `F32JUNORD` ([`sim::Opcode::Jmp`], `F = 12`): Jump on unordered.
+* `F32JORD` ([`Opcode::Jmp`], `F = 11`): Jump on ordered.
+* `F32JUNORD` ([`Opcode::Jmp`], `F = 12`): Jump on unordered.
 
 Perform jump according to last `binary32` comparison result.
 
@@ -395,18 +395,18 @@ for bit-wise shifts and conditional jumps on final bit of registers (even/odd).
 
 #### Shift instructions
 
-* `SLB` ([`sim::Opcode::Shift`], `F = 6`): Shift left `rAX` binary.
+* `SLB` ([`Opcode::Shift`], `F = 6`): Shift left `rAX` binary.
   The contents of `rA` and `rX` are shifted left `M` binary places.
   The signs of `rA` and `rX` are not affected.)
-* `SRB` ([`sim::Opcode::Shift`], `F = 7`): Shift right `rAX` binary. `C = 6`; `F = 7`.
+* `SRB` ([`Opcode::Shift`], `F = 7`): Shift right `rAX` binary. `C = 6`; `F = 7`.
   The contents of `rA` and `rX` are shifted right `M` binary places.
 
 #### Jump instructions
 
-* `JAE` ([`sim::Opcode::JA`], `F = 6`): Jump `rA` even. `C = 40`; `F = 6`.
-* `JAO` ([`sim::Opcode::JA`], `F = 7`): Jump `rA` odd. `C = 40`; `F = 7`.
-* `JXE` ([`sim::Opcode::JX`], `F = 6`): Jump `rX` even. `C = 47`; `F = 6`.
-* `JXO` ([`sim::Opcode::JX`], `F = 7`): Jump `rX` odd. `C = 47`; `F = 7`.
+* `JAE` ([`Opcode::JA`], `F = 6`): Jump `rA` even. `C = 40`; `F = 6`.
+* `JAO` ([`Opcode::JA`], `F = 7`): Jump `rA` odd. `C = 40`; `F = 7`.
+* `JXE` ([`Opcode::JX`], `F = 6`): Jump `rX` even. `C = 47`; `F = 6`.
+* `JXO` ([`Opcode::JX`], `F = 7`): Jump `rX` odd. `C = 47`; `F = 7`.
 
 These instructions look at the least significant bit in `rA` and `rX`, performing jumps
 according to its oddity.

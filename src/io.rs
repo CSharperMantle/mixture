@@ -1,4 +1,4 @@
-use crate::sim::FullWord;
+use crate::FullWord;
 
 /// A device plugged into a [`MixVM`] to perform IO
 /// operations.
@@ -9,9 +9,9 @@ use crate::sim::FullWord;
 ///
 /// # Example
 /// ```rust
-/// use mixture::sim::IODevice;
-/// use mixture::sim::MixVM;
-/// use mixture::sim::FullWord;
+/// use mixture::IODevice;
+/// use mixture::MixVM;
+/// use mixture::FullWord;
 ///
 /// pub struct SomeDevice {}
 ///
@@ -46,8 +46,8 @@ use crate::sim::FullWord;
 /// mix.reset();
 /// mix.io_devices[0] = Some(Box::new(SomeDevice {}));
 /// ```
-/// 
-/// [`MixVM`]: crate::sim::MixVM
+///
+/// [`MixVM`]: crate::MixVM
 pub trait IODevice {
     /// Read a block of [`FullWord`]s from the device into the buffer.
     ///

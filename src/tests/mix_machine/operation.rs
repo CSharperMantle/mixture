@@ -1,4 +1,4 @@
-use crate::sim::mix_vm::*;
+use crate::mix_vm::*;
 
 #[test]
 fn test_reset_restart() {

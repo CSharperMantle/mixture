@@ -1,6 +1,6 @@
 use std::prelude::v1::*;
 
-use crate::sim::*;
+use crate::*;
 
 #[test]
 fn test_unknown_device() {

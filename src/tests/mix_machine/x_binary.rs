@@ -1,4 +1,4 @@
-use crate::sim::*;
+use crate::*;
 
 #[test]
 fn test_binary_jmp_reg_6b() {
