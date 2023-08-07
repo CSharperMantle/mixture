@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use const_format::formatcp;
 use once_cell::sync::Lazy;
 use regex::Regex;
