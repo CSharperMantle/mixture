@@ -110,37 +110,34 @@ pub struct ParsedAddress {
 }
 
 fn parse_normal_address(input: &str) -> Result<ParsedAddress, ()> {
-    if let Some(c) = regex::REGEX_ADDRESS_A.captures(input) {
+    if let Some(c) = regex::REGEX_ADDRESS_A_AF.captures(input) {
         let a_part = parse_expr(c.name("a").unwrap_or_else(|| unreachable!()).as_str())?;
+        let f_part = match c.name("f") {
+            Some(m) => match parse_expr(m.as_str()) {
+                Ok(v) => Ok(Some(v)),
+                Err(_) => Err(()),
+            },
+            None => Ok(None),
+        }?;
         Ok(ParsedAddress {
             a_part,
             i_part: None,
-            f_part: None,
+            f_part,
         })
-    } else if let Some(c) = regex::REGEX_ADDRESS_AF.captures(input) {
-        let a_part = parse_expr(c.name("a").unwrap_or_else(|| unreachable!()).as_str())?;
-        let f_part = parse_expr(c.name("f").unwrap_or_else(|| unreachable!()).as_str())?;
-        Ok(ParsedAddress {
-            a_part,
-            i_part: None,
-            f_part: Some(f_part),
-        })
-    } else if let Some(c) = regex::REGEX_ADDRESS_AI.captures(input) {
+    } else if let Some(c) = regex::REGEX_ADDRESS_AI_AIF.captures(input) {
         let a_part = parse_expr(c.name("a").unwrap_or_else(|| unreachable!()).as_str())?;
         let i_part = parse_expr(c.name("i").unwrap_or_else(|| unreachable!()).as_str())?;
+        let f_part = match c.name("f") {
+            Some(m) => match parse_expr(m.as_str()) {
+                Ok(v) => Ok(Some(v)),
+                Err(_) => Err(()),
+            },
+            None => Ok(None),
+        }?;
         Ok(ParsedAddress {
             a_part,
             i_part: Some(i_part),
-            f_part: None,
-        })
-    } else if let Some(c) = regex::REGEX_ADDRESS_AIF.captures(input) {
-        let a_part = parse_expr(c.name("a").unwrap_or_else(|| unreachable!()).as_str())?;
-        let f_part = parse_expr(c.name("f").unwrap_or_else(|| unreachable!()).as_str())?;
-        let i_part = parse_expr(c.name("i").unwrap_or_else(|| unreachable!()).as_str())?;
-        Ok(ParsedAddress {
-            a_part,
-            i_part: Some(i_part),
-            f_part: Some(f_part),
+            f_part,
         })
     } else {
         Err(())
@@ -188,4 +185,15 @@ impl TryFrom<&str> for ParsedLine {
         });
         Ok(ParsedLine { loc, op, address })
     }
+}
+
+#[test]
+fn test() {
+    use std::println;
+
+    println!("{:?}", ParsedLine::try_from("   STX  1").unwrap());
+    println!("{:?}", ParsedLine::try_from("   STX  1(2:3)").unwrap());
+    println!("{:?}", ParsedLine::try_from("   STX  1,2").unwrap());
+    println!("{:?}", ParsedLine::try_from("   STX  1,2(3:4)").unwrap());
+    println!("{:?}", ParsedLine::try_from("   CON  1,2(0:1),3,1000").unwrap());
 }
