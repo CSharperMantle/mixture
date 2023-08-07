@@ -17,6 +17,7 @@
         "Fcmp",
         "Fdiv",
         "Fmul",
+        "formatcp",
         "Fsub",
         "Incx",
         "JANN",
@@ -38,6 +39,7 @@
         "Slax",
         "Srax",
         "TAOCP",
+        "Tokenizable",
         "unhalts"
     ],
     "rust-analyzer.diagnostics.disabled": [

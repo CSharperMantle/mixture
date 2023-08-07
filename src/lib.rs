@@ -31,8 +31,8 @@ cfg_block! {
     }
 }
 
-#[cfg(feature = "parse")]
-pub mod parse;
+#[cfg(feature = "mixal")]
+pub mod mixal;
 
 #[cfg(test)]
 mod tests;

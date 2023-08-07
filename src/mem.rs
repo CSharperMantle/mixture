@@ -406,7 +406,7 @@ pub type PosHalfWord = Word<3, true>;
 /// The memory area of a [`MixVM`] comprised of [`FullWord`]s.
 ///
 /// [`MixVM`]: crate::MixVM
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Mem {
     /// The memory area.
     data: [FullWord; Self::SIZE],
