@@ -186,14 +186,3 @@ impl TryFrom<&str> for ParsedLine {
         Ok(ParsedLine { loc, op, address })
     }
 }
-
-#[test]
-fn test() {
-    use std::println;
-
-    println!("{:?}", ParsedLine::try_from("   STX  1").unwrap());
-    println!("{:?}", ParsedLine::try_from("   STX  1(2:3)").unwrap());
-    println!("{:?}", ParsedLine::try_from("   STX  1,2").unwrap());
-    println!("{:?}", ParsedLine::try_from("   STX  1,2(3:4)").unwrap());
-    println!("{:?}", ParsedLine::try_from("   CON  1,2(0:1),3,1000").unwrap());
-}
