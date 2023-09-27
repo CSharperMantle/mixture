@@ -1106,7 +1106,7 @@ impl MixVM {
         Ok(())
     }
 
-    /// Handler for `SLA`, `SRA`, `SLAX`, `SRAX`, `SLC` and `SRC`.
+    /// Handler for `SLA`, `SRA`, `SLAX`, `SRAX`, `SLC`, `SRC`, `SLB` and `SRB`.
     fn handle_instr_shift(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         let count = self.helper_get_eff_addr(instr.addr, instr.index)?;
         if instr.field == 0 || instr.field == 1 {

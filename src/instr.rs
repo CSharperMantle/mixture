@@ -108,7 +108,6 @@ pub enum Opcode {
     Nop = 0,
 
     /// * `ADD(0:5)` - Integer addition.
-    /// * `FADD(6)` - Float addition.
     /// * `F32ADD(7)` (`x-ieee754`) - IEEE 754 `binary32` addition.
     ///
     /// ```text
@@ -117,7 +116,6 @@ pub enum Opcode {
     Add = 1,
 
     /// * `SUB(0:5)` - Integer subtraction.
-    /// * `FSUB(6)` - Float subtraction.
     /// * `F32SUB(7)` (`x-ieee754`) - IEEE 754 `binary32` subtraction.
     ///
     /// ```text
