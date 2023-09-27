@@ -518,85 +518,79 @@ impl MixVM {
             // machine later.
             self.halted = true;
             Ok(())
-        } else if cfg!(feature = "x-ieee754") && instr.field == 3 {
-            // F32CVTF322I4B
-            let reg = &mut self.r_a;
-            let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
-            if !orig_value.is_finite()
-                || orig_value > i32::MAX as f32
-                || orig_value < i32::MIN as f32
-            {
-                self.overflow = true
-            }
-            let result = orig_value.abs() as u32;
-            reg.set_all([0; 6]);
-            reg[0] = if orig_value.is_sign_positive() {
-                FullWord::POS
+        } else if cfg!(feature = "x-ieee754") {
+            if instr.field == 3 {
+                // F32CVTF322I4B
+                let reg = &mut self.r_a;
+                let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
+                reg.set_all([0; 6]);
+                reg[0] = if orig_value.is_sign_positive() {
+                    FullWord::POS
+                } else {
+                    FullWord::NEG
+                };
+                if !orig_value.is_finite()
+                    || orig_value > i32::MAX as f32
+                    || orig_value < i32::MIN as f32
+                {
+                    self.overflow = true
+                }
+                let result = orig_value.abs() as u32;
+                reg[2..=5].copy_from_slice(&result.to_be_bytes());
+                Ok(())
+            } else if instr.field == 4 {
+                // F32CVTF322I2B
+                let reg = &mut self.r_a;
+                let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
+                reg.set_all([0; 6]);
+                reg[0] = if orig_value.is_sign_positive() {
+                    FullWord::POS
+                } else {
+                    FullWord::NEG
+                };
+                if !orig_value.is_finite()
+                    || orig_value > i16::MAX as f32
+                    || orig_value < i16::MIN as f32
+                {
+                    self.overflow = true
+                }
+                let result = orig_value.abs() as u16;
+                reg[4..=5].copy_from_slice(&result.to_be_bytes());
+                Ok(())
+            } else if instr.field == 5 {
+                // F32CVTF322I1B
+                let reg = &mut self.r_a;
+                let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
+                reg.set_all([0; 6]);
+                reg[0] = if orig_value.is_sign_positive() {
+                    FullWord::POS
+                } else {
+                    FullWord::NEG
+                };
+                if !orig_value.is_finite()
+                    || orig_value > i8::MAX as f32
+                    || orig_value < i8::MIN as f32
+                {
+                    self.overflow = true
+                }
+                let result = orig_value.abs() as u8;
+                reg[5..=5].copy_from_slice(&result.to_be_bytes());
+                Ok(())
             } else {
-                FullWord::NEG
-            };
-            reg[2..=5].copy_from_slice(&result.to_be_bytes());
-            Ok(())
-        } else if cfg!(feature = "x-ieee754") && instr.field == 4 {
-            // F32CVTF322I2B
-            let reg = &mut self.r_a;
-            let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
-            if !orig_value.is_finite()
-                || orig_value > i16::MAX as f32
-                || orig_value < i16::MIN as f32
-            {
-                self.overflow = true
+                let reg = &mut self.r_a;
+                let new_value = match instr.field {
+                    // F32CVTI4B2F32
+                    6 => Ok(u32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]) as f32),
+                    // F32CVTI2B2F32
+                    7 => Ok(u16::from_be_bytes([reg[4], reg[5]]) as f32),
+                    // F32CVTI1B2F32
+                    8 => Ok(u8::from_be_bytes([reg[5]]) as f32),
+                    _ => Err(ErrorCode::InvalidField),
+                }?;
+                reg.set_all([0; 6]);
+                reg[2..=5].copy_from_slice(&new_value.to_be_bytes());
+                Ok(())
             }
-            let result = orig_value.abs() as u16;
-            reg.set_all([0; 6]);
-            reg[0] = if orig_value.is_sign_positive() {
-                FullWord::POS
-            } else {
-                FullWord::NEG
-            };
-            reg[4..=5].copy_from_slice(&result.to_be_bytes());
-            Ok(())
-        } else if cfg!(feature = "x-ieee754") && instr.field == 5 {
-            // F32CVTF322I1B
-            let reg = &mut self.r_a;
-            let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
-            if !orig_value.is_finite() || orig_value > i8::MAX as f32 || orig_value < i8::MIN as f32
-            {
-                self.overflow = true
-            }
-            let result = orig_value.abs() as u8;
-            reg.set_all([0; 6]);
-            reg[0] = if orig_value.is_sign_positive() {
-                FullWord::POS
-            } else {
-                FullWord::NEG
-            };
-            reg[5..=5].copy_from_slice(&result.to_be_bytes());
-            Ok(())
-        } else if cfg!(feature = "x-ieee754") && instr.field == 6 {
-            // F32CVTI4B2F32
-            let reg = &mut self.r_a;
-            let orig_value = u32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
-            let new_value = orig_value as f32;
-            reg.set_all([0; 6]);
-            reg[2..=5].copy_from_slice(&new_value.to_be_bytes());
-            Ok(())
-        } else if cfg!(feature = "x-ieee754") && instr.field == 7 {
-            // F32CVTI2B2F32
-            let reg = &mut self.r_a;
-            let orig_value = u16::from_be_bytes([reg[4], reg[5]]);
-            let new_value = orig_value as f32;
-            reg.set_all([0; 6]);
-            reg[2..=5].copy_from_slice(&new_value.to_be_bytes());
-            Ok(())
-        } else if cfg!(feature = "x-ieee754") && instr.field == 8 {
-            // F32CVTI1B2F32
-            let reg = &mut self.r_a;
-            let orig_value = u8::from_be_bytes([reg[5]]);
-            let new_value = orig_value as f32;
-            reg.set_all([0; 6]);
-            reg[2..=5].copy_from_slice(&new_value.to_be_bytes());
-            Ok(())
         } else {
             Err(ErrorCode::InvalidField)
         }
