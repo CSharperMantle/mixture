@@ -202,7 +202,7 @@ impl MixVM {
             Opcode::St5 => self.handle_instr_store_3b(&instr),
             Opcode::St6 => self.handle_instr_store_3b(&instr),
             Opcode::StX => self.handle_instr_store_6b(&instr),
-            Opcode::StJ => self.handle_instr_store_3b(&instr),
+            Opcode::StJ => self.handle_instr_store_j(&instr),
             Opcode::StZ => self.handle_instr_store_zero(&instr),
 
             Opcode::Jbus => self.handle_instr_jbus_jred(&instr),
@@ -699,6 +699,25 @@ impl MixVM {
             Opcode::St6 => &self.r_in[6],
             _ => unreachable!(),
         };
+        let padded_reg = [reg[0], 0, 0, 0, reg[1], reg[2]];
+        // Copy bytes shifted right.
+        for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
+            mem_cell[mem_cursor] = padded_reg[reg_cursor];
+        }
+        if sign_copy_needed {
+            // Copy sign bit.
+            mem_cell[0] = padded_reg[0];
+        }
+        Ok(())
+    }
+
+    /// Handler for `STJ`.
+    fn handle_instr_store_j(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
+        // Obtain everything.
+        let (field, sign_copy_needed) = instr.field.to_range_inclusive_signless();
+        let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+        let mem_cell = &mut self.mem[addr];
+        let reg = &self.r_j;
         let padded_reg = [reg[0], 0, 0, 0, reg[1], reg[2]];
         // Copy bytes shifted right.
         for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
