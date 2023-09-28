@@ -167,9 +167,14 @@ fn test_load_3b() {
     mix.mem[3] = Instruction::new(2000, 3, 0, Opcode::Ld1).into();
     mix.mem[4] = Instruction::new(2000, 36, 0, Opcode::Ld1).into();
     mix.mem[5] = Instruction::new(2000, 0, 0, Opcode::Ld1).into();
-    mix.mem[2000].set_all([0, 0, 80, 3, 5, 4]);
+    mix.mem[2000].set_all([1, 0, 80, 3, 5, 4]);
 
     mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.overflow, false);
+    assert_eq!(mix.r_in[1][..], [1, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
@@ -179,27 +184,22 @@ fn test_load_3b() {
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][..], [1, 5, 4]);
+    assert_eq!(mix.r_in[1][..], [0, 5, 4]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][..], [1, 5, 4]);
+    assert_eq!(mix.r_in[1][..], [1, 80, 3]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][..], [0, 80, 3]);
+    assert_eq!(mix.r_in[1][..], [0, 0, 5]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][..], [1, 0, 5]);
-
-    mix.step().unwrap();
-    assert_eq!(mix.halted, false);
-    assert_eq!(mix.overflow, false);
-    assert_eq!(mix.r_in[1][..], [0, 0, 0]);
+    assert_eq!(mix.r_in[1][..], [1, 0, 0]);
 }
 
 #[test]
@@ -348,7 +348,7 @@ fn test_store_zero() {
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
-    assert_eq!(mix.mem[1000][..], [1, 0, 0, 0, 0, 0]);
+    assert_eq!(mix.mem[1000][..], [0, 0, 0, 0, 0, 0]);
 
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
@@ -473,6 +473,53 @@ fn test_store_3b() {
     mix.step().unwrap();
     assert_eq!(mix.halted, false);
     assert_eq!(mix.mem[2005][..], [1, 7, 2, 3, 4, 5]);
+}
+
+#[test]
+fn test_store_j() {
+    let mut mix = MixVM::new();
+    mix.reset();
+
+    mix.mem[0] = Instruction::new(2000, 5, 0, Opcode::StJ).into();
+    mix.mem[1] = Instruction::new(2001, 13, 0, Opcode::StJ).into();
+    mix.mem[2] = Instruction::new(2002, 45, 0, Opcode::StJ).into();
+    mix.mem[3] = Instruction::new(2003, 18, 0, Opcode::StJ).into();
+    mix.mem[4] = Instruction::new(2004, 19, 0, Opcode::StJ).into();
+    mix.mem[5] = Instruction::new(2005, 1, 0, Opcode::StJ).into();
+
+    mix.r_j.set_all([0, 6, 7]);
+    mix.mem[2000].set_all([1, 1, 2, 3, 4, 5]);
+    mix.mem[2001].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2002].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2003].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2004].set_all([0, 1, 2, 3, 4, 5]);
+    mix.mem[2005].set_all([0, 1, 2, 3, 4, 5]);
+
+    mix.restart();
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2000][..], [0, 0, 0, 0, 6, 7]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2001][..], [0, 0, 0, 0, 6, 7]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2002][..], [0, 1, 2, 3, 4, 7]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2003][..], [0, 1, 7, 3, 4, 5]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2004][..], [0, 1, 6, 7, 4, 5]);
+
+    mix.step().unwrap();
+    assert_eq!(mix.halted, false);
+    assert_eq!(mix.mem[2005][..], [0, 7, 2, 3, 4, 5]);
 }
 
 #[test]

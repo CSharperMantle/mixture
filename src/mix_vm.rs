@@ -352,7 +352,7 @@ impl MixVM {
             _ => unreachable!(),
         };
         // Zero reg before copying. Handle 'understood' negative sign.
-        reg.set_all([0; 6]);
+        reg.set_all([FullWord::POS, 0, 0, 0, 0, 0]);
         // Copy bytes shifted right.
         for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
             reg[reg_cursor] = mem_cell[mem_cursor];
@@ -386,7 +386,7 @@ impl MixVM {
         // We need to care about only the 4th, 5th and the sign byte.
         // So we make a temporary word and fill back the reg only the
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
-        let mut temp = FullWord::from_bytes([1, 0, 0, 0, 0, 0]);
+        let mut temp = FullWord::from_bytes([FullWord::POS, 0, 0, 0, 0, 0]);
         // Copy bytes shifted right.
         for (reg_cursor, mem_cursor) in (1..=5).rev().zip(field.rev()) {
             temp[reg_cursor] = mem_cell[mem_cursor];
@@ -423,7 +423,7 @@ impl MixVM {
         // We need to care about only the 4th, 5th and the sign byte.
         // So we make a temporary word and fill back the reg only the
         // 4th, 5th and the sign byte. Handle 'understood' positive sign.
-        let mut temp = FullWord::from_bytes([0; 6]);
+        let mut temp = FullWord::from_bytes([FullWord::POS, 0, 0, 0, 0, 0]);
         // Copy bytes shifted right.
         for (reg_cursor, memory_cell_cursor) in (1..=5).rev().zip(field.rev()) {
             temp[reg_cursor] = memory_cell[memory_cell_cursor];
@@ -523,7 +523,7 @@ impl MixVM {
                 // F32CVTF322I4B
                 let reg = &mut self.r_a;
                 let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
-                reg.set_all([0; 6]);
+                reg.set_all([FullWord::POS, 0, 0, 0, 0, 0]);
                 reg[0] = if orig_value.is_sign_positive() {
                     FullWord::POS
                 } else {
@@ -542,7 +542,7 @@ impl MixVM {
                 // F32CVTF322I2B
                 let reg = &mut self.r_a;
                 let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
-                reg.set_all([0; 6]);
+                reg.set_all([FullWord::POS, 0, 0, 0, 0, 0]);
                 reg[0] = if orig_value.is_sign_positive() {
                     FullWord::POS
                 } else {
@@ -561,7 +561,7 @@ impl MixVM {
                 // F32CVTF322I1B
                 let reg = &mut self.r_a;
                 let orig_value = f32::from_be_bytes([reg[2], reg[3], reg[4], reg[5]]);
-                reg.set_all([0; 6]);
+                reg.set_all([FullWord::POS, 0, 0, 0, 0, 0]);
                 reg[0] = if orig_value.is_sign_positive() {
                     FullWord::POS
                 } else {
@@ -587,7 +587,7 @@ impl MixVM {
                     8 => Ok(u8::from_be_bytes([reg[5]]) as f32),
                     _ => unreachable!(),
                 }?;
-                reg.set_all([0; 6]);
+                reg.set_all([FullWord::POS, 0, 0, 0, 0, 0]);
                 reg[2..=5].copy_from_slice(&new_value.to_be_bytes());
                 Ok(())
             }
@@ -633,7 +633,7 @@ impl MixVM {
         for i in field {
             if i == 0 {
                 // Deal with signs.
-                mem_cell[0] = 1;
+                mem_cell[0] = FullWord::POS;
             } else {
                 mem_cell[i] = 0;
             }
