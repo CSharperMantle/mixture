@@ -11,3 +11,6 @@ mod x_ieee754;
 
 #[cfg(feature = "x-binary")]
 mod x_binary;
+
+#[cfg(feature = "x-binarith")]
+mod x_binarith;

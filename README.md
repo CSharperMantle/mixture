@@ -286,7 +286,7 @@ For a detailed explanation of instruction semantics and effects, please refer to
 
 ### `x-ieee754`: IEEE 754-compatible floating-point arithmetic
 
-This extension adds support to `binary32` floating-point format as described in
+This extension adds support for `binary32` floating-point format as described in
 [IEEE 754-2008](https://standards.ieee.org/ieee/754/4211/) and Rust [`f32`].
 
 #### Data layout
@@ -390,7 +390,7 @@ Trivial.
 
 ### `x-binary`: Binary operations (TAOCP Section 4.5.2)
 
-This extension adds support to binary operations to registers and words, allowing
+This extension adds support for binary operations to registers and words, allowing
 for bit-wise shifts and conditional jumps on final bit of registers (even/odd).
 
 #### Shift instructions
@@ -403,10 +403,29 @@ for bit-wise shifts and conditional jumps on final bit of registers (even/odd).
 
 #### Jump instructions
 
-* `JAE` ([`Opcode::JA`], `F = 6`): Jump `rA` even. `C = 40`; `F = 6`.
-* `JAO` ([`Opcode::JA`], `F = 7`): Jump `rA` odd. `C = 40`; `F = 7`.
-* `JXE` ([`Opcode::JX`], `F = 6`): Jump `rX` even. `C = 47`; `F = 6`.
-* `JXO` ([`Opcode::JX`], `F = 7`): Jump `rX` odd. `C = 47`; `F = 7`.
+* `JAE` ([`Opcode::JA`], `F = 6`): Jump `rA` even.
+* `JAO` ([`Opcode::JA`], `F = 7`): Jump `rA` odd.
+* `JXE` ([`Opcode::JX`], `F = 6`): Jump `rX` even.
+* `JXO` ([`Opcode::JX`], `F = 7`): Jump `rX` odd.
 
 These instructions look at the least significant bit in `rA` and `rX`, performing jumps
 according to its oddity.
+
+### `x-binarith`: Binary arithmetic instructions
+
+This extension adds support for binary arithmetics, resembling the classical 'bit operations' in
+various programming languages. These operations are indeed not authentic MIX (which requires
+operations to be independent of byte size and numerical base), so they are categorized under
+[`Opcode::Special`] sections.
+
+#### Arithmetic instructions
+
+* `NOT` ([`Opcode::Special`], `F = 9`): Perform bitwise NOT on `rA`, then store result in `rA`.
+* `AND` ([`Opcode::Special`], `F = 10`): Perform bitwise AND on `V` and `rA`, then store result in `rA`.
+* `OR` ([`Opcode::Special`], `F = 11`): Perform bitwise OR on `V` and `rA`, then store result in `rA`.
+* `XOR` ([`Opcode::Special`], `F = 12`): Perform bitwise XOR on `V` and `rA`, then store result in `rA`.
+
+#### Sign treatment
+
+In every operations listed in this extension, [`Word<N, P>::POS`] is treated as `0x0`, while
+[`Word<N, P>::NEG`] is treated as `0x1`.

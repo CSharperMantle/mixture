@@ -480,7 +480,7 @@ impl MixVM {
         Ok(())
     }
 
-    /// Handler for `CHAR`, `NUM` and `HLT`.
+    /// Handler for `CHAR`, `NUM` and `HLT`, and various extensions.
     fn handle_instr_special(&mut self, instr: &Instruction) -> Result<(), ErrorCode> {
         if instr.field == 0 {
             // NUM instruction
@@ -518,7 +518,7 @@ impl MixVM {
             // machine later.
             self.halted = true;
             Ok(())
-        } else if cfg!(feature = "x-ieee754") {
+        } else if cfg!(feature = "x-ieee754") && instr.field >= 3 && instr.field <= 8 {
             if instr.field == 3 {
                 // F32CVTF322I4B
                 let reg = &mut self.r_a;
@@ -585,10 +585,37 @@ impl MixVM {
                     7 => Ok(u16::from_be_bytes([reg[4], reg[5]]) as f32),
                     // F32CVTI1B2F32
                     8 => Ok(u8::from_be_bytes([reg[5]]) as f32),
-                    _ => Err(ErrorCode::InvalidField),
+                    _ => unreachable!(),
                 }?;
                 reg.set_all([0; 6]);
                 reg[2..=5].copy_from_slice(&new_value.to_be_bytes());
+                Ok(())
+            }
+        } else if cfg!(feature = "x-binarith") && instr.field >= 9 && instr.field <= 12 {
+            if instr.field == 9 {
+                // NOT
+                let reg = &mut self.r_a;
+                reg.flip_sign();
+                for i in 1..=5 {
+                    reg[i] = !reg[i];
+                }
+                Ok(())
+            } else {
+                let addr = self.helper_get_eff_addr(instr.addr, instr.index)?;
+                let reg = &mut self.r_a;
+                let mem_cell = &mut self.mem[addr];
+                let map_fn = match instr.field {
+                    // AND
+                    10 => |a: u8, b: u8| a & b,
+                    // OR
+                    11 => |a: u8, b: u8| a | b,
+                    // XOR
+                    12 => |a: u8, b: u8| a ^ b,
+                    _ => unreachable!(),
+                };
+                for (r, m) in reg[..].iter_mut().zip(mem_cell[..].iter()) {
+                    *r = map_fn(*r, *m);
+                }
                 Ok(())
             }
         } else {

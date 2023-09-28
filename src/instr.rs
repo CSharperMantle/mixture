@@ -169,6 +169,22 @@ pub enum Opcode {
     /// ```text
     /// rA <- convert(rA)
     /// ```
+    /// 
+    /// ------
+    /// 
+    /// * `NOT(9)` (`x-binarith`): Perform bitwise NOT on `rA`, then store result in `rA`.
+    /// 
+    /// ```text
+    /// rA <- !rA
+    /// ```
+    /// 
+    /// * `AND(10)` (`x-binarith`): Perform bitwise AND on `V` and `rA`, then store result in `rA`.
+    /// * `OR(11)` (`x-binarith`): Perform bitwise OR on `V` and `rA`, then store result in `rA`.
+    /// * `XOR(12)` (`x-binarith`): Perform bitwise XOR on `V` and `rA`, then store result in `rA`.
+    /// 
+    /// ```text
+    /// rA <- rA OP V
+    /// ```
     Special = 5,
 
     /// * `SLA(0)` - Shift left `rA`.

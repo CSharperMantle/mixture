@@ -22,9 +22,10 @@ name = "mixture"
 path = "src/lib.rs"
 
 [features]
-default = ["std", "io", "mixal", "x-ieee754", "x-binary"]
+default = ["std", "io", "mixal", "x-ieee754", "x-binary", "x-binarith"]
 std = []
 io = ["std"]
 mixal = ["std", "dep:regex", "dep:once_cell", "dep:const_format"]
 x-ieee754 = []
 x-binary = []
+x-binarith = []
