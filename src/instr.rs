@@ -560,8 +560,8 @@ pub enum Opcode {
     /// See also [`Opcode::Jmp`].
     JX = 47,
 
-    /// * `INCA(0)` - Increase `rA` by 1.
-    /// * `DECA(1)` - Decrease `rA` by 1.
+    /// * `INCA(0)` - Increase `rA` by `M`.
+    /// * `DECA(1)` - Decrease `rA` by `M`.
     /// * `ENTA(2)` - Load an immediate value into `rA`.
     /// * `ENNA(3)` - Load a negative immediate value into `rA`.
     ///
@@ -570,8 +570,8 @@ pub enum Opcode {
     /// ```
     ModifyA = 48,
 
-    /// * `INC1(0)` - Increase `rI1` by 1.
-    /// * `DEC1(1)` - Decrease `rI1` by 1.
+    /// * `INC1(0)` - Increase `rI1` by `M`.
+    /// * `DEC1(1)` - Decrease `rI1` by `M`.
     /// * `ENT1(2)` - Load an immediate value into `rI1`.
     /// * `ENN1(3)` - Load a negative immediate value into `rI1`.
     ///
@@ -580,8 +580,8 @@ pub enum Opcode {
     /// ```
     Modify1 = 49,
 
-    /// * `INC2(0)` - Increase `rI2` by 1.
-    /// * `DEC2(1)` - Decrease `rI2` by 1.
+    /// * `INC2(0)` - Increase `rI2` by `M`.
+    /// * `DEC2(1)` - Decrease `rI2` by `M`.
     /// * `ENT2(2)` - Load an immediate value into `rI2`.
     /// * `ENN2(3)` - Load a negative immediate value into `rI2`.
     ///
@@ -590,8 +590,8 @@ pub enum Opcode {
     /// ```
     Modify2 = 50,
 
-    /// * `INC3(0)` - Increase `rI3` by 1.
-    /// * `DEC3(1)` - Decrease `rI3` by 1.
+    /// * `INC3(0)` - Increase `rI3` by `M`.
+    /// * `DEC3(1)` - Decrease `rI3` by `M`.
     /// * `ENT3(2)` - Load an immediate value into `rI3`.
     /// * `ENN3(3)` - Load a negative immediate value into `rI3`.
     ///
@@ -600,8 +600,8 @@ pub enum Opcode {
     /// ```
     Modify3 = 51,
 
-    /// * `INC4(0)` - Increase `rI4` by 1.
-    /// * `DEC4(1)` - Decrease `rI4` by 1.
+    /// * `INC4(0)` - Increase `rI4` by `M`.
+    /// * `DEC4(1)` - Decrease `rI4` by `M`.
     /// * `ENT4(2)` - Load an immediate value into `rI4`.
     /// * `ENN4(3)` - Load a negative immediate value into `rI4`.
     ///
@@ -610,8 +610,8 @@ pub enum Opcode {
     /// ```
     Modify4 = 52,
 
-    /// * `INC5(0)` - Increase `rI5` by 1.
-    /// * `DEC5(1)` - Decrease `rI5` by 1.
+    /// * `INC5(0)` - Increase `rI5` by `M`.
+    /// * `DEC5(1)` - Decrease `rI5` by `M`.
     /// * `ENT5(2)` - Load an immediate value into `rI5`.
     /// * `ENN5(3)` - Load a negative immediate value into `rI5`.
     ///
@@ -620,8 +620,8 @@ pub enum Opcode {
     /// ```
     Modify5 = 53,
 
-    /// * `INC6(0)` - Increase `rI6` by 1.
-    /// * `DEC6(1)` - Decrease `rI6` by 1.
+    /// * `INC6(0)` - Increase `rI6` by `M`.
+    /// * `DEC6(1)` - Decrease `rI6` by `M`.
     /// * `ENT6(2)` - Load an immediate value into `rI6`.
     /// * `ENN6(3)` - Load a negative immediate value into `rI6`.
     ///
@@ -630,8 +630,8 @@ pub enum Opcode {
     /// ```
     Modify6 = 54,
 
-    /// * `INCX(0)` - Increase `rX` by 1.
-    /// * `DECX(1)` - Decrease `rX` by 1.
+    /// * `INCX(0)` - Increase `rX` by `M`.
+    /// * `DECX(1)` - Decrease `rX` by `M`.
     /// * `ENTX(2)` - Load an immediate value into `rX`.
     /// * `ENNX(3)` - Load a negative immediate value into `rX`.
     ///
