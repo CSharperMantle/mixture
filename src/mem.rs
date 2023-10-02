@@ -235,7 +235,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// assert_eq!(overflow, false);
     /// assert_eq!(value, 0x0102030405);
     /// ```
-    pub fn to_i64(&self) -> (i64, bool) {
+    pub fn to_i64(self) -> (i64, bool) {
         let sign = self.get_sign() as i64;
         let mut bytes: [u8; 8] = [0; 8];
         // Bytes marked 'dirty' have not been copied yet.
@@ -271,7 +271,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// assert_eq!(overflow, false);
     /// assert_eq!(value, 0x01);
     /// ```
-    pub fn to_i64_ranged(&self, field: RangeInclusive<usize>) -> (i64, bool) {
+    pub fn to_i64_ranged(self, field: RangeInclusive<usize>) -> (i64, bool) {
         // Move sign byte out.
         let sign_included = *field.start() == 0;
         let new_start = if sign_included {

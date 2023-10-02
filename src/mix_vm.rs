@@ -1037,13 +1037,10 @@ impl MixVM {
             let target_value = target_mem.to_i64_ranged(instr.field.to_range_inclusive()).0;
             let reg_value = reg.to_i64_ranged(instr.field.to_range_inclusive()).0;
             // Calculate and set flags.
-            self.comp = if reg_value == target_value {
-                // +0 and -0 are equal.
-                CompIndicator::Equal
-            } else if reg_value > target_value {
-                CompIndicator::Greater
-            } else {
-                CompIndicator::Less
+            self.comp = match reg_value.cmp(&target_value) {
+                Ordering::Equal => CompIndicator::Equal,
+                Ordering::Less => CompIndicator::Less,
+                Ordering::Greater => CompIndicator::Greater,
             };
         }
         Ok(())

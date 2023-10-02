@@ -171,7 +171,7 @@ impl TryFrom<&str> for ParsedLine {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let line = Line::try_from(value)?;
         let op = line.op;
-        let loc = line.loc.map(|s| Token::Symbol(s));
+        let loc = line.loc.map(Token::Symbol);
         let address = line.address.map(|s| {
             if let Ok(result) = parse_normal_address(&s) {
                 AddressType::Normal(result)

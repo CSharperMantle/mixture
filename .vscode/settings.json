@@ -47,4 +47,5 @@
         "non_upper_case_globals"
     ],
     "rust-analyzer.showUnlinkedFileNotification": false,
+    "rust-analyzer.check.command": "clippy",
 }
