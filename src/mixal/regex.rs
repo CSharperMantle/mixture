@@ -47,8 +47,9 @@ pub(crate) static REGEX_ADDRESS_A_AF: Lazy<Regex> =
 
 // Example matches: 1000,1(0:5), IDENT,IDX, IDENT+1,IDX-1
 // Captures: a, i, f?
-pub(crate) const STR_REGEX_ADDRESS_AI_AIF: &str =
-    formatcp!(r"^(?P<a>{STR_REGEX_NG_EXPR_INITIAL}),(?P<i>{STR_REGEX_NG_EXPR_INITIAL})(?:\((?P<f>{STR_REGEX_NG_EXPR_INITIAL})\))?$");
+pub(crate) const STR_REGEX_ADDRESS_AI_AIF: &str = formatcp!(
+    r"^(?P<a>{STR_REGEX_NG_EXPR_INITIAL}),(?P<i>{STR_REGEX_NG_EXPR_INITIAL})(?:\((?P<f>{STR_REGEX_NG_EXPR_INITIAL})\))?$"
+);
 pub(crate) static REGEX_ADDRESS_AI_AIF: Lazy<Regex> =
     Lazy::new(|| Regex::new(STR_REGEX_ADDRESS_AI_AIF).unwrap());
 
