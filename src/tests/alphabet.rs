@@ -23,3 +23,11 @@ fn test_alphabet_u8_to_char() {
     let lp_char: char = Alphabet::try_from(lp_byte).unwrap().try_into().unwrap();
     assert_eq!(lp_char, '(');
 }
+
+#[test]
+fn test_char_to_alphabet() {
+    let lp_char = '(';
+
+    let lp_byte: Alphabet = lp_char.try_into().unwrap();
+    assert_eq!(lp_byte, Alphabet::LParen);
+}

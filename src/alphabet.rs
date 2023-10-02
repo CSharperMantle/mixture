@@ -179,7 +179,7 @@ pub enum Alphabet {
 impl TryFrom<Alphabet> for u8 {
     type Error = ();
 
-    /// Converts an [`Alphabet`] to its numerical representation.
+    /// Converts a character in [`Alphabet`] to its numerical representation.
     ///
     /// # Returns
     /// * [`Ok(u8)`] - The converted byte.
@@ -201,7 +201,7 @@ impl TryFrom<Alphabet> for u8 {
 impl TryFrom<Alphabet> for char {
     type Error = ();
 
-    /// Converts an [`Alphabet`] to a [`char`].
+    /// Converts a character in [`Alphabet`] to a [`char`].
     ///
     /// # Returns
     /// * [`Ok(char)`] - The converted [`char`].
@@ -216,63 +216,143 @@ impl TryFrom<Alphabet> for char {
     /// assert_eq!(a_chr, 'A');
     /// ```
     fn try_from(value: Alphabet) -> Result<Self, Self::Error> {
-        Ok(match value {
-            Alphabet::Space => ' ',
-            Alphabet::A => 'A',
-            Alphabet::B => 'B',
-            Alphabet::C => 'C',
-            Alphabet::D => 'D',
-            Alphabet::E => 'E',
-            Alphabet::F => 'F',
-            Alphabet::G => 'G',
-            Alphabet::H => 'H',
-            Alphabet::I => 'I',
-            Alphabet::SQuote => '\'',
-            Alphabet::J => 'J',
-            Alphabet::K => 'K',
-            Alphabet::L => 'L',
-            Alphabet::M => 'M',
-            Alphabet::N => 'N',
-            Alphabet::O => 'O',
-            Alphabet::P => 'P',
-            Alphabet::Q => 'Q',
-            Alphabet::R => 'R',
-            Alphabet::Degree => '°',
-            Alphabet::DQuote => '"',
-            Alphabet::S => 'S',
-            Alphabet::T => 'T',
-            Alphabet::U => 'U',
-            Alphabet::V => 'V',
-            Alphabet::W => 'W',
-            Alphabet::X => 'X',
-            Alphabet::Y => 'Y',
-            Alphabet::Z => 'Z',
-            Alphabet::Zero => '0',
-            Alphabet::One => '1',
-            Alphabet::Two => '2',
-            Alphabet::Three => '3',
-            Alphabet::Four => '4',
-            Alphabet::Five => '5',
-            Alphabet::Six => '6',
-            Alphabet::Seven => '7',
-            Alphabet::Eight => '8',
-            Alphabet::Nine => '9',
-            Alphabet::Dot => '.',
-            Alphabet::Comma => ',',
-            Alphabet::LParen => '(',
-            Alphabet::RParen => ')',
-            Alphabet::Plus => '+',
-            Alphabet::Minus => '-',
-            Alphabet::Star => '*',
-            Alphabet::Slash => '/',
-            Alphabet::Equal => '=',
-            Alphabet::Dollar => '$',
-            Alphabet::LAngle => '<',
-            Alphabet::RAngle => '>',
-            Alphabet::At => '@',
-            Alphabet::SemiColon => ';',
-            Alphabet::Colon => ':',
-            Alphabet::LowSQuote => '‚',
-        })
+        match value {
+            Alphabet::Space => Ok(' '),
+            Alphabet::A => Ok('A'),
+            Alphabet::B => Ok('B'),
+            Alphabet::C => Ok('C'),
+            Alphabet::D => Ok('D'),
+            Alphabet::E => Ok('E'),
+            Alphabet::F => Ok('F'),
+            Alphabet::G => Ok('G'),
+            Alphabet::H => Ok('H'),
+            Alphabet::I => Ok('I'),
+            Alphabet::SQuote => Ok('\''),
+            Alphabet::J => Ok('J'),
+            Alphabet::K => Ok('K'),
+            Alphabet::L => Ok('L'),
+            Alphabet::M => Ok('M'),
+            Alphabet::N => Ok('N'),
+            Alphabet::O => Ok('O'),
+            Alphabet::P => Ok('P'),
+            Alphabet::Q => Ok('Q'),
+            Alphabet::R => Ok('R'),
+            Alphabet::Degree => Ok('°'),
+            Alphabet::DQuote => Ok('"'),
+            Alphabet::S => Ok('S'),
+            Alphabet::T => Ok('T'),
+            Alphabet::U => Ok('U'),
+            Alphabet::V => Ok('V'),
+            Alphabet::W => Ok('W'),
+            Alphabet::X => Ok('X'),
+            Alphabet::Y => Ok('Y'),
+            Alphabet::Z => Ok('Z'),
+            Alphabet::Zero => Ok('0'),
+            Alphabet::One => Ok('1'),
+            Alphabet::Two => Ok('2'),
+            Alphabet::Three => Ok('3'),
+            Alphabet::Four => Ok('4'),
+            Alphabet::Five => Ok('5'),
+            Alphabet::Six => Ok('6'),
+            Alphabet::Seven => Ok('7'),
+            Alphabet::Eight => Ok('8'),
+            Alphabet::Nine => Ok('9'),
+            Alphabet::Dot => Ok('.'),
+            Alphabet::Comma => Ok(','),
+            Alphabet::LParen => Ok('('),
+            Alphabet::RParen => Ok(')'),
+            Alphabet::Plus => Ok('+'),
+            Alphabet::Minus => Ok('-'),
+            Alphabet::Star => Ok('*'),
+            Alphabet::Slash => Ok('/'),
+            Alphabet::Equal => Ok('='),
+            Alphabet::Dollar => Ok('$'),
+            Alphabet::LAngle => Ok('<'),
+            Alphabet::RAngle => Ok('>'),
+            Alphabet::At => Ok('@'),
+            Alphabet::SemiColon => Ok(';'),
+            Alphabet::Colon => Ok(':'),
+            Alphabet::LowSQuote => Ok('‚'),
+        }
+    }
+}
+
+impl TryFrom<char> for Alphabet {
+    type Error = ();
+
+    /// Converts a [`char`] to a character in [`Alphabet`].
+    ///
+    /// # Returns
+    /// * [`Ok(Alphabet)`] - The converted character in [`Alphabet`].
+    /// * [`Err(())`] - The conversion fails.
+    ///
+    /// # Example
+    /// ```rust
+    /// use mixture::Alphabet;
+    ///
+    /// let a = 'A';
+    /// let a_alpha: Alphabet = a.try_into().unwrap();
+    /// assert_eq!(a_alpha, Alphabet::A);
+    /// ```
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        match value {
+            ' ' => Ok(Alphabet::Space),
+            'A' => Ok(Alphabet::A),
+            'B' => Ok(Alphabet::B),
+            'C' => Ok(Alphabet::C),
+            'D' => Ok(Alphabet::D),
+            'E' => Ok(Alphabet::E),
+            'F' => Ok(Alphabet::F),
+            'G' => Ok(Alphabet::G),
+            'H' => Ok(Alphabet::H),
+            'I' => Ok(Alphabet::I),
+            '\'' => Ok(Alphabet::SQuote),
+            'J' => Ok(Alphabet::J),
+            'K' => Ok(Alphabet::K),
+            'L' => Ok(Alphabet::L),
+            'M' => Ok(Alphabet::M),
+            'N' => Ok(Alphabet::N),
+            'O' => Ok(Alphabet::O),
+            'P' => Ok(Alphabet::P),
+            'Q' => Ok(Alphabet::Q),
+            'R' => Ok(Alphabet::R),
+            '°' => Ok(Alphabet::Degree),
+            '"' => Ok(Alphabet::DQuote),
+            'S' => Ok(Alphabet::S),
+            'T' => Ok(Alphabet::T),
+            'U' => Ok(Alphabet::U),
+            'V' => Ok(Alphabet::V),
+            'W' => Ok(Alphabet::W),
+            'X' => Ok(Alphabet::X),
+            'Y' => Ok(Alphabet::Y),
+            'Z' => Ok(Alphabet::Z),
+            '0' => Ok(Alphabet::Zero),
+            '1' => Ok(Alphabet::One),
+            '2' => Ok(Alphabet::Two),
+            '3' => Ok(Alphabet::Three),
+            '4' => Ok(Alphabet::Four),
+            '5' => Ok(Alphabet::Five),
+            '6' => Ok(Alphabet::Six),
+            '7' => Ok(Alphabet::Seven),
+            '8' => Ok(Alphabet::Eight),
+            '9' => Ok(Alphabet::Nine),
+            '.' => Ok(Alphabet::Dot),
+            ',' => Ok(Alphabet::Comma),
+            '(' => Ok(Alphabet::LParen),
+            ')' => Ok(Alphabet::RParen),
+            '+' => Ok(Alphabet::Plus),
+            '-' => Ok(Alphabet::Minus),
+            '*' => Ok(Alphabet::Star),
+            '/' => Ok(Alphabet::Slash),
+            '=' => Ok(Alphabet::Equal),
+            '$' => Ok(Alphabet::Dollar),
+            '<' => Ok(Alphabet::LAngle),
+            '>' => Ok(Alphabet::RAngle),
+            '@' => Ok(Alphabet::At),
+            ';' => Ok(Alphabet::SemiColon),
+            ':' => Ok(Alphabet::Colon),
+            '‚' => Ok(Alphabet::LowSQuote),
+            _ => Err(()),
+        }
     }
 }
