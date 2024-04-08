@@ -1228,7 +1228,7 @@ impl MixVM {
                 // to simulate shifting.
                 // The iterator is infinite so we don't worry about
                 // panics.
-                orig_bytes_iter.next().expect("cyclic iterator exhausted");
+                orig_bytes_iter.next().or_else(|| unreachable!());
             }
             // Write back.
             for (reg_i, &digit) in (0..10).zip(orig_bytes_iter) {

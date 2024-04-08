@@ -1,4 +1,3 @@
-use core::convert::From;
 use core::ops::Index;
 use core::ops::IndexMut;
 use core::ops::Range;
@@ -111,7 +110,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
         let bytes = value.abs().to_be_bytes();
         // See if we have something not copied.
         // Bytes marked 'dirty' have not been copied yet.
-        let mut bytes_dirty = bytes.map(|byte| byte != 0);
+        let overflow = N - 1 < 8 && bytes[0..8 - (N - 1)].iter().any(|&b| b != 0);
         word[0] = if !P && value < 0 {
             Self::NEG
         } else {
@@ -119,11 +118,9 @@ impl<const N: usize, const P: bool> Word<N, P> {
         };
         for (word_i, bytes_i) in (1..N).rev().zip((0..8).rev()) {
             word[word_i] = bytes[bytes_i];
-            // We have copied the byte; make it clean.
-            bytes_dirty[bytes_i] = false;
         }
         // If we have left some data behind, we have overflowed.
-        (word, bytes_dirty.iter().any(|&dirty| dirty))
+        (word, overflow)
     }
 
     /// Set the content of the whole word to given array.

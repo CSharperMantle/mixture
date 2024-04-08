@@ -1,4 +1,3 @@
-use core::convert::TryFrom;
 use core::ops::RangeInclusive;
 
 use super::mem::FullWord;
