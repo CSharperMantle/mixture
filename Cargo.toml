@@ -10,12 +10,6 @@ readme = "README.md"
 [dependencies]
 num_enum = "0.5.7"
 cfg_block = "0.1.1"
-regex = { version = "1.9.3", optional = true, default-features = false, features = [
-    "std",
-    "perf",
-] }
-once_cell = { version = "1.18.0", optional = true }
-const_format = { version = "0.2.31", optional = true }
 
 [lib]
 name = "mixture"
@@ -25,7 +19,6 @@ path = "src/lib.rs"
 default = ["std", "io", "x-ieee754", "x-binary", "x-binarith"]
 std = []
 io = ["std"]
-mixal = ["std", "dep:regex", "dep:once_cell", "dep:const_format"]
 x-ieee754 = []
 x-binary = []
 x-binarith = []

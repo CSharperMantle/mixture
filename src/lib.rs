@@ -30,8 +30,5 @@ cfg_block! {
     }
 }
 
-#[cfg(feature = "mixal")]
-pub mod mixal;
-
 #[cfg(test)]
 mod tests;
