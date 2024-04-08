@@ -222,33 +222,37 @@ impl<const N: usize, const P: bool> Word<N, P> {
     ///
     /// # Returns
     /// * [`i64`] - The converted value.
-    /// * [`bool`] - `true` if the word overflows.
+    /// * [`bool`] - `true` if the word overflows. Higher zero bytes do not count as overflow.
     ///
     /// # Example
     /// ```rust
     /// use mixture::*;
     ///
-    /// let mut word = Word::<6, false>::new();
-    /// word.set_all([0, 1, 2, 3, 4, 5]);
-    ///
+    /// let word = Word::<6, false>::from_bytes([Word::<6, false>::NEG, 1, 2, 3, 4, 5]);
     /// let (value, overflow) = word.to_i64();
     /// assert_eq!(overflow, false);
-    /// assert_eq!(value, 0x0102030405);
+    /// assert_eq!(value, -0x0102030405);
+    ///
+    /// let xl_word = Word::<10, false>::from_bytes([Word::<10, false>::POS, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    /// let (xl_value, xl_overflow) = xl_word.to_i64();
+    /// assert_eq!(xl_overflow, true);
+    /// assert_eq!(xl_value, 0x0203040506070809);
+    ///
+    /// let zero_word = Word::<6, false>::new();
+    /// let (zero_value, zero_overflow) = zero_word.to_i64();
+    /// assert_eq!(zero_overflow, false);
+    /// assert_eq!(zero_value, 0);
     /// ```
     pub fn to_i64(self) -> (i64, bool) {
         let sign = self.get_sign() as i64;
         let mut bytes: [u8; 8] = [0; 8];
+        let overflow = N - 1 > 8 && self.data[8..N].iter().any(|&b| b != 0);
         // Bytes marked 'dirty' have not been copied yet.
-        let mut data_bytes_dirty = self.data.map(|byte| byte != 0);
-        // Sign byte is always dealt properly.
-        data_bytes_dirty[0] = false;
         for (bytes_i, data_i) in (0..8).rev().zip((1..N).rev()) {
             bytes[bytes_i] = self.data[data_i];
-            // We have copied the byte; make it clean.
-            data_bytes_dirty[data_i] = false;
         }
         let value = i64::from_be_bytes(bytes);
-        (value * sign, data_bytes_dirty.iter().any(|&dirty| dirty))
+        (value * sign, overflow)
     }
 
     /// Convert the corresponding range of an word to an `i64`.
@@ -264,8 +268,7 @@ impl<const N: usize, const P: bool> Word<N, P> {
     /// ```rust
     /// use mixture::*;
     ///
-    /// let mut word = Word::<6, false>::new();
-    /// word.set_all([0, 1, 2, 3, 4, 5]);
+    /// let word = Word::<6, false>::from_bytes([0, 1, 2, 3, 4, 5]);
     ///
     /// let (value, overflow) = word.to_i64_ranged(1..=1);
     /// assert_eq!(overflow, false);
