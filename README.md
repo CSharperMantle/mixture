@@ -244,6 +244,7 @@ Each instruction in MIX could fit in a single word. The encoding of instructions
 * `C`: the *operation code* specifying what operation is to be performed. For example, `C = 8`
   specifies the operation [`LDA`][Opcode::LdA], "load the register A".
 
+> [!NOTE]
 > **Specific to `mixture`:** See [`Opcode`] for a complete list of supported opcodes.
 
 * `F`: the *modification* or *field* of an instruction. It is usually a packed field
