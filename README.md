@@ -6,7 +6,7 @@
 used extensively in *The Art of Computer Programming* series written
 by D. E. Knuth.
 
-Crate highlights:
+This crate sports:
 
 * MIX simulation via [`MixVM`]
 * I/O device simulation via [`IODevice`] (enabled by `io` feature)
@@ -146,6 +146,7 @@ contain *arbitrary* amount of information. MIX only places a lower limit on byte
 size: A byte must be able to hold at least 64 distinct values. *A sound algorithm
 implementation in MIX should work properly regardless of how big a byte is.*
 
+> [!NOTE]
 > **Specific to `mixture`:** The byte size in `mixture` implementation is 256.
 
 Two adjacent bytes can express the numbers 0 through 4,095.<br>
@@ -156,6 +157,7 @@ Five adjacent bytes can express the numbers 0 through 1,073,741,823.<br>
 A *computer word* consists of five bytes and a sign. The sign portion has only two
 possible values, `+` and `-`.
 
+> [!NOTE]
 > **Specific to `mixture`:** The sign in `mixture` is also encoded in a byte, whose
 > only valid content is [`Word<N, P>::POS`] and [`Word<N, P>::NEG`]. Other
 > values written into the sign byte are considered undefined.
@@ -176,6 +178,7 @@ There are nine registers in MIX.
 Each register is denoted with a prefix '`r`' added to its name, e.g. '`rA`' for 'register
 `A`'.
 
+> [!NOTE]
 > **Specific to `mixture`:** `rA` and `rX` have a type of [`FullWord`]. `rI1-6`
 > have a type of [`HalfWord`]. `rJ` has a type of [`PosHalfWord`]. All three types
 > are aliases for different instantiations of [`Word<N, P>`].
@@ -188,6 +191,7 @@ specific instructions:
 * A *memory* (4000 words of storage, each containing five bytes and a sign);
 * *input-output devices* (cards, tapes, disks, etc.).
 
+> [!NOTE]
 > **Specific to `mixture`:** There are several implementation-specific details of the above
 > states.
 >
@@ -217,6 +221,7 @@ are:
 * `(4:4)`, the fourth byte only.
 * `(4:5)`, the two least significant bytes.
 
+> [!NOTE]
 > **Specific to `mixture`:** [`Word`][Word<N, P>]s are able to be indexed by both [`usize`]
 > scalars and [`core::ops::RangeInclusive<usize>`] ranges, so as to match the semantics proposed
 > in the book.
@@ -224,6 +229,7 @@ are:
 The use of field specification varies among instructions. When encoded in an instruction,
 field specification is packed into one-byte scalar equals to `8 * L + R`.
 
+> [!NOTE]
 > **Specific to `mixture`:** There is a trait named [`ToRangeInclusive<T>`] to simplify
 > this conversion process. It is already implemented for [`u8`] by default. 
 
@@ -263,11 +269,13 @@ If `I = 0`, then direct addressing is used, which means `M` is set to `A` withou
 Otherwise, if `I = i` (where `i` is an integer between 1 and 6), the content of index register
 `rIi` is added algebraically to `A` to produce `M`, resembling a base-offset addressing mode.
 
+> [!NOTE]
 > **Specific to `mixture`:** If `I` is out of valid range, the VM will halt, and
 > [`ErrorCode::InvalidIndex`] is returned as error.
 
 If the produced `M` does not fit in two bytes, the result is undefined.
 
+> [!NOTE]
 > **Specific to `mixture`:** `mixture` uses [`u16`] for addresses, and will (depending on build
 > flags) panic or silently wrap should any numerical overflow or underflow happens.
 
@@ -281,6 +289,7 @@ For a detailed explanation of instruction semantics and effects, please refer to
 
 ## Extensions to MIX
 
+> [!NOTE]
 > **Specific to `mixture`:** This section decribes features exclusive to `mixture`
 > and/or implemented in a non-TAOCP way.
 
